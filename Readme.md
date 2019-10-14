@@ -20,7 +20,7 @@ The setting file are split up in production and a development settings files. Al
 
 1. Clone this repository
 
-`https://github.com/Joeriksson/django-forums.git`
+`https://github.com/Joeriksson/django-forums-app.git`
 
 2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop) to be able to use the docker environment.
 
