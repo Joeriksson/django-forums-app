@@ -1,0 +1,16 @@
+{% extends '_base.html' %}
+
+{% block title %}Forums{% endblock title %}
+
+{% block content %}
+    <h1>Forums page</h1>
+    {% if user.is_authenticated %}
+        Hi {{ user.email }}!
+        <p><a href="{% url 'account_logout' %}">Logout</a></p>
+    {% else %}
+        <p>You are not logged in</p>
+        <p><a href="{% url 'account_login' %}">Login</a></p>
+    {% endif %}
+
+
+{% endblock content %}

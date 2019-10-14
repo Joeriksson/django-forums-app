@@ -1,0 +1,48 @@
+{% extends '_base.html' %}
+
+{% block content %}
+
+    <div class="p-3">
+        <div class="pb-3">
+            <a href="{% url 'forum_list' %}" class="btn btn-outline-secondary">Back to forums</a>
+            {% if perms.forums.can_change_forum %}
+                <a href="{% url 'forum_update' forum.id %}" class="btn btn-outline-secondary">Update forum details</a>
+            {% endif %}
+            <a href="{% url 'thread_add' forum.id %}" class="btn btn-outline-secondary float-right">New thread</a>
+        </div>
+        <div class="bg-info text-white rounded p-3 border border-dark">
+            <h3>{{ forum.title }}</h3>
+        </div>
+        <div class="p-3 pb-3">
+            <i>{{ forum.description }}</i>
+        </div>
+
+        {% for thread in forum.thread_set.all %}
+
+            <a href="{% url 'thread_detail' thread.id %}" class="list-group-item-action">
+                <div class="card bg-light mb-3">
+
+                    <div class="card-header"><strong>{{ thread.title }}</strong>
+
+                        <!-- Show delete button if user is thread starter -->
+                        {% if thread.user == user %}
+                            <a href="{% url 'thread_delete' forum.id thread.id %}"
+                               class="btn btn-outline-secondary float-right">Delete thread</a>
+                        {% endif %}
+
+                        <p class="card-text font-weight-lighter"><small>number of
+                            posts: {{ thread.post_set.all.count }}</small></p>
+
+                    </div>
+                    <div class="card-body">
+
+                        <p class="card-text font-weight-lighter"><small>started by: {{ thread.user }}
+                            on {{ thread.added }}</small></p>
+                    </div>
+                </div>
+            </a>
+
+        {% endfor %}
+
+    </div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends '_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Delete post: {{ post.title }}{% endblock title %}
+
+{% block content %}
+    <h2>Delete Post '{{ post }}'</h2>
+    <form method="post" action="" >
+        {% csrf_token %}
+        <p >Are you sure you want to delete this post?</p>
+        <button class="btn btn-danger text-white" type="submit">Confirm</button>
+        <a href="{% url 'thread_detail' post.thread.id %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+{% endblock %}

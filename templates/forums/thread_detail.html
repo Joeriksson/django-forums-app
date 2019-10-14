@@ -1,0 +1,51 @@
+{% extends '_base.html' %}
+
+{% block content %}
+
+    <div class="p-3">
+        <div class="pb-3">
+            <a href="{% url 'forum_detail' thread.forum.id %}" class="btn btn-outline-secondary">Back to forum</a>
+            <a href="{% url 'post_add' thread.id %}" class="btn btn-outline-secondary float-right">Reply</a>
+        </div>
+        <div class="bg-info text-white rounded p-3 border border-dark">
+            <h5>{{ thread.title }}</h5>
+        </div>
+
+        <div class="card bg-light mb-3">
+            <div class="card-header"><strong></strong>
+                <p class="card-text font-weight-lighter">
+                    <i>On {{ thread.added }} - {{ thread.user }} wrote:</i>
+                </p>
+
+            </div>
+            <div class="card-body">
+
+                <p class="card-text font-weight-lighter">{{ thread.text }}</p>
+            </div>
+        </div>
+
+
+        <div>
+            {% for post in thread.post_set.all %}
+                <div class="card bg-light ml-5 mb-3">
+                    <div class="card-header">On {{ post.added }} - {{ post.user }} wrote:
+                    {{ post.id }}
+                        <!-- Show delete button if user is thread starter -->
+                        {% if post.user == user %}
+                            <a href="{% url 'post_delete' thread.id post.id %}" class="btn btn-outline-secondary float-right">Delete post</a>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body">
+
+                        <p class="card-text">{{ post.text }}.</p>
+                    </div>
+                </div>
+
+
+            {% endfor %}
+        </div>
+
+
+    </div>
+{% endblock %}

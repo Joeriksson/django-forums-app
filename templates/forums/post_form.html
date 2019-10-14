@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+{% extends '_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}New post{% endblock title %}
+
+{% block content %}
+<h2>New post - in reply to: "{{ thread.title }}"</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button class="btn btn-success" type="submit">Post</button>
+    <a href="{% url 'thread_detail' thread.id %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock content %}

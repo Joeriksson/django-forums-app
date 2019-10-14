@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+pytz = "==2019.2"
+sqlparse = "==0.3.0"
+Django = "==2.2.5"
+django-crispy-forms = "*"
+django-allauth = "*"
+django-debug-toolbar = "*"
+psycopg2-binary = "*"
+django-admin-honeypot = "*"
+whitenoise = "*"
+gunicorn = "*"
+dj-database-url = "*"
+
+[requires]
+python_version = "3.7"

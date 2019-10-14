@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+{% extends '_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update forum{% endblock title %}
+
+{% block content %}
+<h2>Update forum: "{{ forum.title }}"</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button class="btn btn-success" type="submit">Update</button>
+    <a href="{% url 'forum_detail' forum.id %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock content %}
