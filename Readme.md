@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/Joeriksson/django-forums-app/tree/master.svg?style=svg)](https://circleci.com/gh/Joeriksson/django-forums-app/tree/master)
+
 # Django Forums
 
 A sample forums app built on the Django framework. I built this app to learn Django more, and I wanted to learn how to do a parent/child database model to also learn that aspect of Django.
