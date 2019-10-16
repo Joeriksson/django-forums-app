@@ -30,7 +30,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            pip install pipenv
+            sudo pip install pipenv
             pipenv install
 
 #      - save_cache:
@@ -46,8 +46,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            . pipenv shell
-            python manage.py test
+            pipenv run python manage.py test
 
       - store_artifacts:
           path: test-reports
