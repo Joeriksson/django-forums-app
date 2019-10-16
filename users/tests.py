@@ -53,19 +53,20 @@ class SignupPageTests(TestCase):
         self.assertEqual(get_user_model().objects.all()[0].email, self.email)
 
 
-# class EditProfilePageTests(TestCase):
-#     firstname = 'new'
-#     lastname = 'user'
-#
-#     def setUp(self):
-#         User = get_user_model()
-#         userid = User.objects.get(username='julle')
-#         print(userid)
-#         url = reverse('user_edit', args=(userid,))
-#         self.response = self.client.get(url)
-#
-#     def test_userprofile_template(self):
-#         self.assertEqual(self.response.status_code, 200)
-#         self.assertTemplateUsed(self.response, 'users/customuser_form.html')
-#         self.assertContains(self.response, 'Edit Profile')
-#         self.assertNotContains(self.response, 'This should not be here')
+class EditProfilePageTests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='julle',
+            email="test2@test.com",
+            password='testpass123'
+        )
+        url = reverse('user_edit', args=(self.user.id,))
+        self.response = self.client.get(url)
+
+    def test_userprofile_template(self):
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, 'users/customuser_form.html')
+        self.assertContains(self.response, 'Edit Profile')
+        self.assertNotContains(self.response, 'This should not be here')

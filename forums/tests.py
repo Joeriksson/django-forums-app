@@ -46,25 +46,60 @@ class ForumListPageTests(TestCase):
 
     def setUp(self):
         url = reverse('forum_list')
-        print(url)
         self.response = self.client.get(url)
 
     def test_forum_list_template(self):
         self.assertEqual(self.response.status_code, 200)
         self.assertTemplateUsed(self.response, 'forums/forum_list.html')
-        self.assertContains(self.response, 'New forum')
+        self.assertContains(self.response, 'Forums')
         self.assertNotContains(self.response, 'This should not be here')
 
 
 class ForumDetailPageTests(TestCase):
 
     def setUp(self):
-        url = reverse('forum_detail', args=('1',))
-        #print(url)
+
+        self.forum = Forum.objects.create(
+            title='Testforum',
+            description='A test forum'
+        )
+
+        url = reverse('forum_detail', args=(self.forum.id,))
+
         self.response = self.client.get(url)
 
     def test_forum_detail_template(self):
         self.assertEqual(self.response.status_code, 200)
         self.assertTemplateUsed(self.response, 'forums/forum_detail.html')
-        self.assertContains(self.response, 'New thread')
+        self.assertContains(self.response, 'Testforum')
+        self.assertNotContains(self.response, 'This should not be here')
+
+
+class ThreadDetailPageTests(TestCase):
+
+    def setUp(self):
+
+        self.user = get_user_model().objects.create_user(
+            username='forumuser',
+            email='forumuser@email.com',
+            password='testpass123',
+        )
+        self.forum = Forum.objects.create(
+            title='Testforum',
+            description='A test forum'
+        )
+        self.thread = Thread.objects.create(
+            title='Testtitle',
+            forum_id=self.forum.id,
+            user=self.user
+        )
+
+        url = reverse('thread_detail', args=(self.thread.id,))
+
+        self.response = self.client.get(url)
+
+    def test_thread_detail_template(self):
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, 'forums/thread_detail.html')
+        self.assertContains(self.response, 'Testtitle')
         self.assertNotContains(self.response, 'This should not be here')
