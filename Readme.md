@@ -15,7 +15,7 @@ Includes:
 - different settings files for development and production
 
 ## Production and development settings
-
+ 
 The setting file are split up in production and a development settings files. Also the project have one docker-compose.yml for production and one for development. Within the docker-compose files you can find the parameter for which settings file to use on the runserver command. To make it easier and less to type for each command, there is a Makefile with different common operations.
 
 ## Quick start
