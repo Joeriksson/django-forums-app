@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.urls import reverse, resolve
+from django.urls import reverse
 
 
 class CustomUserTests(TestCase):
@@ -37,6 +37,7 @@ class SignupPageTests(TestCase):
     email = 'newuser@email.com'
 
     def setUp(self):
+        self.user = get_user_model().objects.create_user(self.username, self.email)
         url = reverse('account_signup')
         self.response = self.client.get(url)
 
@@ -47,7 +48,6 @@ class SignupPageTests(TestCase):
         self.assertNotContains(self.response, 'This should not be here')
 
     def test_signup_form(self):
-        new_user = get_user_model().objects.create_user(self.username, self.email)
         self.assertEqual(get_user_model().objects.all().count(), 1)
         self.assertEqual(get_user_model().objects.all()[0].username, self.username)
         self.assertEqual(get_user_model().objects.all()[0].email, self.email)
@@ -56,8 +56,8 @@ class SignupPageTests(TestCase):
 class EditProfilePageTests(TestCase):
 
     def setUp(self):
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user = get_user_model()
+        self.user = user.objects.create_user(
             username='julle',
             email="test2@test.com",
             password='testpass123'
