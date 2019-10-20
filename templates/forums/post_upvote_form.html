@@ -1,0 +1,14 @@
+{% extends '_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Upvote post: {{ post.title }}{% endblock title %}
+
+{% block content %}
+    <h2>Upvote Post '{{ post }}'</h2>
+    <form method="post" action="">
+        {% csrf_token %}
+        <p>Are you sure you want to delete this thread?</p>
+        <button class="btn btn-danger text-white" type="submit">Confirm</button>
+        <a href="{% url 'forum_detail' thread.forum.id %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+{% endblock %}

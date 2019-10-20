@@ -20,7 +20,7 @@
             </div>
             <div class="card-body">
 
-                <p class="card-text font-weight-lighter">{{ thread.text }}</p>
+                <p class="card-text ">{{ thread.text }}</p>
             </div>
         </div>
 
@@ -29,16 +29,34 @@
             {% for post in thread.post_set.all %}
                 <div class="card bg-light ml-5 mb-3">
                     <div class="card-header">On {{ post.added }} - {{ post.user }} wrote:
-                    {{ post.id }}
                         <!-- Show delete button if user is thread starter -->
                         {% if post.user == user %}
-                            <a href="{% url 'post_delete' thread.id post.id %}" class="btn btn-outline-secondary float-right">Delete post</a>
+                            <a href="{% url 'post_delete' thread.id post.id %}"
+                               class="btn btn-outline-secondary float-right">Delete post</a>
                         {% endif %}
                     </div>
 
-                    <div class="card-body">
 
+                    <div class="card-body">
                         <p class="card-text">{{ post.text }}.</p>
+                    </div>
+
+                    <div class="ml-auto p-2">
+                        <!-- Don't show upvote button for the users own posts -->
+                        {% for upvote in upvote.objects.all %}
+                            {{ upvote }}
+                        {% empty %}
+
+                            {% if post.user != user %}
+
+                                {% if voted != 1 %}
+                                    <a href="{% url 'post_upvote' thread.id post.id %}"
+                                       class="btn btn-outline-secondary  p-1">+</a>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        upvotes: {{ post.upvotes }}
+
                     </div>
                 </div>
 

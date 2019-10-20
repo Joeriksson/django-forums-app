@@ -1,6 +1,6 @@
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.shortcuts import get_object_or_404
-from .models import Forum, Thread, Post
+from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.shortcuts import get_object_or_404, HttpResponseRedirect
+from .models import Forum, Thread, Post, UpVote
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 
@@ -118,3 +118,17 @@ class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']})
+
+
+class PostUpvote(LoginRequiredMixin, View):
+    model = Post
+
+    def get(self, request, **kwargs):
+        post = Post.objects.get(id=self.kwargs['pk'])
+        post.upvotes += 1
+        post.save()
+        upvote = UpVote.objects.create(post=post, user=self.request.user)
+        upvote.save()
+        return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']}))
+
+

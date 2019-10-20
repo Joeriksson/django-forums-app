@@ -8,7 +8,8 @@ from .views import ForumsList, \
     ThreadCreate, \
     ThreadDelete, \
     PostCreate, \
-    PostDelete
+    PostDelete, \
+    PostUpvote
 
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     path('<int:fpk>/delete/<int:pk>', ThreadDelete.as_view(), name='thread_delete'),
     path('thread/<int:pk>/post', PostCreate.as_view(), name='post_add'),
     path('thread/<int:tpk>/post/<int:pk>/delete', PostDelete.as_view(), name='post_delete'),
+    path('thread/<int:tpk>/post/<int:pk>/upvote', PostUpvote.as_view(), name='post_upvote'),
 ]
