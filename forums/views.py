@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from .models import Forum, Thread, Post, UpVote
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.core.mail import send_mail
+from django.db.models.signals import post_save
 
 
 class ForumsList(ListView):
@@ -47,6 +49,13 @@ class ForumUpdate(LoginRequiredMixin, UpdateView):
 class ThreadDetail(DetailView):
     model = Thread
     context_object_name = 'thread'
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation
+        context = super(ThreadDetail, self).get_context_data(**kwargs)
+        # Check if current user upvoted
+        context['voted'] = UpVote.objects.filter(user=self.request.user)
+        return context
 
 
 class ThreadCreate(LoginRequiredMixin, CreateView):
@@ -132,3 +141,15 @@ class PostUpvote(LoginRequiredMixin, View):
         return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']}))
 
 
+def send_notification(sender, created, **kwargs):
+    if created:
+        obj = kwargs['instance']
+        send_mail(subject='New post added', message='A new post was added to thread x', from_email='info@email.com', recipient_list=['user@email.com'] )
+        # check_it = obj.whom.get_profile().notifications
+        # if check_it == True:
+        #     #rest code for sending emails works
+        # else:
+        #     pass
+
+
+post_save.connect(send_notification, sender=Post)

@@ -43,23 +43,38 @@
 
                     <div class="ml-auto p-2">
                         <!-- Don't show upvote button for the users own posts -->
-                        {% for upvote in upvote.objects.all %}
-                            {{ upvote }}
-                        {% empty %}
 
-                            {% if post.user != user %}
-
-                                {% if voted != 1 %}
-                                    <a href="{% url 'post_upvote' thread.id post.id %}"
-                                       class="btn btn-outline-secondary  p-1">+</a>
-                                {% endif %}
+                        {% for upvote in post.upvote_set.all %}
+                            {% if upvote.user == user %}
+                                {{ user }}
                             {% endif %}
+
                         {% endfor %}
+
+                        {% if post.user != user %}
+
+                            <!-- This is probably the wrong way to see if a user already has upvoted -->
+                            {% for vote in voted %}
+                                {% if post.id == vote.post_id %}
+                                    {% if user.id != vote.user_id %}
+
+                                    {% else %}
+                                    {% endif %}
+                                {% endif %}
+
+                            {% endfor %}
+                            <!-- **************************************** -->
+
+                            <a href="{% url 'post_upvote' thread.id post.id %}"
+                               class="btn btn-outline-secondary  p-1">+</a>
+                        {% endif %}
+
+
                         upvotes: {{ post.upvotes }}
 
                     </div>
-                </div>
 
+                </div>
 
             {% endfor %}
         </div>
