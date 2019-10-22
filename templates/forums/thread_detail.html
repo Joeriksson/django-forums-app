@@ -11,9 +11,9 @@
         <div class="pb-3">
             {% if subscribed %}
                 <a href="{% url 'thread_notification' thread.id %}"
-                   class="btn btn-outline-secondary active">Subscribe</a>
+                   class="btn btn-outline-secondary active">Subscribed</a>
             {% else %}
-                <a href="{% url 'thread_notification' thread.id %}" class="btn btn-outline-secondary ">Subscribed</a>
+                <a href="{% url 'thread_notification' thread.id %}" class="btn btn-outline-secondary ">Subscribe</a>
             {% endif %}
 
         </div>

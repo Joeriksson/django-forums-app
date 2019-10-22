@@ -50,7 +50,7 @@ class UpVote(models.Model):
     added = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Upvote: {self.post} - (submitted by {self.user})'
+        return f'Upvote: {self.post} - (upvoted by {self.user})'
 
     class Meta:
         ordering = ['added']
@@ -63,7 +63,7 @@ class Notification(models.Model):
     added = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Notification: {self.thread} - (submitted by {self.user})'
+        return f'Notification: {self.thread} - (subscribed by {self.user})'
 
     class Meta:
         ordering = ['added']

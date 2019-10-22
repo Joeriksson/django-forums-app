@@ -1,9 +1,9 @@
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from .models import Forum, Thread, Post, UpVote, Notification
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.db.models.signals import post_save
 
 
@@ -160,12 +160,24 @@ class ThreadNotification(LoginRequiredMixin, View):
 def send_notification(sender, created, **kwargs):
     if created:
         obj = kwargs['instance']
-        send_mail(subject='New post added', message='A new post was added to thread x', from_email='info@email.com', recipient_list=['user@email.com'] )
-        # check_it = obj.whom.get_profile().notifications
-        # if check_it == True:
-        #     #rest code for sending emails works
-        # else:
-        #     pass
+
+        # Check which users has subscribed to the thread which was posted to
+        notification_users = Notification.objects.filter(thread=obj.thread)
+
+        # Compose message to subscribers
+        subject, from_email = f'New post added by {obj.user.username}', 'info@email.com'
+
+        bcc = []
+
+        for notification_user in notification_users:
+            bcc.append(notification_user.user.email)
+
+        text_content = f'A new post was added to thread "{obj.thread.title}" \n'
+        # text_content += f'{[email for email in bcc]}'
+
+        msg = EmailMultiAlternatives(subject=subject, body=text_content, from_email=from_email, bcc=bcc)
+
+        msg.send()
 
 
 post_save.connect(send_notification, sender=Post)
