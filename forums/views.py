@@ -1,6 +1,6 @@
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
-from .models import Forum, Thread, Post, UpVote
+from .models import Forum, Thread, Post, UpVote, Notification
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.core.mail import send_mail
@@ -55,6 +55,7 @@ class ThreadDetail(DetailView):
         context = super(ThreadDetail, self).get_context_data(**kwargs)
         # Check if current user upvoted
         context['voted'] = UpVote.objects.filter(user=self.request.user)
+        context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
         return context
 
 
@@ -139,6 +140,21 @@ class PostUpvote(LoginRequiredMixin, View):
         upvote = UpVote.objects.create(post=post, user=self.request.user)
         upvote.save()
         return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']}))
+
+
+class ThreadNotification(LoginRequiredMixin, View):
+    model = Thread
+
+    def get(self, request, **kwargs):
+        thread = Thread.objects.get(id=self.kwargs['pk'])
+        existing_notification = Notification.objects.filter(thread=thread, user=self.request.user)
+        if not existing_notification:
+            notification = Notification.objects.create(thread=thread, user=self.request.user)
+            notification.save()
+        else:
+            existing_notification.delete()
+
+        return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']}))
 
 
 def send_notification(sender, created, **kwargs):

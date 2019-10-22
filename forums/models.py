@@ -55,3 +55,15 @@ class UpVote(models.Model):
     class Meta:
         ordering = ['added']
 
+
+class Notification(models.Model):
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+
+    added = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Notification: {self.thread} - (submitted by {self.user})'
+
+    class Meta:
+        ordering = ['added']

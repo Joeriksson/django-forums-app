@@ -7,6 +7,17 @@
             <a href="{% url 'forum_detail' thread.forum.id %}" class="btn btn-outline-secondary">Back to forum</a>
             <a href="{% url 'post_add' thread.id %}" class="btn btn-outline-secondary float-right">Reply</a>
         </div>
+
+        <div class="pb-3">
+            {% if subscribed %}
+                <a href="{% url 'thread_notification' thread.id %}"
+                   class="btn btn-outline-secondary active">Subscribe</a>
+            {% else %}
+                <a href="{% url 'thread_notification' thread.id %}" class="btn btn-outline-secondary ">Subscribed</a>
+            {% endif %}
+
+        </div>
+
         <div class="bg-info text-white rounded p-3 border border-dark">
             <h5>{{ thread.title }}</h5>
         </div>
@@ -15,6 +26,7 @@
             <div class="card-header"><strong></strong>
                 <p class="card-text font-weight-lighter">
                     <i>On {{ thread.added }} - {{ thread.user }} wrote:</i>
+
                 </p>
 
             </div>
@@ -42,28 +54,10 @@
                     </div>
 
                     <div class="ml-auto p-2">
-                        <!-- Don't show upvote button for the users own posts -->
-
-                        {% for upvote in post.upvote_set.all %}
-                            {% if upvote.user == user %}
-                                {{ user }}
-                            {% endif %}
-
-                        {% endfor %}
+                        <!-- TBD Don't show upvote button for the users own posts -->
 
                         {% if post.user != user %}
 
-                            <!-- This is probably the wrong way to see if a user already has upvoted -->
-                            {% for vote in voted %}
-                                {% if post.id == vote.post_id %}
-                                    {% if user.id != vote.user_id %}
-
-                                    {% else %}
-                                    {% endif %}
-                                {% endif %}
-
-                            {% endfor %}
-                            <!-- **************************************** -->
 
                             <a href="{% url 'post_upvote' thread.id post.id %}"
                                class="btn btn-outline-secondary  p-1">+</a>

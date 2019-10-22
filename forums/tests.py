@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, Client
 from .models import Forum, Thread, Post
 from django.urls import reverse, resolve
 
@@ -128,6 +128,7 @@ class ThreadDetailPageTests(TestCase):
         )
 
         url = reverse('thread_detail', args=(self.thread.id,))
+        self.client.login(username='forumuser@email.com', password='testpass123')
 
         self.response = self.client.get(url)
 
