@@ -1,13 +1,18 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from .models import Forum, Thread, Post, UpVote, Notification
+from .forms import SearchForm
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.contrib.postgres.search import (
+    SearchVector, SearchQuery, SearchRank
+)
 
 
-class ForumsList(ListView):
+class ForumsList(ListView, FormView):
     model = Forum
     context_object_name = 'forum_list'
+    form_class = SearchForm
 
 
 class ForumDetail(DetailView):
@@ -153,3 +158,16 @@ class ThreadNotification(LoginRequiredMixin, View):
             existing_notification.delete()
 
         return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']}))
+
+
+class SearchResultsView(ListView):
+    model = Post
+    template_name_suffix = '_search_results_form'
+
+    ## SearchRank ##
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        object_list = Post.objects.annotate(
+            search=SearchVector('text'),
+        ).filter(search=SearchQuery(query))
+        return object_list

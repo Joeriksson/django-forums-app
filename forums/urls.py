@@ -10,7 +10,8 @@ from .views import ForumsList, \
     ThreadNotification, \
     PostCreate, \
     PostDelete, \
-    PostUpvote
+    PostUpvote, \
+    SearchResultsView
 
 
 urlpatterns = [
@@ -25,4 +26,5 @@ urlpatterns = [
     path('thread/<int:pk>/post', PostCreate.as_view(), name='post_add'),
     path('thread/<int:tpk>/post/<int:pk>/delete', PostDelete.as_view(), name='post_delete'),
     path('thread/<int:tpk>/post/<int:pk>/upvote', PostUpvote.as_view(), name='post_upvote'),
+    path('search/', SearchResultsView.as_view(), name='search_results'),
 ]

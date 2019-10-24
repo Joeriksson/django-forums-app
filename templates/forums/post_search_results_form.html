@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+{% extends '_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Search results{% endblock title %}
+
+{% block content %}
+    <h1>Search Results</h1>
+    <ul>
+        {% for post in object_list %}
+            <li>
+                <div>
+                    Found in thread: {{ post.thread.title }}
+                </div>
+                <div>
+                    <a href="{% url 'thread_detail' post.thread.id %}">"{{ post.text }}" by {{ post.user }}</a>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock content %}

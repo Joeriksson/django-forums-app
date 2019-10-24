@@ -3,12 +3,21 @@
 {% block content %}
 
     <div class="p-3">
-        <div class="pb-3">
-            {% if perms.forums.can_add_forum %}
-                <a href="{% url 'forum_add' %}" class="btn btn-outline-secondary">New forum</a>
-            {% endif %}
+        <div class="pb-3 d-flex justify-content-between">
+            <div>
+                {% if perms.forums.can_add_forum %}
+                    <a href="{% url 'forum_add' %}" class="btn btn-outline-secondary">New forum</a>
+                {% endif %}
+            </div>
+            <div class="font-weight-light">
 
+                <form action={% url 'search_results' %} method='get'>
+                    {{ form }}
+                </form>
+            </div>
         </div>
+
+
         <div>
             {% for forum in forum_list %}
                 <a href="{% url 'forum_detail' forum.id %}"
@@ -19,8 +28,8 @@
                     <div class="p-3 pb-3">
                         <i>{{ forum.description }}</i>
                     </div>
-                <p class="p-3 font-weight-lighter"><small>number of
-                            threads: {{ forum.thread_set.all.count }}</small></p>
+                    <p class="p-3 font-weight-lighter"><small>number of
+                        threads: {{ forum.thread_set.all.count }}</small></p>
 
                 </a>
 
