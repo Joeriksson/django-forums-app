@@ -3,8 +3,6 @@ from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from .models import Forum, Thread, Post, UpVote, Notification
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
-from django.core.mail import EmailMultiAlternatives
-from django.db.models.signals import post_save
 
 
 class ForumsList(ListView):
@@ -155,29 +153,3 @@ class ThreadNotification(LoginRequiredMixin, View):
             existing_notification.delete()
 
         return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']}))
-
-
-def send_notification(sender, created, **kwargs):
-    if created:
-        obj = kwargs['instance']
-
-        # Check which users has subscribed to the thread which was posted to
-        notification_users = Notification.objects.filter(thread=obj.thread)
-
-        # Compose message to subscribers
-        subject, from_email = f'New post added by {obj.user.username}', 'info@email.com'
-
-        bcc = []
-
-        for notification_user in notification_users:
-            bcc.append(notification_user.user.email)
-
-        text_content = f'A new post was added to thread "{obj.thread.title}" \n'
-        # text_content += f'{[email for email in bcc]}'
-
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, from_email=from_email, bcc=bcc)
-
-        msg.send()
-
-
-post_save.connect(send_notification, sender=Post)
