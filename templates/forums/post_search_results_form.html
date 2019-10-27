@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% extends '_base.html' %}
+{% load class_name %}
 {% load crispy_forms_tags %}
 
 {% block title %}Search results{% endblock title %}
@@ -7,15 +8,35 @@
 {% block content %}
     <h1>Search Results</h1>
     <ul>
-        {% for post in object_list %}
-            <li>
-                <div>
-                    Found in thread: {{ post.thread.title }}
-                </div>
-                <div>
-                    <a href="{% url 'thread_detail' post.thread.id %}">"{{ post.text }}" by {{ post.user }}</a>
-                </div>
-            </li>
+        {% for object in object_list %}
+            {% with object|class_name as objclass %}
+                {% if objclass == 'Post' %}
+                    <li class="pb-2">
+                        <div>
+                            <strong>Post in thread:</strong> {{ object.thread.title }}
+                        </div>
+                        <div>
+
+                            <a href="{% url 'thread_detail' object.thread.id %}">"{{ object.text|truncatechars:100 }}"</a>
+                            <small>by {{ object.user }} on {{ object.added }}</small>
+
+                        </div>
+                    </li>
+                {% endif %}
+                {% if objclass == 'Thread' %}
+                    <li class="pb-2">
+                        <div>
+                            <strong>Thread: {{ object.title }}</strong> in <i>{{ object.forum.title }}</i>
+                        </div>
+                        <div>
+
+                            <a href="{% url 'thread_detail' object.id %}">"{{ object.text|truncatechars:100 }}"</a>
+                                <small>by {{ object.user }} on {{ object.added }}</small>
+
+                        </div>
+                    </li>
+                {% endif %}
+            {% endwith %}
         {% endfor %}
     </ul>
 {% endblock content %}

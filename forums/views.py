@@ -1,12 +1,12 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
-from django.shortcuts import get_object_or_404, HttpResponseRedirect
-from .models import Forum, Thread, Post, UpVote, Notification
-from .forms import SearchForm
-from django.urls import reverse_lazy
+from itertools import chain
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
-from django.contrib.postgres.search import (
-    SearchVector, SearchQuery, SearchRank
-)
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, HttpResponseRedirect
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
+
+from .forms import SearchForm
+from .models import Forum, Thread, Post, UpVote, Notification
 
 
 class ForumsList(ListView, FormView):
@@ -162,12 +162,22 @@ class ThreadNotification(LoginRequiredMixin, View):
 
 class SearchResultsView(ListView):
     model = Post
-    template_name_suffix = '_search_results_form'
+    #template_name_suffix = '_search_results_form'
+    template_name = 'forums/post_search_results_form.html'
 
-    ## SearchRank ##
-    def get_queryset(self):
+    def get_queryset(self):  # new
         query = self.request.GET.get('q')
-        object_list = Post.objects.annotate(
-            search=SearchVector('text'),
-        ).filter(search=SearchQuery(query))
+
+        post = Post.objects.filter(Q(text__icontains=query))
+        thread = Thread.objects.filter(Q(title__icontains=query) | Q(text__icontains=query))
+
+        object_list = chain(post, thread)
         return object_list
+
+    # ## SearchRank ##
+    # def get_queryset(self):
+    #     query = self.request.GET.get('q')
+    #     object_list = Post.objects.annotate(
+    #         search=SearchVector('text'),
+    #     ).filter(search=SearchQuery(query))
+    #     return object_list
