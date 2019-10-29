@@ -20,7 +20,9 @@ def send_notification(sender, created, **kwargs):
         bcc = []
 
         for notification_user in notification_users:
-            bcc.append(notification_user.user.email)
+            # add users to bcc unless it is the user who created the post
+            if not notification_user == obj.user:
+                bcc.append(notification_user.user.email)
 
         text_content = f'A new post was added to thread "{obj.thread.title}" \n'
 

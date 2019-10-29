@@ -20,19 +20,17 @@
         </button>
 
 
-        <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="collapse navbar-collapse " id="navbarCollapse">
             <ul class="navbar-nav">
                 <li><a class="navbar-text nav-link" href="{% url 'forum_list' %}">Forums</a></li>
             </ul>
-
             <ul class="navbar-nav ml-auto">
-                <div class="font-weight-light p-1">
-
-                    <form action={% url 'search_results' %} method='get' class="form-inline ml-auto">
-                        {{ form }}
-                    </form>
-                </div>
+                x
+                <form action={% url 'search_results' %} method='get' class="form-inline ml-auto font-weight-lighter">
+                    {{ form }}
+                </form>
             </ul>
+
             {% if user.is_authenticated %}
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
