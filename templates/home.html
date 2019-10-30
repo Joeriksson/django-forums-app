@@ -6,7 +6,7 @@
     <div class="p-3">
         <h1>Homepage</h1>
         {% if user.is_authenticated %}
-            Hi {{ user.email }}!
+            Hi {{ user.username }}!
             <p><a href="{% url 'account_logout' %}">Logout</a></p>
         {% else %}
             <p>You are not logged in</p>
