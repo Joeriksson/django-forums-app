@@ -15,9 +15,10 @@ class ForumsList(ListView, FormView):
     form_class = SearchForm
 
 
-class ForumDetail(DetailView):
+class ForumDetail(DetailView, FormView):
     model = Forum
     context_object_name = 'forum'
+    form_class = SearchForm
 
 
 class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -49,9 +50,10 @@ class ForumUpdate(LoginRequiredMixin, UpdateView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class ThreadDetail(DetailView):
+class ThreadDetail(DetailView, FormView):
     model = Thread
     context_object_name = 'thread'
+    form_class = SearchForm
 
     def get_context_data(self, **kwargs):
         # Call the base implementation
@@ -160,10 +162,10 @@ class ThreadNotification(LoginRequiredMixin, View):
         return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']}))
 
 
-class SearchResultsView(ListView):
+class SearchResultsView(ListView, FormView):
     model = Post
-    #template_name_suffix = '_search_results_form'
     template_name = 'forums/post_search_results_form.html'
+    form_class = SearchForm
 
     def get_queryset(self):  # new
         query = self.request.GET.get('q')
