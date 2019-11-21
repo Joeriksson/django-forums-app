@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, Client
 from .models import Forum, Thread, Post
 from django.urls import reverse, resolve
 
@@ -45,6 +45,12 @@ class ForumTests(TestCase):
 class ForumListPageTests(TestCase):
 
     def setUp(self):
+
+        self.forum = Forum.objects.create(
+            title="General Forum",
+            description="A forum for general topics"
+        )
+
         url = reverse('forum_list')
         self.response = self.client.get(url)
 
@@ -54,14 +60,31 @@ class ForumListPageTests(TestCase):
         self.assertContains(self.response, 'Forums')
         self.assertNotContains(self.response, 'This should not be here')
 
+    def test_forum_create(self):
+        self.assertEqual(Forum.objects.all().count(), 1)
+        self.assertEqual(Forum.objects.all()[0].title, "General Forum")
+        self.assertEqual(Forum.objects.all()[0].description, "A forum for general topics")
+
 
 class ForumDetailPageTests(TestCase):
 
     def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='forumuser',
+            email='forumuser@email.com',
+            password='testpass123',
+        )
 
         self.forum = Forum.objects.create(
             title='Testforum',
             description='A test forum'
+        )
+
+        self.thread = Thread.objects.create(
+            forum_id=self.forum.id,
+            title="A new forum thread",
+            text="This is text in the new thread",
+            user=self.user
         )
 
         url = reverse('forum_detail', args=(self.forum.id,))
@@ -73,6 +96,11 @@ class ForumDetailPageTests(TestCase):
         self.assertTemplateUsed(self.response, 'forums/forum_detail.html')
         self.assertContains(self.response, 'Testforum')
         self.assertNotContains(self.response, 'This should not be here')
+
+    def test_thread_create(self):
+        self.assertEqual(Thread.objects.all().count(), 1)
+        self.assertEqual(Thread.objects.all()[0].title, "A new forum thread")
+        self.assertEqual(Thread.objects.all()[0].text, "This is text in the new thread")
 
 
 class ThreadDetailPageTests(TestCase):
@@ -93,8 +121,14 @@ class ThreadDetailPageTests(TestCase):
             forum_id=self.forum.id,
             user=self.user
         )
+        self.post = Post.objects.create(
+            thread_id=self.thread.id,
+            text="A reply to a thread",
+            user=self.user
+        )
 
         url = reverse('thread_detail', args=(self.thread.id,))
+        self.client.login(username='forumuser@email.com', password='testpass123')
 
         self.response = self.client.get(url)
 
@@ -103,3 +137,8 @@ class ThreadDetailPageTests(TestCase):
         self.assertTemplateUsed(self.response, 'forums/thread_detail.html')
         self.assertContains(self.response, 'Testtitle')
         self.assertNotContains(self.response, 'This should not be here')
+
+    def test_post_create(self):
+        self.assertEqual(Post.objects.all().count(), 1)
+        self.assertEqual(Post.objects.all()[0].text, "A reply to a thread")
+        self.assertEqual(Post.objects.all()[0].user, self.user)

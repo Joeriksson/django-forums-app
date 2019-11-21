@@ -1,18 +1,24 @@
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.shortcuts import get_object_or_404
-from .models import Forum, Thread, Post
-from django.urls import reverse_lazy
+from itertools import chain
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, HttpResponseRedirect
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
+
+from .forms import SearchForm
+from .models import Forum, Thread, Post, UpVote, Notification
 
 
-class ForumsList(ListView):
+class ForumsList(ListView, FormView):
     model = Forum
     context_object_name = 'forum_list'
+    form_class = SearchForm
 
 
-class ForumDetail(DetailView):
+class ForumDetail(DetailView, FormView):
     model = Forum
     context_object_name = 'forum'
+    form_class = SearchForm
 
 
 class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -44,9 +50,18 @@ class ForumUpdate(LoginRequiredMixin, UpdateView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class ThreadDetail(DetailView):
+class ThreadDetail(DetailView, FormView):
     model = Thread
     context_object_name = 'thread'
+    form_class = SearchForm
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation
+        context = super(ThreadDetail, self).get_context_data(**kwargs)
+        # Check if current user upvoted
+        context['voted'] = UpVote.objects.filter(user=self.request.user)
+        context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
+        return context
 
 
 class ThreadCreate(LoginRequiredMixin, CreateView):
@@ -118,3 +133,53 @@ class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']})
+
+
+class PostUpvote(LoginRequiredMixin, View):
+    model = Post
+
+    def get(self, request, **kwargs):
+        post = Post.objects.get(id=self.kwargs['pk'])
+        post.upvotes += 1
+        post.save()
+        upvote = UpVote.objects.create(post=post, user=self.request.user)
+        upvote.save()
+        return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']}))
+
+
+class ThreadNotification(LoginRequiredMixin, View):
+    model = Thread
+
+    def get(self, request, **kwargs):
+        thread = Thread.objects.get(id=self.kwargs['pk'])
+        existing_notification = Notification.objects.filter(thread=thread, user=self.request.user)
+        if not existing_notification:
+            notification = Notification.objects.create(thread=thread, user=self.request.user)
+            notification.save()
+        else:
+            existing_notification.delete()
+
+        return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']}))
+
+
+class SearchResultsView(ListView, FormView):
+    model = Post
+    template_name = 'forums/post_search_results_form.html'
+    form_class = SearchForm
+
+    def get_queryset(self):  # new
+        query = self.request.GET.get('q')
+
+        post = Post.objects.filter(Q(text__icontains=query))
+        thread = Thread.objects.filter(Q(title__icontains=query) | Q(text__icontains=query))
+
+        object_list = chain(post, thread)
+        return object_list
+
+    # ## SearchRank ##
+    # def get_queryset(self):
+    #     query = self.request.GET.get('q')
+    #     object_list = Post.objects.annotate(
+    #         search=SearchVector('text'),
+    #     ).filter(search=SearchQuery(query))
+    #     return object_list

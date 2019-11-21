@@ -14,11 +14,12 @@ urlpatterns = [
                   path('user_profile/<int:pk>', views.UserUpdate.as_view(), name='user_edit'),
                   # local apps
                   path('', include('pages.urls')),
-                  path('forums/',  include('forums.urls')),
+                  path('forums/', include('forums.urls')),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+                      path('__debug__/', include(debug_toolbar.urls)),
+                  ] + urlpatterns

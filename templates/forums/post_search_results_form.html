@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% extends '_base.html' %}
+{% load class_name %}
+{% load crispy_forms_tags %}
+
+{% block title %}Search results{% endblock title %}
+
+{% block content %}
+    <div class=" flex-grow-1 p-2">
+
+        <form action={% url 'search_results' %} method='get' class="form-inline d-flex flex-fill">
+            {{ form }}
+        </form>
+    </div>
+
+    <h1>Search Results</h1>
+    <ul>
+
+        {% for object in object_list %}
+            {% with object|class_name as objclass %}
+                {% if objclass == 'Post' %}
+                    <li class="pb-2">
+                        <div>
+                            <strong>Post in thread:</strong> {{ object.thread.title }}
+                        </div>
+                        <div>
+
+                            <a href="{% url 'thread_detail' object.thread.id %}">"{{ object.text|truncatechars:100 }}"</a>
+                            <small>by {{ object.user }} on {{ object.added }}</small>
+
+                        </div>
+                    </li>
+                {% endif %}
+                {% if objclass == 'Thread' %}
+                    <li class="pb-2">
+                        <div>
+                            <strong>Thread: {{ object.title }}</strong> in <i>{{ object.forum.title }}</i>
+                        </div>
+                        <div>
+
+                            <a href="{% url 'thread_detail' object.id %}">"{{ object.text|truncatechars:100 }}"</a>
+                            <small>by {{ object.user }} on {{ object.added }}</small>
+
+                        </div>
+                    </li>
+                {% endif %}
+            {% endwith %}
+        {% empty %}
+            Search for <i>"{{ request.GET.q }}"</i> didn't return any results!
+        {% endfor %}
+
+    </ul>
+{% endblock content %}

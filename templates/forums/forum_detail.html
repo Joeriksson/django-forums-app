@@ -1,13 +1,22 @@
 {% extends '_base.html' %}
+{% load crispy_forms_tags %}
 
 {% block content %}
 
     <div class="p-3">
-        <div class="pb-3">
+        <div class="p-3 d-flex justify-content-between">
             <a href="{% url 'forum_list' %}" class="btn btn-outline-secondary">Back to forums</a>
             {% if perms.forums.can_change_forum %}
                 <a href="{% url 'forum_update' forum.id %}" class="btn btn-outline-secondary">Update forum details</a>
             {% endif %}
+
+                <div class="font-weight-light p-1">
+
+                    <form action={% url 'search_results' %} method='get' class="form-inline ml-auto">
+                        {{ form }}
+                    </form>
+                </div>
+
             <a href="{% url 'thread_add' forum.id %}" class="btn btn-outline-secondary float-right">New thread</a>
         </div>
         <div class="bg-info text-white rounded p-3 border border-dark">
