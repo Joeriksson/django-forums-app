@@ -1,4 +1,5 @@
 from itertools import chain
+
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
@@ -57,8 +58,9 @@ class ThreadDetail(DetailView):
         # Call the base implementation
         context = super(ThreadDetail, self).get_context_data(**kwargs)
         # Check if current user upvoted
-        context['voted'] = UpVote.objects.filter(user=self.request.user)
-        context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
+        if self.request.user.is_authenticated:
+            context['voted'] = UpVote.objects.filter(user=self.request.user)
+            context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
         return context
 
 
@@ -162,7 +164,7 @@ class ThreadNotification(LoginRequiredMixin, View):
 
 class SearchResultsView(ListView):
     model = Post
-    #template_name_suffix = '_search_results_form'
+    # template_name_suffix = '_search_results_form'
     template_name = 'forums/post_search_results_form.html'
 
     def get_queryset(self):  # new

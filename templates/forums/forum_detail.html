@@ -8,7 +8,9 @@
             {% if perms.forums.can_change_forum %}
                 <a href="{% url 'forum_update' forum.id %}" class="btn btn-outline-secondary">Update forum details</a>
             {% endif %}
-            <a href="{% url 'thread_add' forum.id %}" class="btn btn-outline-secondary float-right">New thread</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'thread_add' forum.id %}" class="btn btn-outline-secondary float-right">New thread</a>
+            {% endif %}
         </div>
         <div class="bg-info text-white rounded p-3 border border-dark">
             <h3>{{ forum.title }}</h3>
