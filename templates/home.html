@@ -3,24 +3,32 @@
 {% block title %}Home{% endblock title %}
 
 {% block content %}
-    <div class="p-3">
-        <h1>Homepage</h1>
-        {% if user.is_authenticated %}
-            Hi {{ user.email }}!
-            <p><a href="{% url 'account_logout' %}">Logout</a></p>
-        {% else %}
-            <p>You are not logged in</p>
-            <p><a href="{% url 'account_login' %}">Login</a>
-             or
-            <a href="{% url 'account_signup' %}">Sign
-                        up</a>
-            </p>
+    <div class="jumbotron my-3">
+        <div class="container">
+            <h1 class="display-4">Homepage</h1>
+            {#            {% if user.is_authenticated %}#}
+            {#                Hi {{ user.username }}!#}
+            {#                <p><a href="{% url 'account_logout' %}">Logout</a></p>#}
+            {#            {% else %}#}
+            {#                <p>You are not logged in</p>#}
+            {#                <p><a href="{% url 'account_login' %}">Login</a>#}
+            {#                    or#}
+            {#                    <a href="{% url 'account_signup' %}">Sign#}
+            {#                        up</a>#}
+            {#                </p>#}
+            {##}
+            {#            {% endif %}#}
 
-        {% endif %}
-
-<hr>
-        <p><h3>Welcome to Wildvasa Forums!</h3></p>
-        <p>This is a web app built on Django. I built it in my journey to learn python and web development.</p>
-    <p>To get to the forums, click on the "Forums" link in the header. If you want to try out the functionality, sign up for a login account in the top right corner of this site.</p>
+            <hr class="my-4">
+            <p>
+            <h3>Welcome to Wildvasa Forums!</h3></p>
+            <p class="lead">This is a web app built on Django. I built it in my journey to learn python and web
+                development.</p>
+            <p></p>
+            <a class="btn btn-info btn-lg" href="/forums" role="button">Go to Forums</a>
+        </div>
     </div>
+
+
+
 {% endblock content %}

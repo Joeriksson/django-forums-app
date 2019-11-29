@@ -1,5 +1,6 @@
 {% extends '_base.html' %}
 {% load crispy_forms_tags %}
+{% load socialaccount %}
 
 {% block title %}Sign Up{% endblock title %}
 
@@ -9,5 +10,10 @@
         {% csrf_token %}
         {{ form|crispy }}
         <button class="btn btn-success" type="submit">Sign up</button>
+        <div class="p-3 nav justify-content-center">
+            <a class="btn btn-social btn-github" href="{% provider_login_url 'github' %}">
+                <span class="fab fa-github pt-1"></span>Sign Up/Login with
+                GitHub</a>
+        </div>
     </form>
 {% endblock content %}

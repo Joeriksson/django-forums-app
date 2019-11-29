@@ -1,28 +1,24 @@
 {% extends '_base.html' %}
-{% load crispy_forms_tags %}
 
 {% block content %}
 
-    <div class="pb-3">
-        <div class="pb-3 d-flex justify-content-between">
+    <div class="p-3">
+        <div class="pb-3">
             <a href="{% url 'forum_detail' thread.forum.id %}" class="btn btn-outline-secondary">Back to forum</a>
-             <div class="font-weight-light p-1 ">
-
-                    <form action={% url 'search_results' %} method='get' class="form-inline ">
-                        {{ form }}
-                    </form>
-                </div>
-            <a href="{% url 'post_add' thread.id %}" class="btn btn-outline-secondary float-right">Reply</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'post_add' thread.id %}" class="btn btn-outline-secondary float-right">Reply</a>
+            {% endif %}
         </div>
 
         <div class="pb-3">
-            {% if subscribed %}
-                <a href="{% url 'thread_notification' thread.id %}"
-                   class="btn btn-outline-secondary active">Subscribed</a>
-            {% else %}
-                <a href="{% url 'thread_notification' thread.id %}" class="btn btn-outline-secondary ">Subscribe</a>
+            {% if user.is_authenticated %}
+                {% if subscribed %}
+                    <a href="{% url 'thread_notification' thread.id %}"
+                       class="btn btn-outline-secondary active">Subscribed</a>
+                {% else %}
+                    <a href="{% url 'thread_notification' thread.id %}" class="btn btn-outline-secondary ">Subscribe</a>
+                {% endif %}
             {% endif %}
-
         </div>
 
         <div class="bg-info text-white rounded p-3 border border-dark">
@@ -49,9 +45,11 @@
                 <div class="card bg-light ml-5 mb-3">
                     <div class="card-header">On {{ post.added }} - {{ post.user }} wrote:
                         <!-- Show delete button if user is thread starter -->
-                        {% if post.user == user %}
-                            <a href="{% url 'post_delete' thread.id post.id %}"
-                               class="btn btn-outline-secondary float-right">Delete post</a>
+                        {% if user.is_authenticated %}
+                            {% if post.user == user %}
+                                <a href="{% url 'post_delete' thread.id post.id %}"
+                                   class="btn btn-outline-secondary float-right">Delete post</a>
+                            {% endif %}
                         {% endif %}
                     </div>
 
@@ -62,15 +60,13 @@
 
                     <div class="ml-auto p-2">
                         <!-- TBD Don't show upvote button for the users own posts -->
+                        {% if user.is_authenticated %}
+                            {% if post.user != user %}
+                                <a href="{% url 'post_upvote' thread.id post.id %}"
+                                   class="btn btn-outline-secondary  p-1">+</a>
+                            {% endif %}
 
-                        {% if post.user != user %}
-
-
-                            <a href="{% url 'post_upvote' thread.id post.id %}"
-                               class="btn btn-outline-secondary  p-1">+</a>
                         {% endif %}
-
-
                         upvotes: {{ post.upvotes }}
 
                     </div>

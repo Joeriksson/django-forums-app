@@ -34,6 +34,7 @@ SENDGRID_USERNAME=<your sendgrid username>
 SECRET_KEY=<your secret key>
 DEBUG=True
 ```
+> *Note: you don't need a Sendgrid account when using the development settings. It sends mail to the console by default*
 
 3. In the directory where you cloned the repository, run the following command:
 

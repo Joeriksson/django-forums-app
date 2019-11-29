@@ -1,4 +1,5 @@
 from itertools import chain
+
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
@@ -15,10 +16,9 @@ class ForumsList(ListView, FormView):
     form_class = SearchForm
 
 
-class ForumDetail(DetailView, FormView):
+class ForumDetail(DetailView):
     model = Forum
     context_object_name = 'forum'
-    form_class = SearchForm
 
 
 class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -50,17 +50,17 @@ class ForumUpdate(LoginRequiredMixin, UpdateView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class ThreadDetail(DetailView, FormView):
+class ThreadDetail(DetailView):
     model = Thread
     context_object_name = 'thread'
-    form_class = SearchForm
 
     def get_context_data(self, **kwargs):
         # Call the base implementation
         context = super(ThreadDetail, self).get_context_data(**kwargs)
         # Check if current user upvoted
-        context['voted'] = UpVote.objects.filter(user=self.request.user)
-        context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
+        if self.request.user.is_authenticated:
+            context['voted'] = UpVote.objects.filter(user=self.request.user)
+            context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
         return context
 
 
@@ -162,10 +162,10 @@ class ThreadNotification(LoginRequiredMixin, View):
         return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']}))
 
 
-class SearchResultsView(ListView, FormView):
+class SearchResultsView(ListView):
     model = Post
+    # template_name_suffix = '_search_results_form'
     template_name = 'forums/post_search_results_form.html'
-    form_class = SearchForm
 
     def get_queryset(self):  # new
         query = self.request.GET.get('q')

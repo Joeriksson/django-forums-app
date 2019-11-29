@@ -1,5 +1,6 @@
 {% extends '_base.html' %}
 {% load crispy_forms_tags %}
+{% load socialaccount %}
 
 {% block title %}Log In{% endblock title %}
 
@@ -12,5 +13,12 @@
         {% if not socialaccount_providers %}
             <a href="{% url 'account_reset_password' %}" class="btn btn-secondary">Forgot password?</a>
         {% endif %}
+        <div class="p-3 nav justify-content-center">
+            <a class="btn btn-social btn-github" href="{% provider_login_url 'github' %}">
+                <span class="fab fa-github pt-2"></span>
+                Sign Up/Login with
+                GitHub
+            </a>
+        </div>
     </form>
 {% endblock content %}
