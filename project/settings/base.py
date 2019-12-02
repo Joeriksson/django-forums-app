@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     # Third party
+    'rest_framework',
     'crispy_forms',
     'allauth',
     'allauth.account',
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
     'forums.apps.ForumsConfig',
+    'api.apps.ApiConfig',
 ]
 
 
@@ -158,6 +160,12 @@ DEFAULT_FROM_EMAIL = 'noreply@email.com'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ]
+}
 
 # Heroku
 import dj_database_url
