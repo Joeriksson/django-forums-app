@@ -1,9 +1,8 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAdminUser
 
 from forums.models import Forum, Thread, Post
-from .serializers import ForumSerializer, ThreadSerializer, PostSerializer
 from .permissions import IsOwnerOrReadOnly
+from .serializers import ForumSerializer, ThreadSerializer, PostSerializer
 
 
 class ForumList(generics.ListCreateAPIView):
@@ -12,7 +11,6 @@ class ForumList(generics.ListCreateAPIView):
 
 
 class ForumDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsAdminUser,)
     queryset = Forum.objects.all()
     serializer_class = ForumSerializer
 
