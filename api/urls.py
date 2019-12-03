@@ -1,13 +1,15 @@
 from django.urls import path, include
+from rest_framework import routers
 
-from .views import ForumList, ForumDetail, ThreadList, ThreadDetail, PostList, PostDetail
+from .views import ForumViewSet, ThreadViewSet, PostViewSet, UserViewSet
+
+router = routers.DefaultRouter()
+router.register(r'forums', ForumViewSet)
+router.register(r'threads', ThreadViewSet)
+router.register(r'posts', PostViewSet)
+router.register(r'users', UserViewSet)
 
 urlpatterns = [
-    path('', ForumList.as_view(), name='forums'),
-    path('<int:pk>', ForumDetail.as_view(), name='forum_detail'),
-    path('threads/', ThreadList.as_view(), name='threads'),
-    path('threads/<int:pk>', ThreadDetail.as_view(), name='thread_detail'),
-    path('posts/', PostList.as_view(), name='posts'),
-    path('posts/<int:pk>', PostDetail.as_view(), name='post_detail'),
+    path('', include(router.urls)),
     path('api-auth', include('rest_framework.urls')),
 ]

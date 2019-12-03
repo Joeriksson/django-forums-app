@@ -16,10 +16,10 @@ class Forum(models.Model):
 
 class Thread(models.Model):
     title = models.CharField(max_length=300)
-    text = models.TextField(default='<empy>')
+    text = models.TextField(default='<empty>')
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
-    forum = models.ForeignKey(Forum, on_delete=models.CASCADE)
+    forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
 
     def __str__(self):
@@ -34,7 +34,7 @@ class Post(models.Model):
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
-    thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
+    thread = models.ForeignKey(Thread, related_name='posts', on_delete=models.CASCADE)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
 
     def __str__(self):
