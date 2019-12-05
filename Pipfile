@@ -17,6 +17,7 @@ django-admin-honeypot = "*"
 whitenoise = "*"
 gunicorn = "*"
 dj-database-url = "*"
+djangorestframework = "*"
 
 [requires]
 python_version = "3.7"
