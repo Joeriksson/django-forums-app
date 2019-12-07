@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 
 from forums.models import Forum, Thread, Post
 from users.models import CustomUser
@@ -13,13 +13,13 @@ class ForumViewSet(viewsets.ModelViewSet):
 
 
 class ThreadViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly & IsAuthenticatedOrReadOnly, )
     queryset = Thread.objects.all().order_by('-added')
     serializer_class = ThreadSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly & IsAuthenticatedOrReadOnly, )
     queryset = Post.objects.all().order_by('-added')
     serializer_class = PostSerializer
 

@@ -41,7 +41,7 @@
 
 
         <div>
-            {% for post in thread.posts.all %}
+            {% for post in posts %}
                 <div class="card bg-light ml-5 mb-3">
                     <div class="card-header">On {{ post.added }} - {{ post.user }} wrote:
                         <!-- Show delete button if user is thread starter -->

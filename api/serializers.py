@@ -5,6 +5,7 @@ from users.models import CustomUser
 
 
 class PostSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Post
         fields = ('url', 'id', 'text', 'thread', 'upvotes', 'user')
