@@ -62,11 +62,11 @@ class EditProfilePageTests(TestCase):
             email="test2@test.com",
             password='testpass123'
         )
-        url = reverse('user_edit', args=(self.user.id,))
+        url = reverse('user_profile_edit', args=(self.user.id,))
         self.response = self.client.get(url)
 
     def test_userprofile_template(self):
         self.assertEqual(self.response.status_code, 200)
-        self.assertTemplateUsed(self.response, 'users/customuser_form.html')
+        self.assertTemplateUsed(self.response, 'forums/userprofile_form.html')
         self.assertContains(self.response, 'Edit Profile')
         self.assertNotContains(self.response, 'This should not be here')
