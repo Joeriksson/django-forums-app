@@ -1,10 +1,11 @@
-from django.views.generic.edit import UpdateView
 from django.urls import reverse_lazy
+from django.views.generic.edit import UpdateView
 
-from django.contrib.auth import get_user_model
+from forums.forms import UserProfileForm
+from forums.models import UserProfile
 
 
-class UserUpdate(UpdateView):
-    model = get_user_model()
-    fields = ['first_name', 'last_name']
+class UserProfileUpdate(UpdateView):
+    model = UserProfile
     success_url = reverse_lazy('home')
+    form_class = UserProfileForm

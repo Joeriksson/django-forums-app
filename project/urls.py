@@ -11,7 +11,7 @@ urlpatterns = [
                   path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
                   # user management
                   path('accounts/', include('allauth.urls')),
-                  path('user_profile/<int:pk>', views.UserUpdate.as_view(), name='user_edit'),
+                  path('user_profile/<int:pk>', views.UserProfileUpdate.as_view(), name='user_profile_edit'),
                   # local apps
                   path('', include('pages.urls')),
                   path('forums/', include('forums.urls')),
