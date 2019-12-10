@@ -7,18 +7,25 @@ A sample forums app built on the Django framework. I built this app to learn Dja
 Includes:
 
 - forums, threads and posts (reply in threads)
+- subscribe to threads and get email notifications
 - custom user model (email instead of username)
+- optionally login via github account
+- user profile in a separate model from user
 - e-mail verification
 - django debug toolbar (only in development)
 - docker files for spinning up containers (python and postgresql)
 - basic tests for pages, users and forums
 - different settings files for development and production
+- basic Bootstrap styling
+- api via Django REST Framework
 
 ## Production and development settings
  
 The setting file are split up in production and a development settings files. Also the project have one docker-compose.yml for production and one for development. Within the docker-compose files you can find the parameter for which settings file to use on the runserver command. To make it easier and less to type for each command, there is a Makefile with different common operations.
 
 ## Quick start
+
+> Note: I haven't tested setting this up this project as below on Windows or Linux. Only on MacOS.
 
 1. Clone this repository
 
