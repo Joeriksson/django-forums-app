@@ -1,7 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth import get_user_model
+
 from users.models import CustomUser
 from .models import Post, Notification, UserProfile
 
@@ -44,4 +45,3 @@ def save_user_profile(sender, instance, **kwargs):
     if not user_profile:
         UserProfile.objects.create(user=instance)
     instance.profile.save()
-

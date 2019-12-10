@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from forums.models import UserProfile
 
 class CustomUserTests(TestCase):
 
@@ -70,3 +71,29 @@ class EditProfilePageTests(TestCase):
         self.assertTemplateUsed(self.response, 'forums/userprofile_form.html')
         self.assertContains(self.response, 'Edit Profile')
         self.assertNotContains(self.response, 'This should not be here')
+
+    def test_userprofile_update(self):
+        # Update users profile info
+        user_profile = UserProfile.objects.get(user_id=self.user.id)
+        user_profile.first_name = 'Julle'
+        user_profile.last_name = 'Julgran'
+        user_profile.bio = 'The users bio'
+        user_profile.signature = 'Regards julle'
+        user_profile.github_url = 'https://github.com/julle'
+        user_profile.web_site = 'https://mysite.com'
+        user_profile.gender = user_profile.MALE
+        user_profile.save()
+
+        user_profile.refresh_from_db()
+
+        self.assertEqual(user_profile.first_name, 'Julle')
+        self.assertEqual(user_profile.last_name, 'Julgran')
+        self.assertEqual(user_profile.bio, 'The users bio')
+        self.assertEqual(user_profile.signature, 'Regards julle')
+        self.assertEqual(user_profile.github_url, 'https://github.com/julle')
+        self.assertEqual(user_profile.web_site, 'https://mysite.com')
+        self.assertEqual(user_profile.gender, user_profile.MALE)
+
+
+
+
