@@ -1,7 +1,7 @@
 from django.urls import reverse_lazy
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-
+from django.shortcuts import redirect
 from forums.forms import UserProfileForm
 from forums.models import UserProfile
 
@@ -14,3 +14,6 @@ class UserProfileUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         obj = self.get_object()
         return obj.user == self.request.user
+
+    def handle_no_permission(self):
+        return redirect('home')

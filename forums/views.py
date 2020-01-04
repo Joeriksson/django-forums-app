@@ -41,9 +41,10 @@ class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return str(login_url)
 
 
-class ForumUpdate(LoginRequiredMixin, UpdateView):
+class ForumUpdate(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Forum
     fields = '__all__'
+    permission_required = "auth.change_user"
     template_name_suffix = '_update_form'
 
     def get_success_url(self):
