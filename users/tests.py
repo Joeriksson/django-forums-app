@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from forums.models import UserProfile
 
+
 class CustomUserTests(TestCase):
 
     def test_create_user(self):
@@ -63,7 +64,10 @@ class EditProfilePageTests(TestCase):
             email="test2@test.com",
             password='testpass123'
         )
-        url = reverse('user_profile_edit', args=(self.user.id,))
+        url = reverse('user_profile_edit', args=(self.user.profile.id,))
+        print(f'Userid: {self.user.id}')
+        print(f'Userprofileid: {self.user.profile.id}')
+        print(url)
         self.response = self.client.get(url)
 
     def test_userprofile_template(self):

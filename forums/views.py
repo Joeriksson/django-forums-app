@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
 
 from .forms import SearchForm
-from .models import Forum, Thread, Post, UpVote, Notification
+from .models import Forum, Thread, Post, UpVote, Notification, UserProfile
 
 
 class ForumsList(ListView, FormView):
@@ -58,7 +58,7 @@ class ThreadDetail(DetailView):
     def get_context_data(self, **kwargs):
         # Call the base implementation
         context = super(ThreadDetail, self).get_context_data(**kwargs)
-        context['posts'] = Post.objects.all().select_related('thread').select_related('user')
+        context['posts'] = Post.objects.all().select_related('thread').select_related('user').prefetch_related('user__profile')
 
         # Check if current user upvoted
         if self.request.user.is_authenticated:

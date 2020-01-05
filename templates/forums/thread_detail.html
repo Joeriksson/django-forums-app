@@ -28,14 +28,30 @@
         <div class="card bg-light mb-3">
             <div class="card-header"><strong></strong>
                 <p class="card-text font-weight-lighter">
-                    <i>On {{ thread.added }} - {{ thread.user }} wrote:</i>
+                    <i>
+                        {% if thread.user.profile.first_name or thread.user.profile.last_name %}
+                            On {{ thread.added }} - {{ thread.user.profile.first_name }}
+                            {{ thread.user.profile.last_name }} wrote:</i>
+                        {% else %}
+                            On {{ thread.added }} - {{ thread.user }} wrote:</i>
+                        {% endif %}
 
                 </p>
 
             </div>
             <div class="card-body">
 
-                <p class="card-text ">{{ thread.text }}</p>
+                <p class="card-text ">{{ thread.text }}
+                    {% if thread.user.profile.signature %}
+                        <br><br>
+                        {% for line in thread.user.profile.signature.splitlines %}
+                            {{ line }}<br>
+                        {% endfor %}
+                        <a href="{{ thread.user.profile.web_site }}">
+                            {{ thread.user.profile.web_site }}
+                        </a>
+                    {% endif %}
+                </p>
             </div>
         </div>
 
@@ -43,7 +59,13 @@
         <div>
             {% for post in posts %}
                 <div class="card bg-light ml-5 mb-3">
-                    <div class="card-header">On {{ post.added }} - {{ post.user }} wrote:
+                    <div class="card-header">
+                        {% if post.user.profile.first_name or post.user.profile.last_name %}
+                            On {{ post.added }} - {{ post.user.profile.first_name }}
+                            {{ post.user.profile.last_name }} wrote:
+                        {% else %}
+                            On {{ post.added }} - {{ post.user }} wrote:
+                        {% endif %}
                         <!-- Show delete button if user is thread starter -->
                         {% if user.is_authenticated %}
                             {% if post.user == user %}
@@ -55,7 +77,17 @@
 
 
                     <div class="card-body">
-                        <p class="card-text">{{ post.text }}.</p>
+                        <p class="card-text">{{ post.text }}
+                        {% if post.user.profile.signature %}
+                        <br><br>
+                        {% for line in post.user.profile.signature.splitlines %}
+                            {{ line }}<br>
+                        {% endfor %}
+                        <a href="{{ post.user.profile.web_site }}">
+                            {{ post.user.profile.web_site }}
+                        </a>
+                    {% endif %}
+                        </p>
                     </div>
 
                     <div class="ml-auto p-2">

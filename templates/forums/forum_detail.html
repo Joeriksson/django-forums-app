@@ -38,7 +38,13 @@
                     </div>
                     <div class="card-body">
 
-                        <p class="card-text font-weight-lighter"><small>started by: {{ thread.user }}
+                        <p class="card-text font-weight-lighter"><small>started by:
+                            {% if thread.user.profile.first_name or thread.user.profile.last_name %}
+                                {{ thread.user.profile.first_name }}
+                                {{ thread.user.profile.last_name }}
+                            {% else %}
+                                {{ thread.user }}
+                            {% endif %}
                             on {{ thread.added }}</small></p>
                     </div>
                 </div>
