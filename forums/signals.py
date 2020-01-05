@@ -17,7 +17,7 @@ def send_notification(sender, created, **kwargs):
         notification_users = Notification.objects.filter(thread=obj.thread)
 
         # Compose message to subscribers
-        subject, from_email = f'New post added by {obj.user.username}', 'info@email.com'
+        subject, from_email = f'New post added by {obj.user.username}', 'info@wildvasa.com'
 
         bcc = []
 
