@@ -58,7 +58,8 @@ class ThreadDetail(DetailView):
     def get_context_data(self, **kwargs):
         # Call the base implementation
         context = super(ThreadDetail, self).get_context_data(**kwargs)
-        context['posts'] = Post.objects.all().select_related('thread').select_related('user').prefetch_related('user__profile')
+        context['posts'] = Post.objects.filter(thread=self.kwargs['pk']).select_related('thread').select_related('user').prefetch_related(
+            'user__profile')
 
         # Check if current user upvoted
         if self.request.user.is_authenticated:
