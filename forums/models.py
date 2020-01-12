@@ -15,7 +15,7 @@ class Forum(models.Model):
 
 class Thread(models.Model):
     title = models.CharField(max_length=300)
-    text = models.TextField(default='<empty>')
+    text = models.TextField()
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)

@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
 
 from .forms import SearchForm
-from .models import Forum, Thread, Post, UpVote, Notification, UserProfile
+from .models import Forum, Thread, Post, UpVote, Notification
 
 
 class ForumsList(ListView, FormView):
@@ -19,6 +19,11 @@ class ForumsList(ListView, FormView):
 class ForumDetail(DetailView):
     model = Forum
     context_object_name = 'forum'
+
+    # def get_context_data(self, **kwargs):
+    #     # Call the base implementation
+    #     context = super(ForumDetail, self).get_context_data(**kwargs)
+    #     context['threads'] = Thread.objects.filter(forum=self.kwargs['pk'])
 
 
 class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -58,7 +63,8 @@ class ThreadDetail(DetailView):
     def get_context_data(self, **kwargs):
         # Call the base implementation
         context = super(ThreadDetail, self).get_context_data(**kwargs)
-        context['posts'] = Post.objects.filter(thread=self.kwargs['pk']).select_related('thread').select_related('user').prefetch_related(
+        context['posts'] = Post.objects.filter(thread=self.kwargs['pk']).select_related('thread').select_related(
+            'user').prefetch_related(
             'user__profile')
 
         # Check if current user upvoted
