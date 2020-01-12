@@ -20,43 +20,48 @@
             <a class="navbar-brand" href="/">Wildvasa Forums</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
                     aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item active mr-3">
-                    <a class="nav-link" href="{% url 'forum_list' %}">Forums
-                        <span class="sr-only">(current)</span>
-                    </a>
-                </li>
-
-                {% if user.is_authenticated %}
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown"
-                           aria-haspopup="true" aria-expanded="false">
-                            {{ user.email }}
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active mr-3">
+                        <a class="nav-link" href="{% url 'forum_list' %}">Forums
+                            <span class="sr-only">(current)</span>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right " aria-labelledby="userMenu">
-                            <a class="dropdown-item" href="{% url 'account_change_password' %}">Change password</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{% url 'user_profile_edit' request.user.profile.id %}">Edit profile</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a>
-                        </div>
                     </li>
 
-                {% else %}
+                    {% if user.is_authenticated %}
 
-                    <form class="form-inline ml-auto">
-                        <a href="{% url 'account_login' %}" class="btn bg-dark text-light btn-outline-secondary">Log
-                            in</a>
-                        <a href="{% url 'account_signup' %}" class="btn bg-dark text-light btn-outline-secondary ml-2">Sign
-                            up</a>
-                    </form>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown"
+                               aria-haspopup="true" aria-expanded="false">
+                                {{ user.email }}
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right " aria-labelledby="userMenu">
+                                {% if not user.socialaccount_set.first %}
+                                    <a class="dropdown-item" href="{% url 'account_change_password' %}">Change
+                                        password</a>
+                                    <div class="dropdown-divider"></div>
+                                {% endif %}
+                                <a class="dropdown-item" href="{% url 'user_profile_edit' request.user.profile.id %}">Edit
+                                    profile</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a>
+                            </div>
+                        </li>
 
-                {% endif %}
-            </ul>
+                    {% else %}
+
+                        <form class="form-inline ml-auto">
+                            <a href="{% url 'account_login' %}" class="btn bg-dark text-light btn-outline-secondary">Log
+                                in</a>
+                            <a href="{% url 'account_signup' %}"
+                               class="btn bg-dark text-light btn-outline-secondary ml-2">Sign
+                                up</a>
+                        </form>
+
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
