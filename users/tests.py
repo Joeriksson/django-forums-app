@@ -64,11 +64,17 @@ class EditProfilePageTests(TestCase):
             email="test2@test.com",
             password='testpass123'
         )
-        url = reverse('user_profile_edit', args=(self.user.profile.id,))
-        self.client.login(username='julle', password='testpass123')
-        self.response = self.client.get(url)
+        self.url = reverse('user_profile_edit', args=(self.user.profile.id,))
+
+        # self.response = self.client.get(url)
 
     def test_userprofile_template(self):
+        # if user not logged in should redirect to login page
+        self.response = self.client.get(self.url)
+        self.assertEqual(self.response.status_code, 302)
+        # if user logged in should get 200 response and use correct template
+        self.client.login(username='julle', password='testpass123')
+        self.response = self.client.get(self.url)
         self.assertEqual(self.response.status_code, 200)
         self.assertTemplateUsed(self.response, 'forums/userprofile_form.html')
         self.assertContains(self.response, 'Edit Profile')
