@@ -65,6 +65,7 @@ class EditProfilePageTests(TestCase):
             password='testpass123'
         )
         url = reverse('user_profile_edit', args=(self.user.profile.id,))
+        self.client.login(username='julle', password='testpass123')
         self.response = self.client.get(url)
 
     def test_userprofile_template(self):
