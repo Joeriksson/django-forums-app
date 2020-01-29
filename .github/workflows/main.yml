@@ -25,9 +25,7 @@ jobs:
 #        python -m pip install pipenv
 #        pipenv install --system
     - name: Create .env file
-      run: |
-        touch .env
-        echo SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} > .env
+      run: touch .env
     - name: Build Docker Container
       run: make dev_build
     - name: Test with Django
