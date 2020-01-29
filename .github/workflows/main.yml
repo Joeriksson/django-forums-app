@@ -24,4 +24,4 @@ jobs:
         pip install pipenv
         pipenv install --system
     - name: Test with Django
-      run: python manage.py tests
+      run: python manage.py test -v 2
