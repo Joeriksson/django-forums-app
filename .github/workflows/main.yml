@@ -28,10 +28,10 @@ jobs:
         cat .env
     - name: Build Docker Container
       run: make dev_build
-    - name: Check running containers
-      run: docker ps -a
     - name: Check Docker logs
       run: make dev_logs
+    - name: Check running containers
+      run: docker ps -a
     - name: Django migrations
       env:
         SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
