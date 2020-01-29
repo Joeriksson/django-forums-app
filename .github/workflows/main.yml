@@ -30,7 +30,11 @@ jobs:
       run: make dev_build
     - name: Check running containers
       run: docker ps -a
+    - name: Check Docker logs
+      run: make dev_logs
     - name: Django migrations
+      env:
+        SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       run: |
         make dev_web_exec cmd='python manage.py migrate'
         make dev_logs
