@@ -28,9 +28,11 @@ jobs:
       run: touch .env
     - name: Build Docker Container
       run: make dev_build
+    - name: Check running containers
+      run: docker ps -a
     - name: Test with Django
       env:
-        SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        SECRET_KEY: '1234' #${{ secrets.DJANGO_SECRET_KEY }}
       run: make dev_test
     - name: Take down container
       run: make dev_down
