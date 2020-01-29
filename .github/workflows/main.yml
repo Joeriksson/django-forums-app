@@ -31,8 +31,6 @@ jobs:
         touch .env
         echo "SECRET_KEY='123'" > .env
         cat .env
-        echo "SECRET_KEY=" ${{ secrets.DJANGO_SECRET_KEY }} > .env
-        cat .env
 #    - name: Build Docker Container
 #      run: make dev_build
 #    - name: Check running containers
