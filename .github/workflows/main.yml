@@ -29,7 +29,7 @@ jobs:
     - name: Create .env file
       run: |
         touch .env
-        echo "123" > .env
+        echo "SECRET_KEY='123'" > .env
     - name: Build Docker Container
       run: make dev_build
     - name: Check running containers
