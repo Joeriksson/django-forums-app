@@ -21,9 +21,14 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        pip install pipenv
+        python -m pip install --upgrade pip
+        python -m pip install pipenv
         pipenv install --system
+    - name: Build Docker Container
+      run: make dev_build
     - name: Test with Django
       env:
         SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-      run: python manage.py test -v 2
+      run: make dev_test
+    - name: Take down container
+      run: make dev_down
