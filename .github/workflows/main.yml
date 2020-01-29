@@ -10,7 +10,7 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      SECRET_KEY: "123" #${{ secrets.DJANGO_SECRET_KEY }}
     strategy:
       matrix:
         python-version: [3.7, 3.8]
