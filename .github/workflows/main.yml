@@ -27,9 +27,11 @@ jobs:
 #        python -m pip install pipenv
 #        pipenv install --system
     - name: Create .env file
-      run: touch .env
+      run: |
+        touch .env
+        echo "123" > .env
     - name: Build Docker Container
-      run: make dev_build_ci
+      run: make dev_build
     - name: Check running containers
       run: docker ps -a
     - name: Django migrations
