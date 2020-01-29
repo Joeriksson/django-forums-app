@@ -17,3 +17,4 @@ COPY . /code/
 
 # Command for container to not shut down in GitHub Action
 CMD tail -f /dev/null
+

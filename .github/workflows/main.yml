@@ -29,9 +29,11 @@ jobs:
     - name: Create .env file
       run: touch .env
     - name: Build Docker Container
-      run: make dev_build
+      run: make dev_build_ci
     - name: Check running containers
       run: docker ps -a
+    - name: Django migrations
+      run: make dev_web_exec cmd='python manage.py migrate'
     - name: Test with Django
       env:
         SECRET_KEY: '1234' #${{ secrets.DJANGO_SECRET_KEY }}
