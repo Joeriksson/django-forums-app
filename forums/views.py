@@ -177,8 +177,7 @@ class SearchResultsView(ListView):
         post = Post.objects.filter(Q(text__icontains=query))
         thread = Thread.objects.filter(Q(title__icontains=query) | Q(text__icontains=query))
 
-        object_list = chain(post, thread)
-        return object_list
+        return chain(post, thread)
 
     # ## SearchRank ##
     # def get_queryset(self):
