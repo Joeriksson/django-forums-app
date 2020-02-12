@@ -8,7 +8,7 @@ verify_ssl = true
 [packages]
 pytz = "==2019.2"
 sqlparse = "==0.3.0"
-Django = "==2.2.9"
+Django = "==3.0.3"
 django-crispy-forms = "*"
 django-allauth = "*"
 django-debug-toolbar = "*"
