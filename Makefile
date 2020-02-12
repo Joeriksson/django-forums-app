@@ -14,14 +14,6 @@ dev_build:
 			-f docker-compose-dev.yml \
 			up -d --build
 
-dev_build_ci:
-	@docker-compose \
-		-f docker-compose-dev.yml \
-		down && \
-		docker-compose \
-			-f docker-compose-dev.yml \
-			up --build
-
 dev_logs:
 	@docker-compose -f docker-compose-dev.yml logs
 
