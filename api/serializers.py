@@ -8,7 +8,8 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('url', 'id', 'text', 'thread', 'upvotes', 'user')
+        # fields = ('url', 'id', 'text', 'thread', 'upvotes', 'user')
+        fields = ('id', 'text', 'thread', 'upvotes', 'user')
 
 
 class ThreadSerializer(serializers.ModelSerializer):
@@ -16,7 +17,8 @@ class ThreadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Thread
-        fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
+        # fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
+        fields = ('id', 'title', 'text', 'forum', 'user', 'posts')
 
 
 class ForumSerializer(serializers.ModelSerializer):
@@ -24,14 +26,24 @@ class ForumSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Forum
-        fields = ('url', 'id', 'title', 'description', 'threads')
+        # fields = ('url', 'id', 'title', 'description', 'threads')
+        fields = ('id', 'title', 'description', 'threads')
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
+        # fields = (
+        #     'url',
+        #     'id',
+        #     'username',
+        #     'first_name',
+        #     'last_name',
+        #     'email',
+        #     'date_joined',
+        #     'last_login',
+        # )
         fields = (
-            'url',
             'id',
             'username',
             'first_name',

@@ -18,6 +18,9 @@ whitenoise = "*"
 gunicorn = "*"
 dj-database-url = "*"
 djangorestframework = "*"
+pytest = "*"
+pytest-django = "*"
+pytest-cov = "==2.8.1"
 
 [requires]
 python_version = "3.8"
