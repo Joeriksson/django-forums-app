@@ -7,6 +7,7 @@ from .views import ForumsList, \
     ThreadDetail, \
     ThreadCreate, \
     ThreadDelete, \
+    ThreadUpdate, \
     ThreadNotification, \
     PostCreate, \
     PostDelete, \
@@ -18,8 +19,9 @@ urlpatterns = [
     path('', ForumsList.as_view(), name='forum_list'),
     path('add/', ForumCreate.as_view(), name='forum_add'),
     path('<int:pk>/', ForumDetail.as_view(), name='forum_detail'),
-    path('<int:pk>/update', ForumUpdate.as_view(), name='forum_update'),
+    path('<int:pk>/update/', ForumUpdate.as_view(), name='forum_update'),
     path('thread/<int:pk>', ThreadDetail.as_view(), name='thread_detail'),
+    path('thread/<int:pk>/update/', ThreadUpdate.as_view(), name='thread_update'),
     path('thread/<int:pk>/notify', ThreadNotification.as_view(), name='thread_notification'),
     path('<int:pk>/add/', ThreadCreate.as_view(), name='thread_add'),
     path('<int:fpk>/delete/<int:pk>', ThreadDelete.as_view(), name='thread_delete'),

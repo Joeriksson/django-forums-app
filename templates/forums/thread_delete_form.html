@@ -4,7 +4,7 @@
 {% block title %}Delete thread: {{ thread.title }}{% endblock title %}
 
 {% block content %}
-    <h2>Delete Post '{{ thread }}'</h2>
+    <h2>Delete Thread '{{ thread }}'</h2>
     <form method="post" action="">
         {% csrf_token %}
         <p>Are you sure you want to delete this thread?</p>

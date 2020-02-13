@@ -68,7 +68,7 @@
                         {% endif %}
                         <!-- Show delete button if user is thread starter -->
                         {% if user.is_authenticated %}
-                            {% if post.user == user %}
+                            {% if post.user == user or perms.forums.delete_post %}
                                 <a href="{% url 'post_delete' thread.id post.id %}"
                                    class="btn btn-outline-secondary float-right">Delete post</a>
                             {% endif %}

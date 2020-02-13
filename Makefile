@@ -20,6 +20,9 @@ dev_logs:
 dev_down:
 	@docker-compose -f docker-compose-dev.yml down
 
+dev_export_data:
+	@docker-compose -f docker-compose-dev.yml exec web python manage.py dumpdata -a --format json -o forumsdata.json --exclude=auth --exclude=contenttypes  --exclude=sessions --natural-primary --settings=project.settings.development
+
 dev_web_exec:
 	@docker-compose -f docker-compose-dev.yml exec web $(cmd)
 
