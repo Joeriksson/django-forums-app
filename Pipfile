@@ -21,6 +21,8 @@ djangorestframework = "*"
 pytest = "*"
 pytest-django = "*"
 pytest-cov = "==2.8.1"
+django-rest-auth = "*"
+coreapi = "*"
 
 [requires]
 python_version = "3.8"
