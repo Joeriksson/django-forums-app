@@ -43,23 +43,30 @@ class Post(models.Model):
         ordering = ['added']
 
 
+class Gender(models.TextChoices):
+    NOTPROVIDED = 'N', 'NotProvided'
+    MALE = 'M', 'Male'
+    FEMALE = 'F', 'Female'
+    OTHER = 'O', 'Other'
+
+
 class UserProfile(models.Model):
-    NOTPROVIDED = 'N'
-    MALE = 'M'
-    FEMALE = 'F'
-    OTHER = 'O'
-    GENDER_CHOICES = (
-        (NOTPROVIDED, 'NotProvided'),
-        (MALE, 'Male'),
-        (FEMALE, 'Female'),
-        (OTHER, 'Other'),
-    )
+    # NOTPROVIDED = 'N'
+    # MALE = 'M'
+    # FEMALE = 'F'
+    # OTHER = 'O'
+    # GENDER_CHOICES = (
+    #     (NOTPROVIDED, 'NotProvided'),
+    #     (MALE, 'Male'),
+    #     (FEMALE, 'Female'),
+    #     (OTHER, 'Other'),
+    # )
     user = models.OneToOneField(get_user_model(), related_name='profile', on_delete=models.CASCADE, )
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=1000, blank=True)
     location = models.CharField(max_length=50, blank=True)
-    gender = models.TextField(max_length=1, choices=GENDER_CHOICES, default=NOTPROVIDED)
+    gender = models.TextField(max_length=1, choices=Gender.choices, default=Gender.NOTPROVIDED)
     web_site = models.URLField(blank=True)
     github_url = models.URLField(blank=True)
     signature = models.TextField(blank=True)
