@@ -1,6 +1,8 @@
 import pytest
 from django.contrib.auth import get_user_model
-from forums.models import Forum, Thread
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+from forums.models import Forum, Thread, Post
 
 
 @pytest.fixture(scope="function")
@@ -19,6 +21,15 @@ def add_thread():
         return thread
 
     return _add_thread
+
+
+@pytest.fixture(scope="function")
+def add_post():
+    def _add_post(text, thread, user):
+        post = Post.objects.create(text=text, thread=thread, user=user)
+        return post
+
+    return _add_post
 
 
 @pytest.fixture(scope="function")
@@ -46,3 +57,17 @@ def add_super_user():
         return super_user
 
     return _add_super_user
+
+
+@pytest.fixture(scope="function")
+def get_user_client():
+    def _get_user_client(super_user):
+
+        token = Token.objects.create(user=super_user, )
+
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='TOKEN ' + token.key)
+
+        return client
+
+    return _get_user_client
