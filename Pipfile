@@ -23,6 +23,7 @@ pytest-django = "*"
 pytest-cov = "==2.8.1"
 django-rest-auth = "*"
 coreapi = "*"
+django-lifecycle = "*"
 
 [requires]
 python_version = "3.8"

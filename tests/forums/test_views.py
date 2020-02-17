@@ -11,15 +11,33 @@ def test_add_forum(client, add_super_user):
 
     super_user = add_super_user('admin', 'admin@email.com', 'testpass123')
 
-    print(super_user.email)
-    response = client.login(username=super_user.email, password=super_user.password)
-    print(f'Response: {response}')
+    # print(super_user.email)
+    # response = client.login(username=super_user.email, password=super_user.password)
+    # print(f'Response: {response}')
     assert super_user.is_superuser
+
+    resp = client.get(
+        '/api/rest_auth/logout/',
+        content_type="application/json",
+    )
+
+    token = client.post(
+        '/api/rest_auth/login/',
+        {'username': super_user.username, 'email': super_user.email, 'password': super_user.password},
+        content_type="application/json",
+    )
+
+    # breakpoint()
+
+    headers = {
+        'Content-Type': "application/json",
+        'Authorization': f"Token {token.body['key']}",
+    }
 
     resp = client.post(
         "/api/forums/",
         {"title": "General Forum", "description": "This is a General Forum"},
-        content_type="application/json",
+        content_type="application/json", headers=headers
     )
     assert resp.status_code == 201
     assert resp.data["title"] == "General Forum"
