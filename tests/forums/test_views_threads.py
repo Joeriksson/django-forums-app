@@ -44,8 +44,8 @@ def test_add_thread_not_logged_in(add_forum, add_user):
 
     assert resp.status_code == 403
 
-    movies = Thread.objects.all()
-    assert len(movies) == 0
+    threads = Thread.objects.all()
+    assert len(threads) == 0
 
 
 @pytest.mark.django_db

@@ -61,9 +61,9 @@ def add_super_user():
 
 @pytest.fixture(scope="function")
 def get_user_client():
-    def _get_user_client(super_user):
+    def _get_user_client(user):
 
-        token = Token.objects.create(user=super_user, )
+        token = Token.objects.create(user=user, )
 
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='TOKEN ' + token.key)
