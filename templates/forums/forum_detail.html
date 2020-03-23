@@ -5,7 +5,7 @@
     <div class="p-3">
         <div class="pb-3">
             <a href="{% url 'forum_list' %}" class="btn btn-outline-secondary">Back to forums</a>
-            {% if perms.forums.can_change_forum %}
+            {% if perms.forums.change_forum %}
                 <a href="{% url 'forum_update' forum.id %}" class="btn btn-outline-secondary">Update forum details</a>
             {% endif %}
             {% if user.is_authenticated %}
@@ -27,9 +27,13 @@
                     <div class="card-header"><strong>{{ thread.title }}</strong>
 
                         <!-- Show delete button if user is thread starter -->
-                        {% if thread.user == user %}
+                        {% if thread.user == user or perms.forums.delete_forum %}
                             <a href="{% url 'thread_delete' forum.id thread.id %}"
-                               class="btn btn-outline-secondary float-right">Delete thread</a>
+                               class="btn btn-outline-secondary float-right m-2">Delete thread</a>
+                        {% endif %}
+                        {% if thread.user == user or perms.forums.change_forum %}
+                            <a href="{% url 'thread_update' thread.id %}"
+                               class="btn btn-outline-secondary float-right m-2">Update thread</a>
                         {% endif %}
 
                         <p class="card-text font-weight-lighter"><small>number of

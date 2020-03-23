@@ -8,7 +8,7 @@ verify_ssl = true
 [packages]
 pytz = "==2019.2"
 sqlparse = "==0.3.0"
-Django = "==3.0.2"
+Django = "==3.0.3"
 django-crispy-forms = "*"
 django-allauth = "*"
 django-debug-toolbar = "*"
@@ -18,6 +18,12 @@ whitenoise = "*"
 gunicorn = "*"
 dj-database-url = "*"
 djangorestframework = "*"
+pytest = "*"
+pytest-django = "*"
+pytest-cov = "==2.8.1"
+django-rest-auth = "*"
+coreapi = "*"
+django-lifecycle = "*"
 
 [requires]
 python_version = "3.8"

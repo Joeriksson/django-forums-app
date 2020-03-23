@@ -29,7 +29,7 @@ class ForumDetail(DetailView):
 class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Forum
     fields = '__all__'
-    permission_required = "auth.change_user"
+    permission_required = 'forums.add_forum'
     success_url = reverse_lazy('forum_list')
     login_url = 'home'
 
@@ -49,7 +49,7 @@ class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 class ForumUpdate(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Forum
     fields = '__all__'
-    permission_required = "auth.change_user"
+    permission_required = 'forums.change_forum'
     template_name_suffix = '_update_form'
 
     def get_success_url(self):
@@ -72,6 +72,22 @@ class ThreadDetail(DetailView):
             context['voted'] = UpVote.objects.filter(user=self.request.user)
             context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
         return context
+
+
+class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Thread
+    fields = ('title', 'text')
+    # permission_required = 'forums.change_thread'
+    template_name_suffix = '_update_form'
+
+    def test_func(self):
+        if self.request.user.has_perm('forums.update_thread'):
+            return True
+        obj = self.get_object()
+        return obj.user == self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
 
 
 class ThreadCreate(LoginRequiredMixin, CreateView):
@@ -101,8 +117,11 @@ class ThreadCreate(LoginRequiredMixin, CreateView):
 class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Thread
     template_name_suffix = '_delete_form'
+    # permission_required = 'forums.delete_thread'
 
     def test_func(self):
+        if self.request.user.has_perm('forums.delete_thread'):
+            return True
         obj = self.get_object()
         return obj.user == self.request.user
 
@@ -136,8 +155,11 @@ class PostCreate(LoginRequiredMixin, CreateView):
 class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name_suffix = '_delete_form'
+    # permission_required = 'forums.delete_post'
 
     def test_func(self):
+        if self.request.user.has_perm('forums.delete_post'):
+            return True
         obj = self.get_object()
         return obj.user == self.request.user
 
@@ -183,8 +205,7 @@ class SearchResultsView(ListView):
         post = Post.objects.filter(Q(text__icontains=query))
         thread = Thread.objects.filter(Q(title__icontains=query) | Q(text__icontains=query))
 
-        object_list = chain(post, thread)
-        return object_list
+        return chain(post, thread)
 
     # ## SearchRank ##
     # def get_queryset(self):

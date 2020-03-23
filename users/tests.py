@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from forums.models import UserProfile
+from forums.models import UserProfile, Gender
 
 
 class CustomUserTests(TestCase):
@@ -89,7 +89,7 @@ class EditProfilePageTests(TestCase):
         user_profile.signature = 'Regards julle'
         user_profile.github_url = 'https://github.com/julle'
         user_profile.web_site = 'https://mysite.com'
-        user_profile.gender = user_profile.MALE
+        user_profile.gender = Gender.MALE
         user_profile.save()
 
         user_profile.refresh_from_db()
@@ -100,7 +100,7 @@ class EditProfilePageTests(TestCase):
         self.assertEqual(user_profile.signature, 'Regards julle')
         self.assertEqual(user_profile.github_url, 'https://github.com/julle')
         self.assertEqual(user_profile.web_site, 'https://mysite.com')
-        self.assertEqual(user_profile.gender, user_profile.MALE)
+        self.assertEqual(user_profile.gender, Gender.MALE)
 
 
 
