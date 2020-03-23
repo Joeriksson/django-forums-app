@@ -22,6 +22,7 @@ jobs:
       - image: circleci/postgres:11
         environment:
           POSTGRES_USER: root
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: circle_test
 
     steps:
