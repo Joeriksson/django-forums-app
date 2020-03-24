@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
     'admin_honeypot',
+    'martor',
     # Local
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
@@ -180,3 +181,52 @@ REST_FRAMEWORK = {
 import dj_database_url
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
+
+MARTOR_ENABLE_CONFIGS = {
+    'emoji': 'true',       # to enable/disable emoji icons.
+    'imgur': 'false',       # to enable/disable imgur/custom uploader.
+    'mention': 'false',    # to enable/disable mention
+    'jquery': 'true',      # to include/revoke jquery (require for admin default django)
+    'living': 'false',     # to enable/disable live updates in preview
+    'spellcheck': 'true',  # to enable/disable spellcheck in form textareas
+    'hljs': 'true',        # to enable/disable hljs highlighting in preview
+}
+
+# Markdownify
+MARTOR_MARKDOWNIFY_FUNCTION = 'martor.utils.markdownify' # default
+MARTOR_MARKDOWNIFY_URL = '/martor/markdownify/' # default
+
+# Markdown extensions (default)
+MARTOR_MARKDOWN_EXTENSIONS = [
+    'markdown.extensions.extra',
+    'markdown.extensions.nl2br',
+    'markdown.extensions.smarty',
+    'markdown.extensions.fenced_code',
+    # 'markdown.extensions.codehilite'
+
+    # Custom markdown extensions.
+    'martor.extensions.urlize',
+    'martor.extensions.del_ins',    # ~~strikethrough~~ and ++underscores++
+    'martor.extensions.mention',    # to parse markdown mention
+    'martor.extensions.emoji',      # to parse markdown emoji
+    'martor.extensions.mdx_video',  # to parse embed/iframe video
+]
+
+MARKDOWNX_MARKDOWN_EXTENSIONS_CONFIGS = {
+    'codehilite': {
+        'use_pygments': True,
+        # 'linenums': True,
+        'style': 'monokai',
+        'css_class': 'highlight',
+    }
+}
+
+# Markdown urls
+MARTOR_UPLOAD_URL = '/martor/uploader/' # default
+MARTOR_SEARCH_USERS_URL = '/martor/search-user/' # default
+
+# Markdown Extensions
+# MARTOR_MARKDOWN_BASE_EMOJI_URL = 'https://www.webfx.com/tools/emoji-cheat-sheet/graphics/emojis/'     # from webfx
+MARTOR_MARKDOWN_BASE_EMOJI_URL = 'https://github.githubassets.com/images/icons/emoji/'                  # default from github
+MARTOR_MARKDOWN_BASE_MENTION_URL = 'https://python.web.id/author/'
+
