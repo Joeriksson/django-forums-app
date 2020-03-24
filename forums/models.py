@@ -4,7 +4,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse_lazy
 from django.contrib.sites.models import Site
 from django_lifecycle import LifecycleModelMixin, hook
-
+from martor.models import MartorField
 
 class Forum(models.Model):
     title = models.CharField(max_length=200)
@@ -19,7 +19,8 @@ class Forum(models.Model):
 
 class Thread(models.Model):
     title = models.CharField(max_length=300)
-    text = models.TextField()
+    # text = models.TextField()
+    text = MartorField()
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
@@ -33,7 +34,8 @@ class Thread(models.Model):
 
 
 class Post(LifecycleModelMixin, models.Model):
-    text = models.TextField()
+    #text = models.TextField()
+    text = MartorField()
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)

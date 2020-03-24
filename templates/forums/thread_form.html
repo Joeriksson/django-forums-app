@@ -1,16 +1,26 @@
 <!DOCTYPE html>
 {% extends '_base.html' %}
 {% load crispy_forms_tags %}
+{% load martortags %}
 
 {% block title %}New thread{% endblock title %}
 
 {% block content %}
-    <h2>New thread</h2>
-
+    <style>
+        .heading {
+            padding-top: 70px;
+            margin-top: 70px;
+            margin-bottom: 30px;
+        }
+    </style>
+    <div class="heading">
+        <h2>New thread</h2>
+    </div>
     <form method="post">
         {% csrf_token %}
         {{ form|crispy }}
         <button class="btn btn-success" type="submit">Post</button>
         <a href="{% url 'forum_detail' forum.id %}" class="btn btn-outline-secondary">Cancel</a>
     </form>
+    {{ form.media }}
 {% endblock content %}

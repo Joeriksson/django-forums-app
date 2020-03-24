@@ -24,6 +24,7 @@ pytest-cov = "==2.8.1"
 django-rest-auth = "*"
 coreapi = "*"
 django-lifecycle = "*"
+martor="==1.4.9"
 
 [requires]
 python_version = "3.8"
