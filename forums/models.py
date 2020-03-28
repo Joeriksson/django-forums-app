@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
-from django.db import models
-from django.core.mail import EmailMultiAlternatives
-from django.urls import reverse_lazy
 from django.contrib.sites.models import Site
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.db import models
+from django.urls import reverse_lazy
 from django_lifecycle import LifecycleModelMixin, hook
 from martor.models import MartorField
+
 
 class Forum(models.Model):
     title = models.CharField(max_length=200)
@@ -24,7 +26,8 @@ class Thread(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
+    # user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, )
 
     def __str__(self):
         return f'Thread: {self.title} - (started by {self.user})'
@@ -34,13 +37,13 @@ class Thread(models.Model):
 
 
 class Post(LifecycleModelMixin, models.Model):
-    #text = models.TextField()
+    # text = models.TextField()
     text = MartorField()
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     thread = models.ForeignKey(Thread, related_name='posts', on_delete=models.CASCADE)
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, )
 
     def __str__(self):
         return f'Post: {self.text} - (submitted by {self.user})'
@@ -89,7 +92,7 @@ class UserProfile(models.Model):
     #     (FEMALE, 'Female'),
     #     (OTHER, 'Other'),
     # )
-    user = models.OneToOneField(get_user_model(), related_name='profile', on_delete=models.CASCADE, )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE, )
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=1000, blank=True)
@@ -102,7 +105,7 @@ class UserProfile(models.Model):
 
 class UpVote(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, )
     added = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -114,7 +117,7 @@ class UpVote(models.Model):
 
 class Notification(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     added = models.DateTimeField(auto_now_add=True)
 
