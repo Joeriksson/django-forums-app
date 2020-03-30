@@ -29,6 +29,9 @@ dev_web_exec:
 dev_test:
 	@docker-compose -f docker-compose-dev.yml exec web python manage.py test --settings=project.settings.development
 
+dev_pytest:
+	@docker-compose -f docker-compose-dev.yml exec web pytest tests/ -v
+
 prod:
 	@docker-compose -f docker-compose-prod.yml down && docker-compose -f docker-compose-prod.yml up -d
 

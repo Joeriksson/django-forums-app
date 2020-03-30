@@ -25,6 +25,7 @@ django-rest-auth = "*"
 coreapi = "*"
 django-lifecycle = "*"
 martor="==1.4.9"
+sentry-sdk="==0.14.3"
 
 [requires]
 python_version = "3.8"

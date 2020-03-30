@@ -117,6 +117,7 @@ class ThreadCreate(LoginRequiredMixin, CreateView):
 class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Thread
     template_name_suffix = '_delete_form'
+
     # permission_required = 'forums.delete_thread'
 
     def test_func(self):
@@ -155,6 +156,7 @@ class PostCreate(LoginRequiredMixin, CreateView):
 class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name_suffix = '_delete_form'
+
     # permission_required = 'forums.delete_post'
 
     def test_func(self):
