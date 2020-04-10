@@ -40,8 +40,10 @@ SENDGRID_PASSWORD=<you sendgrid password>
 SENDGRID_USERNAME=<your sendgrid username>
 SECRET_KEY=<your secret key>
 DEBUG=True
+SENTRY_KEY=<your sentry key>
+SENTRY_PROJECT=<your sentry project id>
 ```
-> *Note: you don't need a Sendgrid account when using the development settings. It sends mail to the console by default*
+> *Note: you don't need a Sendgrid account when using the development settings. It sends mail to the console by default. Also you don't need to use sentry for logging. Just comment out the sentry settings in /settings/base.py.*
 
 3. In the directory where you cloned the repository, run the following command:
 

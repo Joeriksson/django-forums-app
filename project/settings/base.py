@@ -231,6 +231,7 @@ MARTOR_MARKDOWN_BASE_EMOJI_URL = 'https://github.githubassets.com/images/icons/e
 MARTOR_MARKDOWN_BASE_MENTION_URL = 'https://python.web.id/author/'
 
 # SENTRY
+# Comment out all Sentry settings below if you don't want to use sentry logging
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
