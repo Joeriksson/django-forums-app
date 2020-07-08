@@ -27,6 +27,7 @@ class ForumTests(TestCase):
             user=self.user
         )
 
+
     def test_forum_listing(self):
         self.assertEqual(f'{self.forum.title}', 'Testforum')
         self.assertEqual(f'{self.forum.description}', 'A test forum')

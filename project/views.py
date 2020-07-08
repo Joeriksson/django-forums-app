@@ -12,6 +12,9 @@ class UserProfileUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = UserProfileForm
 
     def test_func(self):
+        """
+        User can only edit their own profile
+        """
         obj = self.get_object()
         return obj.user == self.request.user
 

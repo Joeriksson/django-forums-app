@@ -26,12 +26,12 @@ class ForumDetail(DetailView):
     #     context['threads'] = Thread.objects.filter(forum=self.kwargs['pk'])
 
 
-class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class ForumCreate(PermissionRequiredMixin, CreateView):
     model = Forum
     fields = '__all__'
     permission_required = 'forums.add_forum'
     success_url = reverse_lazy('forum_list')
-    login_url = 'home'
+    login_url = ''
 
     def get_login_url(self):
         """
@@ -46,7 +46,7 @@ class ForumCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return str(login_url)
 
 
-class ForumUpdate(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+class ForumUpdate(PermissionRequiredMixin, UpdateView):
     model = Forum
     fields = '__all__'
     permission_required = 'forums.change_forum'
@@ -81,6 +81,9 @@ class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name_suffix = '_update_form'
 
     def test_func(self):
+        """
+        User must be author to update
+        """
         if self.request.user.has_perm('forums.update_thread'):
             return True
         obj = self.get_object()
@@ -121,6 +124,9 @@ class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     # permission_required = 'forums.delete_thread'
 
     def test_func(self):
+        """
+        User must be author to delete
+        """
         if self.request.user.has_perm('forums.delete_thread'):
             return True
         obj = self.get_object()
@@ -160,6 +166,9 @@ class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     # permission_required = 'forums.delete_post'
 
     def test_func(self):
+        """
+        User must be author to delete
+        """
         if self.request.user.has_perm('forums.delete_post'):
             return True
         obj = self.get_object()

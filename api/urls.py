@@ -11,8 +11,8 @@ router.register(r'threads', ThreadViewSet)
 router.register(r'posts', PostViewSet)
 router.register(r'users', UserViewSet)
 
-API_TITLE = 'Blog API'
-API_DESCRIPTION = 'A Web API for creating and editing blog posts'
+API_TITLE = 'Forums API'
+API_DESCRIPTION = 'A Web API for creating and editing forums, threads, and posts'
 schema_view = get_schema_view(title=API_TITLE)
 
 urlpatterns = [

@@ -8,7 +8,7 @@ verify_ssl = true
 [packages]
 pytz = "==2019.2"
 sqlparse = "==0.3.0"
-Django = "==3.0.4"
+Django = "==3.0.7"
 django-crispy-forms = "*"
 django-allauth = "*"
 django-debug-toolbar = "*"
@@ -26,6 +26,9 @@ coreapi = "*"
 django-lifecycle = "*"
 martor="==1.4.9"
 sentry-sdk="==0.14.3"
+django-permissions-auditor = "*"
+pyyaml = "*"
+pytest-xdist = "*"
 
 [requires]
 python_version = "3.8"
