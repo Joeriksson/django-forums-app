@@ -32,13 +32,13 @@
                             <span class="sr-only">(current)</span>
                         </a>
                     </li>
-                {% if user.is_staff %}
-                    <li class="nav-item active mr-3">
-                        <a class="nav-link" href="{% url 'admin:index' %}">Admin
-                            <span class="sr-only">(current)</span>
-                        </a>
-                    </li>
-                {% endif %}
+                    {% if user.is_staff %}
+                        <li class="nav-item active mr-3">
+                            <a class="nav-link" href="{% url 'admin:index' %}">Admin
+                                <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                    {% endif %}
 
                     {% if user.is_authenticated %}
 
@@ -78,6 +78,17 @@
 </header>
 
 <div class="container">
+    {% if messages %}
+        <div class="alert alert-secondary" role="alert">
+            {% for message in messages %}
+                <p id="message_{{ forloop.counter }}"
+                        {% if message.tags %} class="{{ message.tags }}"
+                        {% endif %}>
+                    {{ message }}
+                </p>
+            {% endfor %}
+        </div>
+    {% endif %}
     {% block content %}
     {% endblock content %}
 </div>

@@ -1,6 +1,7 @@
 from itertools import chain
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -93,10 +94,11 @@ class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class ThreadCreate(LoginRequiredMixin, CreateView):
+class ThreadCreate(LoginRequiredMixin, SuccessMessageMixin , CreateView):
     model = Thread
     context_object_name = 'thread'
     fields = ['title', 'text']
+    success_message = "Thread was created successfullty"
 
     def get_context_data(self, **kwargs):
         # Call the base implementation
@@ -136,9 +138,10 @@ class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['fpk']})
 
 
-class PostCreate(LoginRequiredMixin, CreateView):
+class PostCreate(LoginRequiredMixin, SuccessMessageMixin , CreateView):
     model = Post
     fields = ['text']
+    success_message = "Post was created successfully!"
 
     def get_context_data(self, **kwargs):
         # Call the base implementation
