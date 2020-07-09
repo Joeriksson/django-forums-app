@@ -37,8 +37,9 @@ jobs:
       - run:
           name: Wait for db
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-
-
+      - run:
+          name: Wait for redis
+          command: dockerize -wait redis://localhost:6379 -timeout 1m
 
 
 
