@@ -25,6 +25,8 @@ jobs:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: circle_test
 
+      - image: circleci/redis:alpine
+
     steps:
       - checkout
       - run:
@@ -66,7 +68,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            pipenv run python manage.py test
+            pipenv run python manage.py test --parallel
 
       - store_artifacts:
           path: test-reports
