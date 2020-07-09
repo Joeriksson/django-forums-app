@@ -17,10 +17,6 @@ class ForumsList(ListView, FormView):
     context_object_name = 'forum_list'
     form_class = SearchForm
 
-    def get_context_data(self, **kwargs):
-        # Call the base implementation
-        context = super(ForumsList, self).get_context_data(**kwargs)
-
 
 class ForumDetail(DetailView):
     model = Forum
