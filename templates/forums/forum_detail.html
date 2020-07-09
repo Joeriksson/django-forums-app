@@ -19,8 +19,8 @@
             <i>{{ forum.description }}</i>
         </div>
 
-        {% for thread in forum.threads.all %}
-
+{#        {% for thread in forum.threads.all %}#}
+        {% for thread in threads %}
             <a href="{% url 'thread_detail' thread.id %}" class="list-group-item-action">
                 <div class="card bg-light mb-3">
 

@@ -2,6 +2,7 @@ from itertools import chain
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.cache import cache
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -16,15 +17,29 @@ class ForumsList(ListView, FormView):
     context_object_name = 'forum_list'
     form_class = SearchForm
 
+    def get_context_data(self, **kwargs):
+        # Call the base implementation
+        context = super(ForumsList, self).get_context_data(**kwargs)
+
 
 class ForumDetail(DetailView):
     model = Forum
     context_object_name = 'forum'
 
-    # def get_context_data(self, **kwargs):
-    #     # Call the base implementation
-    #     context = super(ForumDetail, self).get_context_data(**kwargs)
-    #     context['threads'] = Thread.objects.filter(forum=self.kwargs['pk'])
+    def get_context_data(self, **kwargs):
+        # Call the base implementation
+        context = super(ForumDetail, self).get_context_data(**kwargs)
+
+        thread_objects = cache.get(f'thread_objects_forum_{self.kwargs["pk"]}')
+
+        if thread_objects is None:
+            thread_objects = Thread.objects.filter(forum=self.kwargs['pk']).prefetch_related(
+                'user').prefetch_related('user__profile').prefetch_related('posts')
+            cache.set(f'thread_objects_forum_{self.kwargs["pk"]}', thread_objects)
+
+        context['threads'] = thread_objects
+
+        return context
 
 
 class ForumCreate(PermissionRequiredMixin, CreateView):
@@ -64,9 +79,16 @@ class ThreadDetail(DetailView):
     def get_context_data(self, **kwargs):
         # Call the base implementation
         context = super(ThreadDetail, self).get_context_data(**kwargs)
-        context['posts'] = Post.objects.filter(thread=self.kwargs['pk']).select_related('thread').select_related(
-            'user').prefetch_related(
-            'user__profile')
+
+        post_objects = cache.get(f'post_objects_thread_{self.kwargs["pk"]}')
+
+        if post_objects is None:
+            post_objects = Post.objects.filter(thread=self.kwargs['pk']).select_related('thread').select_related(
+                'user').prefetch_related(
+                'user__profile')
+            cache.set(f'post_objects_thread_{self.kwargs["pk"]}', post_objects)
+
+        context['posts'] = post_objects
 
         # Check if current user upvoted
         if self.request.user.is_authenticated:
@@ -94,7 +116,7 @@ class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class ThreadCreate(LoginRequiredMixin, SuccessMessageMixin , CreateView):
+class ThreadCreate(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Thread
     context_object_name = 'thread'
     fields = ['title', 'text']
@@ -138,7 +160,7 @@ class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['fpk']})
 
 
-class PostCreate(LoginRequiredMixin, SuccessMessageMixin , CreateView):
+class PostCreate(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Post
     fields = ['text']
     success_message = "Post was created successfully!"

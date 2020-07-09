@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.conf import settings
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.urls import reverse_lazy
@@ -34,6 +35,11 @@ class Thread(models.Model):
 
     class Meta:
         ordering = ['-added']
+
+    @hook('after_save')
+    @hook('after_delete')
+    def invalidate_cache(self):
+        cache.delete(f'thread_objects_forum_{self.forum_id}')
 
 
 class Post(LifecycleModelMixin, models.Model):
@@ -72,6 +78,12 @@ class Post(LifecycleModelMixin, models.Model):
             subject=subject, body=text_content, from_email=from_email, bcc=bcc)
 
         msg.send()
+
+
+    @hook('after_save')
+    @hook('after_delete')
+    def invalidate_cache(self):
+        cache.delete(f'post_objects_thread_{self.thread_id}')
 
 
 class Gender(models.TextChoices):
