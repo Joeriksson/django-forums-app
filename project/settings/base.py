@@ -252,8 +252,8 @@ MARTOR_MARKDOWN_BASE_MENTION_URL = 'https://python.web.id/author/'
 
 CACHE_MIDDLEWARE_ALIAS = 'default'
 
-if os.environ.get('REDIS_URL'):
-    redisurl = os.environ.get('REDIS_URL')
+if os.environ.get('REDIS_URL') is not None:
+    redis_host = os.environ.get('REDIS_URL')
 elif os.environ.get('REDIS_LOCALHOST'):
     redis_host = f'redis://localhost:6379/1'
 else:
