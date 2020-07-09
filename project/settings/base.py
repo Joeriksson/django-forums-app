@@ -252,16 +252,17 @@ MARTOR_MARKDOWN_BASE_MENTION_URL = 'https://python.web.id/author/'
 
 CACHE_MIDDLEWARE_ALIAS = 'default'
 
-
-if os.environ.get('REDIS_LOCALHOST'):
-    redis_host = 'localhost'
+if os.environ.get('REDIS_URL'):
+    redisurl = os.environ.get('REDIS_URL')
+elif os.environ.get('REDIS_LOCALHOST'):
+    redis_host = f'redis://localhost:6379/1'
 else:
-    redis_host = 'redis'
+    redis_host = f'redis://redis:6379/1'
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{redis_host}:6379/1',
+        'LOCATION': redis_host,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
