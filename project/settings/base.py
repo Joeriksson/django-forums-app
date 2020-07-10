@@ -151,7 +151,15 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
-ADMINS = os.environ.get('ADMINS')
+
+ADMIN1 = tuple(os.environ.get('ADMIN1').split(','))
+ADMIN2 = tuple(os.environ.get('ADMIN2').split(','))
+
+ADMINS = []
+ADMINS.append(ADMIN1)
+ADMINS.append(ADMIN2)
+
+# ADMINS = os.environ.get('ADMINS')
 
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
