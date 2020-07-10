@@ -16,6 +16,8 @@ jobs:
           PIPENV_VENV_IN_PROJECT: true
           DATABASE_URL: postgresql://root@localhost/circle_test?sslmode=disable
           REDIS_LOCALHOST: true
+          ADMIN1: test, test@email.com
+          ADMIN2: test2, test2@email.com
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
