@@ -155,9 +155,9 @@ AUTHENTICATION_BACKENDS = (
 ADMIN1 = tuple(os.environ.get('ADMIN1').split(','))
 ADMIN2 = tuple(os.environ.get('ADMIN2').split(','))
 
-ADMINS = []
-ADMINS.append(ADMIN1)
-ADMINS.append(ADMIN2)
+ADMINS = [ADMIN1, ADMIN2]
+# ADMINS.append(ADMIN1)
+# ADMINS.append(ADMIN2)
 
 # ADMINS = os.environ.get('ADMINS')
 
