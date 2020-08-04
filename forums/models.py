@@ -1,13 +1,13 @@
-from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.conf import settings
 from django.core.cache import cache
-from django.core.mail import EmailMultiAlternatives
+# from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.urls import reverse_lazy
 from django_lifecycle import LifecycleModelMixin, hook
 from martor.models import MartorField
 
+from forums.tasks import send_notifications_task
 
 class Forum(models.Model):
     title = models.CharField(max_length=200)
@@ -59,25 +59,37 @@ class Post(LifecycleModelMixin, models.Model):
 
     @hook('after_create')
     def notify_subscribers(self):
-        # TODO: Look into how to send multiple mails via header instead of BCC
-
-        # Check which users has subscribed to the thread which was posted to
-        notification_users = Notification.objects.filter(thread=self.thread)
-
-        # Compose message to subscribers
-        subject, from_email = f'New post added by {self.user.username}', 'info@wildvasa.com'
 
         url = reverse_lazy('thread_detail', args=(self.thread_id,))
         full_url = ''.join(['http://', str(Site.objects.get_current().domain), str(url)])
 
-        bcc = [notification_user.user.email for notification_user in notification_users if
-               notification_user != self.user]
-        text_content = f'A new post was added to thread "{self.thread.title}" \n\nUrl: {full_url} \n\n'
+        notification_users = Notification.objects.filter(thread=self.thread)
+        email_addresses = [notification_user.user.email for notification_user in notification_users if
+                           notification_user != self.user]
 
-        msg = EmailMultiAlternatives(
-            subject=subject, body=text_content, from_email=from_email, bcc=bcc)
+        task = send_notifications_task.delay(self.thread_id, self.thread.title, self.user.username, full_url, email_addresses)
 
-        msg.send()
+        task.get()
+
+        # # TODO: Look into how to send multiple mails via header instead of BCC
+        #
+        # # Check which users has subscribed to the thread which was posted to
+        # notification_users = Notification.objects.filter(thread=self.thread)
+        #
+        # # Compose message to subscribers
+        # subject, from_email = f'New post added by {self.user.username}', 'info@wildvasa.com'
+        #
+        # url = reverse_lazy('thread_detail', args=(self.thread_id,))
+        # full_url = ''.join(['http://', str(Site.objects.get_current().domain), str(url)])
+        #
+        # bcc = [notification_user.user.email for notification_user in notification_users if
+        #        notification_user != self.user]
+        # text_content = f'A new post was added to thread "{self.thread.title}" \n\nUrl: {full_url} \n\n'
+        #
+        # msg = EmailMultiAlternatives(
+        #     subject=subject, body=text_content, from_email=from_email, bcc=bcc)
+        #
+        # msg.send()
 
 
     @hook('after_save')

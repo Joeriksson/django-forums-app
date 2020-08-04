@@ -26,6 +26,9 @@ dev_export_data:
 dev_web_exec:
 	@docker-compose -f docker-compose-dev.yml exec web $(cmd)
 
+dev_redis_exec:
+	@docker-compose -f docker-compose-dev.yml exec redis $(cmd)
+
 dev_test:
 	@docker-compose -f docker-compose-dev.yml exec web python manage.py test --settings=project.settings.test --parallel
 
