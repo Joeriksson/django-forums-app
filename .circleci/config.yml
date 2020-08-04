@@ -71,8 +71,8 @@ jobs:
       - run:
           name: run tests
           command: |
-#            pipenv run python manage.py test --parallel
             python manage.py test --parallel
+#           pipenv run python manage.py test --parallel
 
       - store_artifacts:
           path: test-reports
