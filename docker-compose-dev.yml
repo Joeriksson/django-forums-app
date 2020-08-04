@@ -24,5 +24,21 @@ services:
     image: redis:alpine
     ports:
     - 6379:6379
+  celery:
+    env_file: .env
+    build: .
+    command: celery -A project worker -l debug --without-gossip
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+  celery-beat:
+    env_file: .env
+    build: .
+    command: celery -A project beat -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
 volumes:
   postgres_data:

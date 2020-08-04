@@ -155,9 +155,9 @@ AUTHENTICATION_BACKENDS = (
 ADMIN1 = tuple(os.environ.get('ADMIN1').split(','))
 ADMIN2 = tuple(os.environ.get('ADMIN2').split(','))
 
-ADMINS = []
-ADMINS.append(ADMIN1)
-ADMINS.append(ADMIN2)
+ADMINS = [ADMIN1, ADMIN2]
+# ADMINS.append(ADMIN1)
+# ADMINS.append(ADMIN2)
 
 # ADMINS = os.environ.get('ADMINS')
 
@@ -265,9 +265,9 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 if os.environ.get('REDIS_URL') is not None:
     redis_host = os.environ.get('REDIS_URL')
 elif os.environ.get('REDIS_LOCALHOST'):
-    redis_host = f'redis://localhost:6379/1'
+    redis_host = f'redis://localhost:6379/0'
 else:
-    redis_host = f'redis://redis:6379/1'
+    redis_host = f'redis://redis:6379/0'
 
 CACHES = {
     'default': {
@@ -278,3 +278,25 @@ CACHES = {
         }
     }
 }
+
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+
+# An example below how to set up a scheduled task
+# The tasks code could live in a tasks.py in the app folder of choice
+# If using tasks in the core folder I explicitly import it
+# Couldn't get it to work otherwise
+
+# from celery.schedules import crontab
+# import project.tasks
+#
+# CELERY_BEAT_SCHEDULE = {
+#     'my_scheduled_task': {
+#         'task': 'project.tasks.my_scheduled_task',
+#         'schedule': crontab(minute='*/1'),
+#     },
+# }

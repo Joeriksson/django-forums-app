@@ -53,8 +53,10 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            sudo pip install pipenv
-            pipenv install
+            python -m pip install --upgrade pip
+            python -m pip install -r requirements.txt
+#            sudo pip install pipenv
+#            pipenv install
 
 #      - save_cache:
 #          paths:
