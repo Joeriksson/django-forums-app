@@ -53,8 +53,12 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            sudo pip install pipenv
-            pipenv install
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+#            sudo pip install pipenv
+#            pipenv install
 #            sudo python -m pip install --upgrade pip
 #            sudo python -m pip install -r requirements.txt
 
@@ -72,10 +76,9 @@ jobs:
       - run:
           name: run tests
           command: |
-            pipenv run python manage.py test --parallel
-#            python3 -m venv venv
-#            . venv/bin/activate
-#            python manage.py test --parallel
+            . venv/bin/activate
+            python manage.py test --parallel
+#            pipenv run python manage.py test --parallel
 
 
       - store_artifacts:
