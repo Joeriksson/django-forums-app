@@ -33,7 +33,7 @@ dev_test:
 	@docker-compose -f docker-compose-dev.yml exec web python manage.py test --settings=project.settings.test --parallel
 
 dev_pytest:
-	@docker-compose -f docker-compose-dev.yml exec web pytest tests/ -v
+	@docker-compose -f docker-compose-dev.yml exec web pytest tests/ -v --disable-warnings
 
 prod:
 	@docker-compose -f docker-compose-prod.yml down && docker-compose -f docker-compose-prod.yml up -d

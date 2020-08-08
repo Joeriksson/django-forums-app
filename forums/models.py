@@ -1,3 +1,5 @@
+import os
+
 from django.contrib.sites.models import Site
 from django.conf import settings
 from django.core.cache import cache
@@ -59,17 +61,17 @@ class Post(LifecycleModelMixin, models.Model):
 
     @hook('after_create')
     def notify_subscribers(self):
+        if not os.environ.get('CI'):
+            url = reverse_lazy('thread_detail', args=(self.thread_id,))
+            full_url = ''.join(['http://', str(Site.objects.get_current().domain), str(url)])
 
-        url = reverse_lazy('thread_detail', args=(self.thread_id,))
-        full_url = ''.join(['http://', str(Site.objects.get_current().domain), str(url)])
+            notification_users = Notification.objects.filter(thread=self.thread)
+            email_addresses = [notification_user.user.email for notification_user in notification_users if
+                               notification_user != self.user]
 
-        notification_users = Notification.objects.filter(thread=self.thread)
-        email_addresses = [notification_user.user.email for notification_user in notification_users if
-                           notification_user != self.user]
+            task = send_notifications_task.delay(self.thread_id, self.thread.title, self.user.username, full_url, email_addresses)
 
-        task = send_notifications_task.delay(self.thread_id, self.thread.title, self.user.username, full_url, email_addresses)
-
-        task.get()
+            task.get()
 
         # # TODO: Look into how to send multiple mails via header instead of BCC
         #
