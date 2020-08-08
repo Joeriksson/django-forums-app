@@ -85,9 +85,9 @@ jobs:
 #            pipenv run python manage.py test --parallel
 
 
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
+      - store_test_results:
+          path: test-results
+#          destination: test-reports
 
 workflows:
   version: 2
