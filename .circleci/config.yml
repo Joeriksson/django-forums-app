@@ -71,7 +71,8 @@ jobs:
       - run:
           name: run tests
           command: |
-            python manage.py test
+            . venv/bin/activate
+            python manage.py test --parallel
 #           pipenv run python manage.py test --parallel
 
       - store_artifacts:
