@@ -44,24 +44,25 @@ jobs:
 
 
       # Download and cache dependencies
-#      - restore_cache:
-#          keys:
-#            - v1-dependencies-{{ checksum "requirements.txt" }}
-#            # fallback to using the latest cache if no exact match is found
-#            - v1-dependencies-
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
       - run:
           name: install dependencies
           command: |
-            sudo python -m pip install --upgrade pip
-            sudo python -m pip install -r requirements.txt
-#            sudo pip install pipenv
-#            pipenv install
+            sudo pip install pipenv
+            pipenv install
+#            sudo python -m pip install --upgrade pip
+#            sudo python -m pip install -r requirements.txt
 
-#      - save_cache:
-#          paths:
-#            - ./venv
-#          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       # run tests!
       # this example uses Django's built-in test-runner
@@ -71,9 +72,11 @@ jobs:
       - run:
           name: run tests
           command: |
-            . venv/bin/activate
-            python manage.py test --parallel
-#           pipenv run python manage.py test --parallel
+            pipenv run python manage.py test --parallel
+#            python3 -m venv venv
+#            . venv/bin/activate
+#            python manage.py test --parallel
+
 
       - store_artifacts:
           path: test-reports
