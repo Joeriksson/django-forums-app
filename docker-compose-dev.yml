@@ -27,7 +27,7 @@ services:
   celery:
     env_file: .env
     build: .
-    command: celery -A project worker -l debug --without-gossip
+    command: celery -A project worker -l DEBUG
     volumes:
       - .:/code
     depends_on:
@@ -35,7 +35,7 @@ services:
   celery-beat:
     env_file: .env
     build: .
-    command: celery -A project beat -l info
+    command: celery -A project beat -l INFO
     volumes:
       - .:/code
     depends_on:
