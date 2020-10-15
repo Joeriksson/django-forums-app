@@ -6,10 +6,11 @@ from django.core.cache import cache
 # from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.urls import reverse_lazy
-from django_lifecycle import LifecycleModelMixin, hook
+from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE, AFTER_DELETE, AFTER_SAVE
 from martor.models import MartorField
 
 from forums.tasks import send_notifications_task
+
 
 class Forum(models.Model):
     title = models.CharField(max_length=200)
@@ -38,8 +39,8 @@ class Thread(models.Model):
     class Meta:
         ordering = ['-added']
 
-    @hook('after_save')
-    @hook('after_delete')
+    @hook(AFTER_SAVE)
+    @hook(AFTER_DELETE)
     def invalidate_cache(self):
         cache.delete(f'thread_objects_forum_{self.forum_id}')
 
@@ -59,7 +60,7 @@ class Post(LifecycleModelMixin, models.Model):
     class Meta:
         ordering = ['added']
 
-    @hook('after_create')
+    @hook(AFTER_CREATE)
     def notify_subscribers(self):
         if not os.environ.get('CI'):
             url = reverse_lazy('thread_detail', args=(self.thread_id,))
@@ -91,9 +92,8 @@ class Post(LifecycleModelMixin, models.Model):
         #
         # msg.send()
 
-
-    @hook('after_save')
-    @hook('after_delete')
+    @hook(AFTER_SAVE)
+    @hook(AFTER_DELETE)
     def invalidate_cache(self):
         cache.delete(f'post_objects_thread_{self.thread_id}')
 
