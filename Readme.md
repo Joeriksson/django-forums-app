@@ -2,7 +2,7 @@
 
 # Django Forums
 
-A sample forums app built on the Django framework. I built this app to learn Django more, and I wanted to learn how to do a parent/child database model to also learn that aspect of Django.
+A sample forums app built on the Django framework. I built this app to learn Django more, and I wanted to learn how to do a parent/child database model to also learn that aspect of Django. It can also be seen as an example app to see how the features listed below could be implemented in Django.
 
 Includes:
 
@@ -18,6 +18,8 @@ Includes:
 - different settings files for development and production
 - basic Bootstrap styling
 - api via Django REST Framework
+- caching with Redis
+- e-mail task queue with Celery
 
 ## Production and development settings
  
