@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -5,9 +7,11 @@ from django.urls import path, include
 
 from . import views
 
+ADMIN_URL = os.getenv('ADMIN_URL', 'nimda')
+
 urlpatterns = [
                   # django admin
-                  path('nimda/', admin.site.urls),
+                  path(f'{ADMIN_URL}/', admin.site.urls),
                   path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
                   # user management
                   path('accounts/', include('allauth.urls')),
