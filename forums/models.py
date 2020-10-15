@@ -71,8 +71,6 @@ class Post(LifecycleModelMixin, models.Model):
 
             task = send_notifications_task.delay(self.thread_id, self.thread.title, self.user.username, full_url, email_addresses)
 
-            task.get()
-
         # # TODO: Look into how to send multiple mails via header instead of BCC
         #
         # # Check which users has subscribed to the thread which was posted to

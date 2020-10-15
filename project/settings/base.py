@@ -284,6 +284,8 @@ CELERY_RESULT_BACKEND = redis_host
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+if not os.environ.get('ENVIRONMENT') == 'production':
+    CELERY_ALWAYS_EAGER = True
 
 
 # An example below how to set up a scheduled task

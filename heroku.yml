@@ -4,9 +4,19 @@ setup:
 build:
   docker:
     web: Dockerfile
+    celery: Dockerfile
+    celery-beat: Dockerfile
 release:
   image: web
   command:
     - python manage.py collectstatic --noinput
 run:
   web: gunicorn project.wsgi
+  celery:
+    command:
+      - celery -A project worker -l INFO
+    image: celery
+  celery-beat:
+    command:
+      - celery -A project beat -l INFO
+    image: celery-beat
