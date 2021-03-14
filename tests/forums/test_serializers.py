@@ -41,6 +41,13 @@ def test_valid_thread_serializer(add_forum, add_user):
     assert serializer.data == valid_serializer_data
     assert serializer.errors == {}
 
+# posts = PostSerializer(many=True, read_only=True)
+#     user_name = serializers.CharField(source="user.username")
+#     class Meta:
+#         model = Thread
+#         # fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
+#         fields = ('id', 'title', 'text', 'forum', 'user', 'user_name', 'posts', 'added', 'edited')
+
 
 @pytest.mark.django_db
 def test_invalid_thread_serializer(add_forum, add_user):
@@ -56,7 +63,7 @@ def test_invalid_thread_serializer(add_forum, add_user):
     assert not serializer.is_valid()
     assert serializer.validated_data == {}
     assert serializer.data == invalid_serializer_data
-    assert serializer.errors == {"text": ["This field is required."]}
+    assert 'This field is required' in serializer.errors['text'][0]
 
 
 @pytest.mark.django_db
@@ -70,6 +77,7 @@ def test_valid_post_serializer(add_thread, add_forum, add_user):
         'forum': forum.id,
         'user': user.id,
     }
+    # 'id', 'text', 'thread', 'upvotes', 'user', 'user_name', 'added', 'edited'
     serializer = PostSerializer(data=valid_serializer_data)
 
     assert serializer.is_valid()
@@ -89,7 +97,7 @@ def test_invalid_post_serializer(add_thread, add_forum, add_user):
     serializer = PostSerializer(data=invalid_serializer_data)
     assert not serializer.is_valid()
     assert serializer.validated_data == {}
-    assert serializer.errors == {"thread": ["This field is required."]}
+    assert 'This field is required' in serializer.errors['thread'][0]
 
 
 @pytest.mark.django_db

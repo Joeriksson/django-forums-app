@@ -9,16 +9,17 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         # fields = ('url', 'id', 'text', 'thread', 'upvotes', 'user')
-        fields = ('id', 'text', 'thread', 'upvotes', 'user')
+        fields = ('id', 'text', 'thread', 'upvotes', 'user', 'added', 'edited')
 
 
 class ThreadSerializer(serializers.ModelSerializer):
     posts = PostSerializer(many=True, read_only=True)
+    # user_name = serializers.CharField(source="user.username")
 
     class Meta:
         model = Thread
         # fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
-        fields = ('id', 'title', 'text', 'forum', 'user', 'posts')
+        fields = ('id', 'title', 'text', 'forum', 'user', 'posts', 'added', 'edited')
 
 
 class ForumSerializer(serializers.ModelSerializer):
