@@ -1,5 +1,5 @@
 # Pull base image
-FROM python:3.8.3-slim
+FROM python:3.9.2-slim
 
 # Set env vars
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code
 
 # Install dependencies
-COPY Pipfile Pipfile.lock /code/
+# COPY Pipfile Pipfile.lock /code/
 RUN python -m pip install --upgrade pip
 
 # RUN pip install pipenv && pipenv install --system
