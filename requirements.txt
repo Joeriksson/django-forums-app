@@ -6,7 +6,7 @@ django-admin-honeypot==1.1.0
 django-allauth==0.44.0
 django-cors-headers==3.6.0
 django-crispy-forms==1.9.2
-django-debug-toolbar==3.2
+django-debug-toolbar==3.2.1
 django-lifecycle==0.8.0
 django-permissions-auditor==1.0.1
 django-redis==4.12.1
