@@ -13,10 +13,12 @@ WORKDIR /code
 RUN python -m pip install --upgrade pip
 
 # RUN pip install pipenv && pipenv install --system
+COPY requirements.txt /code/
+RUN python -m pip install -r requirements.txt
 
 # Copy project
 COPY . /code/
-RUN python -m pip install -r requirements.txt
+
 
 # Command for container to not shut down in GitHub Action
 CMD tail -f /dev/null
