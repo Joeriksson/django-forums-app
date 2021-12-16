@@ -12,7 +12,7 @@ ADMIN_URL = os.getenv('ADMIN_URL', 'nimda')
 urlpatterns = [
                   # django admin
                   path(f'{ADMIN_URL}/', admin.site.urls),
-                  path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
+                  # path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
                   # user management
                   path('accounts/', include('allauth.urls')),
                   path('user_profile/<int:pk>', views.UserProfileUpdate.as_view(), name='user_profile_edit'),

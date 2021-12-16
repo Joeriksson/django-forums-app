@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
-    'admin_honeypot',
     'martor',
     'permissions_auditor',
     # Local
