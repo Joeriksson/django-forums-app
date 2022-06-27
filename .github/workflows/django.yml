@@ -11,6 +11,8 @@ env:
   SENDGRID_PASSWORD: x
   SENDGRID_USERNAME: x
   SECRET_KEY: 1234
+  ADMIN1: John, test@email.com
+  ADMIN2: Paul, test2@email.com
 
 jobs:
 
