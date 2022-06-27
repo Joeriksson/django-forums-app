@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/Joeriksson/django-forums-app/tree/master.svg?style=svg)](https://circleci.com/gh/Joeriksson/django-forums-app/tree/master)
+![django test workflow](https://github.com/joeriksson/django-forums-app/actions/workflows/django.yml/badge.svg)
 
 # Django Forums
 
@@ -45,7 +46,8 @@ DEBUG=True
 SENTRY_KEY=<your sentry key>
 SENTRY_PROJECT=<your sentry project id>
 ```
-> *Note: you don't need a Sendgrid account when using the development settings. It sends mail to the console by default. Also you don't need to use sentry for logging. Just comment out the sentry settings in /settings/base.py.*
+> *Note: you don't need a Sendgrid account when using the development settings. It sends mail to the console by default. You can just put in some random values for those. 
+> Also you don't need to use sentry for logging. Just comment out the sentry settings in /settings/base.py.*
 
 3. In the directory where you cloned the repository, run the following command:
 
