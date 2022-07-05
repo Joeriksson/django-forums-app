@@ -23,7 +23,7 @@ class Forum(models.Model):
         ordering = ['title']
 
 
-class Thread(models.Model):
+class Thread(LifecycleModelMixin, models.Model):
     title = models.CharField(max_length=300)
     # text = models.TextField()
     text = MartorField()
@@ -41,6 +41,7 @@ class Thread(models.Model):
 
     @hook(AFTER_SAVE)
     @hook(AFTER_DELETE)
+    @hook(AFTER_CREATE)
     def invalidate_cache(self):
         cache.delete(f'thread_objects_forum_{self.forum_id}')
 
@@ -94,6 +95,7 @@ class Post(LifecycleModelMixin, models.Model):
 
     @hook(AFTER_SAVE)
     @hook(AFTER_DELETE)
+    @hook(AFTER_CREATE)
     def invalidate_cache(self):
         cache.delete(f'post_objects_thread_{self.thread_id}')
 

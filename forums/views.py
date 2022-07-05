@@ -11,6 +11,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from .forms import SearchForm
 from .models import Forum, Thread, Post, UpVote, Notification
 
+
 class ForumsList(ListView, FormView):
     model = Forum
     context_object_name = 'forum_list'
