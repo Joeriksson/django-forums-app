@@ -18,7 +18,7 @@ schema_view = get_schema_view(title=API_TITLE)
 urlpatterns = [
     path('', include(router.urls)),
     path('api-auth', include('rest_framework.urls')),
-    path('rest_auth/', include('rest_auth.urls')),
+    # path('rest_auth/', include('rest_auth.urls')),
     # path('rest-auth/registration/', include('rest_auth.registration.urls')),
     path('docs/', include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)),
     path('schema/', schema_view),
