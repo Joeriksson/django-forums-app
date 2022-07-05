@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth',
+    # 'rest_auth',
     'corsheaders',
     # 'rest_auth.registration',
     'crispy_forms',
