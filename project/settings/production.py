@@ -10,12 +10,13 @@ if RENDER_EXTERNAL_HOSTNAME := os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
 DEFAULT_FROM_EMAIL = 'noreply@email.com'
 
 # Sendgrid
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.mailgun.org'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_PASSWORD = os.environ['MAILGUN_PASSWORD']
-EMAIL_HOST_USER = os.environ['MAILGUN_USERNAME']
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.ConsoleBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.mailgun.org'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_PASSWORD = os.environ['MAILGUN_PASSWORD']
+# EMAIL_HOST_USER = os.environ['MAILGUN_USERNAME']
 
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
