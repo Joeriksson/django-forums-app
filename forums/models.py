@@ -3,10 +3,17 @@ import os
 from django.contrib.sites.models import Site
 from django.conf import settings
 from django.core.cache import cache
+
 # from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.urls import reverse_lazy
-from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE, AFTER_DELETE, AFTER_SAVE
+from django_lifecycle import (
+    LifecycleModelMixin,
+    hook,
+    AFTER_CREATE,
+    AFTER_DELETE,
+    AFTER_SAVE,
+)
 from martor.models import MartorField
 
 from forums.tasks import send_notifications_task
@@ -31,7 +38,10 @@ class Thread(LifecycleModelMixin, models.Model):
     edited = models.DateTimeField(auto_now=True)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
     # user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return f'Thread: {self.title} - (started by {self.user})'
@@ -53,7 +63,10 @@ class Post(LifecycleModelMixin, models.Model):
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     thread = models.ForeignKey(Thread, related_name='posts', on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return f'Post: {self.text} - (submitted by {self.user})'
@@ -65,13 +78,24 @@ class Post(LifecycleModelMixin, models.Model):
     def notify_subscribers(self):
         if not os.environ.get('CI'):
             url = reverse_lazy('thread_detail', args=(self.thread_id,))
-            full_url = ''.join(['http://', str(Site.objects.get_current().domain), str(url)])
+            full_url = ''.join(
+                ['http://', str(Site.objects.get_current().domain), str(url)]
+            )
 
             notification_users = Notification.objects.filter(thread=self.thread)
-            email_addresses = [notification_user.user.email for notification_user in notification_users if
-                               notification_user != self.user]
+            email_addresses = [
+                notification_user.user.email
+                for notification_user in notification_users
+                if notification_user != self.user
+            ]
 
-            task = send_notifications_task.delay(self.thread_id, self.thread.title, self.user.username, full_url, email_addresses)
+            task = send_notifications_task.delay(
+                self.thread_id,
+                self.thread.title,
+                self.user.username,
+                full_url,
+                email_addresses,
+            )
 
         # # TODO: Look into how to send multiple mails via header instead of BCC
         #
@@ -118,12 +142,18 @@ class UserProfile(models.Model):
     #     (FEMALE, 'Female'),
     #     (OTHER, 'Other'),
     # )
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile', on_delete=models.CASCADE, )
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        related_name='profile',
+        on_delete=models.CASCADE,
+    )
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=1000, blank=True)
     location = models.CharField(max_length=50, blank=True)
-    gender = models.TextField(max_length=1, choices=Gender.choices, default=Gender.NOTPROVIDED)
+    gender = models.TextField(
+        max_length=1, choices=Gender.choices, default=Gender.NOTPROVIDED
+    )
     web_site = models.URLField(blank=True)
     github_url = models.URLField(blank=True)
     signature = models.TextField(blank=True)
@@ -131,7 +161,10 @@ class UserProfile(models.Model):
 
 class UpVote(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
     added = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

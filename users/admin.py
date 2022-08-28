@@ -7,15 +7,17 @@ from forums.models import UserProfile
 
 CustomUser = get_user_model()
 
+
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
+
 
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
     inlines = [UserProfileInline]
-    list_display = ['email', 'username', 'is_staff', 'is_active','date_joined']
+    list_display = ['email', 'username', 'is_staff', 'is_active', 'date_joined']
     # list_filter = ('date_joined',)
 
     list_filter = (
@@ -24,7 +26,6 @@ class CustomUserAdmin(UserAdmin):
         ('is_active', admin.BooleanFieldListFilter),
         ('date_joined', admin.DateFieldListFilter),
     )
-
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

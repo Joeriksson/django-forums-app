@@ -6,13 +6,10 @@ from forums.models import UserProfile, Gender
 
 
 class CustomUserTests(TestCase):
-
     def test_create_user(self):
         User = get_user_model()
         user = User.objects.create_user(
-            username='julle',
-            email="test2@test.com",
-            password='testpass123'
+            username='julle', email="test2@test.com", password='testpass123'
         )
         self.assertEqual(user.username, 'julle')
         self.assertEqual(user.email, 'test2@test.com')
@@ -23,9 +20,7 @@ class CustomUserTests(TestCase):
     def test_create_superuser(self):
         User = get_user_model()
         admin_user = User.objects.create_superuser(
-            username='superjulle',
-            email="supertest2@test.com",
-            password='testpass123'
+            username='superjulle', email="supertest2@test.com", password='testpass123'
         )
         self.assertEqual(admin_user.username, 'superjulle')
         self.assertEqual(admin_user.email, 'supertest2@test.com')
@@ -56,13 +51,10 @@ class SignupPageTests(TestCase):
 
 
 class EditProfilePageTests(TestCase):
-
     def setUp(self):
         user = get_user_model()
         self.user = user.objects.create_user(
-            username='julle',
-            email="test2@test.com",
-            password='testpass123'
+            username='julle', email="test2@test.com", password='testpass123'
         )
         self.url = reverse('user_profile_edit', args=(self.user.profile.id,))
 
@@ -101,7 +93,3 @@ class EditProfilePageTests(TestCase):
         self.assertEqual(user_profile.github_url, 'https://github.com/julle')
         self.assertEqual(user_profile.web_site, 'https://mysite.com')
         self.assertEqual(user_profile.gender, Gender.MALE)
-
-
-
-
