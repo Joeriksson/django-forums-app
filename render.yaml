@@ -1,0 +1,20 @@
+databases:
+  - name: forum-app-postgres
+    databaseName: forum_app_postgres
+    user: forum_app_postgres_user
+
+services:
+  - type: web
+    name: mysite
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn core.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: forum-app-postgres
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
