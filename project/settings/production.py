@@ -4,6 +4,8 @@ DEBUG = False
 
 # Add any host where your app is published
 ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1', '0.0.0.0']
+if RENDER_EXTERNAL_HOSTNAME := os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 DEFAULT_FROM_EMAIL = 'noreply@email.com'
 
