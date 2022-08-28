@@ -1,6 +1,11 @@
 import pytest
 
-from api.serializers import ForumSerializer, ThreadSerializer, UserSerializer, PostSerializer
+from api.serializers import (
+    ForumSerializer,
+    ThreadSerializer,
+    UserSerializer,
+    PostSerializer,
+)
 
 
 def test_valid_forum_serializer():
@@ -41,6 +46,7 @@ def test_valid_thread_serializer(add_forum, add_user):
     assert serializer.data == valid_serializer_data
     assert serializer.errors == {}
 
+
 # posts = PostSerializer(many=True, read_only=True)
 #     user_name = serializers.CharField(source="user.username")
 #     class Meta:
@@ -70,7 +76,9 @@ def test_invalid_thread_serializer(add_forum, add_user):
 def test_valid_post_serializer(add_thread, add_forum, add_user):
     forum = add_forum(title='General Forum', description='A general forum')
     user = add_user(username='testuser', email='test@email.com', password='testpass123')
-    thread = add_thread(title='A new thread', text='text in the thread', forum=forum, user=user)
+    thread = add_thread(
+        title='A new thread', text='text in the thread', forum=forum, user=user
+    )
     valid_serializer_data = {
         'text': 'A General Forum',
         'thread': thread.id,
@@ -88,7 +96,9 @@ def test_valid_post_serializer(add_thread, add_forum, add_user):
 def test_invalid_post_serializer(add_thread, add_forum, add_user):
     forum = add_forum(title='General Forum', description='A general forum')
     user = add_user(username='testuser', email='test@email.com', password='testpass123')
-    thread = add_thread(title='A new thread', text='text in the thread', forum=forum, user=user)
+    thread = add_thread(
+        title='A new thread', text='text in the thread', forum=forum, user=user
+    )
     invalid_serializer_data = {
         'text': 'A General Forum',
         'forum': forum.id,

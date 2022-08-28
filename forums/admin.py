@@ -15,9 +15,7 @@ class PostAdmin(admin.ModelAdmin):
 
 class NotificationAdmin(admin.ModelAdmin):
     search_fields = ('user__username',)
-    list_filter = (
-        ('added', admin.DateFieldListFilter),
-    )
+    list_filter = (('added', admin.DateFieldListFilter),)
     list_display = ('thread', 'user')
 
 
