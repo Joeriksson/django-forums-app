@@ -1,12 +1,24 @@
 from itertools import chain
 
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    UserPassesTestMixin,
+    PermissionRequiredMixin,
+)
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
+from django.views.generic import (
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    DeleteView,
+    View,
+    FormView,
+)
 
 from .forms import SearchForm
 from .models import Forum, Thread, Post, UpVote, Notification
@@ -29,8 +41,12 @@ class ForumDetail(DetailView):
         thread_objects = cache.get(f'thread_objects_forum_{self.kwargs["pk"]}')
 
         if thread_objects is None:
-            thread_objects = Thread.objects.filter(forum=self.kwargs['pk']).prefetch_related(
-                'user').prefetch_related('user__profile').prefetch_related('posts')
+            thread_objects = (
+                Thread.objects.filter(forum=self.kwargs['pk'])
+                .prefetch_related('user')
+                .prefetch_related('user__profile')
+                .prefetch_related('posts')
+            )
             cache.set(f'thread_objects_forum_{self.kwargs["pk"]}', thread_objects)
 
         context['threads'] = thread_objects
@@ -49,13 +65,16 @@ class ForumCreate(PermissionRequiredMixin, CreateView):
         """
         Override this method to override the login_url attribute.
         """
-        login_url = self.login_url
-        if not login_url:
+        if login_url := self.login_url:
+            return str(login_url)
+        else:
             raise NotImplementedError(
-                '{0} is missing the login_url attribute. Define {0}.login_url, settings.LOGIN_URL, or override '
-                '{0}.get_login_url().'.format(self.__class__.__name__)
+                (
+                    '{0} is missing the login_url attribute. Define {0}.login_url, settings.LOGIN_URL, or override {0}.get_login_url().'.format(
+                        self.__class__.__name__
+                    )
+                )
             )
-        return str(login_url)
 
 
 class ForumUpdate(PermissionRequiredMixin, UpdateView):
@@ -79,9 +98,12 @@ class ThreadDetail(DetailView):
         post_objects = cache.get(f'post_objects_thread_{self.kwargs["pk"]}')
 
         if post_objects is None:
-            post_objects = Post.objects.filter(thread=self.kwargs['pk']).select_related('thread').select_related(
-                'user').prefetch_related(
-                'user__profile')
+            post_objects = (
+                Post.objects.filter(thread=self.kwargs['pk'])
+                .select_related('thread')
+                .select_related('user')
+                .prefetch_related('user__profile')
+            )
             cache.set(f'post_objects_thread_{self.kwargs["pk"]}', post_objects)
 
         context['posts'] = post_objects
@@ -89,7 +111,9 @@ class ThreadDetail(DetailView):
         # Check if current user upvoted
         if self.request.user.is_authenticated:
             context['voted'] = UpVote.objects.filter(user=self.request.user)
-            context['subscribed'] = Notification.objects.filter(thread=self.kwargs['pk'], user=self.request.user)
+            context['subscribed'] = Notification.objects.filter(
+                thread=self.kwargs['pk'], user=self.request.user
+            )
         return context
 
 
@@ -208,7 +232,9 @@ class PostUpvote(LoginRequiredMixin, View):
         post.save()
         upvote = UpVote.objects.create(post=post, user=self.request.user)
         upvote.save()
-        return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']}))
+        return HttpResponseRedirect(
+            reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']})
+        )
 
 
 class ThreadNotification(LoginRequiredMixin, View):
@@ -216,14 +242,19 @@ class ThreadNotification(LoginRequiredMixin, View):
 
     def get(self, request, **kwargs):
         thread = Thread.objects.get(id=self.kwargs['pk'])
-        existing_notification = Notification.objects.filter(thread=thread, user=self.request.user)
-        if not existing_notification:
-            notification = Notification.objects.create(thread=thread, user=self.request.user)
-            notification.save()
-        else:
+        if existing_notification := Notification.objects.filter(
+            thread=thread, user=self.request.user
+        ):
             existing_notification.delete()
+        else:
+            notification = Notification.objects.create(
+                thread=thread, user=self.request.user
+            )
 
-        return HttpResponseRedirect(reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']}))
+            notification.save()
+        return HttpResponseRedirect(
+            reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
+        )
 
 
 class SearchResultsView(ListView):
@@ -238,7 +269,9 @@ class SearchResultsView(ListView):
             return
 
         post = Post.objects.filter(Q(text__icontains=query))
-        thread = Thread.objects.filter(Q(title__icontains=query) | Q(text__icontains=query))
+        thread = Thread.objects.filter(
+            Q(title__icontains=query) | Q(text__icontains=query)
+        )
         return chain(post, thread)
 
     # ## SearchRank ##

@@ -9,12 +9,14 @@ class CustomUser(LifecycleModelMixin, AbstractUser):
 
     @hook('after_create')
     def send_welcome_mail(self):
-        subject, from_email = f'Welcome to Wildvasa Forums', 'info@wildvasa.com'
+        subject, from_email = 'Welcome to Wildvasa Forums', 'info@wildvasa.com'
 
         to = (self.email,)
 
-        text_content = f'Thank you for registering at Wildvasa forums'
+        text_content = 'Thank you for registering at Wildvasa forums'
 
-        msg = EmailMultiAlternatives(subject=subject, body=text_content, from_email=from_email, to=to)
+        msg = EmailMultiAlternatives(
+            subject=subject, body=text_content, from_email=from_email, to=to
+        )
 
         msg.send()

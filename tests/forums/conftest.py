@@ -8,7 +8,10 @@ from forums.models import Forum, Thread, Post
 @pytest.fixture(scope="function")
 def add_forum():
     def _add_forum(title, description):
-        forum = Forum.objects.create(title=title, description=description,)
+        forum = Forum.objects.create(
+            title=title,
+            description=description,
+        )
         return forum
 
     return _add_forum
@@ -63,10 +66,12 @@ def add_super_user():
 def get_user_client():
     def _get_user_client(user):
 
-        token = Token.objects.create(user=user, )
+        token = Token.objects.create(
+            user=user,
+        )
 
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='TOKEN ' + token.key)
+        client.credentials(HTTP_AUTHORIZATION=f'TOKEN {token.key}')
 
         return client
 

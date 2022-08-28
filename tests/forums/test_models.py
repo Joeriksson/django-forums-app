@@ -22,7 +22,9 @@ def test_thread_model():
         email='forumuser@email.com',
         password='testpass123',
     )
-    thread = Thread(title='A new thread', text='The text of the thread', forum=forum, user=user)
+    thread = Thread(
+        title='A new thread', text='The text of the thread', forum=forum, user=user
+    )
     thread.save()
     assert thread.title == 'A new thread'
     assert thread.text == 'The text of the thread'
@@ -56,6 +58,7 @@ def create_user(db, django_user_model, test_password, test_email):
         if 'username' not in kwargs:
             kwargs['username'] = 'testuser'
         return django_user_model.objects.create_user(**kwargs)
+
     return make_user
 
 

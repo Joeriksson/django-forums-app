@@ -12,7 +12,9 @@ def test_add_forum(add_super_user, get_user_client):
 
     resp = client.post(
         "/api/forums/",
-        json.dumps({"title": "General Forum", "description": "This is a General Forum"}),
+        json.dumps(
+            {"title": "General Forum", "description": "This is a General Forum"}
+        ),
         content_type="application/json",
     )
 
@@ -30,7 +32,9 @@ def test_add_forum_not_logged_in():
 
     resp = client.post(
         "/api/forums/",
-        json.dumps({"title": "General Forum", "description": "This is a General Forum"}),
+        json.dumps(
+            {"title": "General Forum", "description": "This is a General Forum"}
+        ),
         content_type="application/json",
     )
 
@@ -51,7 +55,9 @@ def test_add_forum_user_with_no_permissions(add_user, get_user_client):
 
     resp = client.post(
         "/api/forums/",
-        json.dumps({"title": "General Forum", "description": "This is a General Forum"}),
+        json.dumps(
+            {"title": "General Forum", "description": "This is a General Forum"}
+        ),
         content_type="application/json",
     )
 
@@ -83,8 +89,7 @@ def test_remove_forum(add_forum, add_super_user, get_user_client):
 def test_remove_forum_incorrect_id(add_super_user, get_user_client):
     super_user = add_super_user('admin', 'admin@email.com', 'testpass123')
     client = get_user_client(super_user)
-
-    resp = client.delete(f"/api/forums/99/")
+    resp = client.delete("/api/forums/99/")
     assert resp.status_code == 404
 
 
@@ -97,8 +102,13 @@ def test_update_forum(add_forum, add_super_user, get_user_client):
 
     resp = client.put(
         f"/api/forums/{forum.id}/",
-        json.dumps({"title": "This is an updated title", "description": "This is an updated description"}),
-        content_type="application/json"
+        json.dumps(
+            {
+                "title": "This is an updated title",
+                "description": "This is an updated description",
+            }
+        ),
+        content_type="application/json",
     )
     assert resp.status_code == 200
     assert resp.data["title"] == "This is an updated title"
@@ -114,7 +124,7 @@ def test_update_forum(add_forum, add_super_user, get_user_client):
 def test_update_forum_incorrect_id(add_super_user, get_user_client):
     super_user = add_super_user('admin', 'admin@email.com', 'testpass123')
     client = get_user_client(super_user)
-    resp = client.put(f"/api/forums/99/")
+    resp = client.put("/api/forums/99/")
     assert resp.status_code == 404
 
 
