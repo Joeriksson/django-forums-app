@@ -4,18 +4,6 @@ databases:
     user: forum_app_postgres_user
 
 services:
-  - type: worker
-    name: queue
-    region: ohio
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "celery --app tasks worker --loglevel info --concurrency 4"
-    envVars:
-      - key: CELERY_BROKER_URL
-        fromService:
-          name: forum-app-redis
-          type: redis
-          property: connectionString
   - type: web
     name: mysite
     env: python
@@ -32,6 +20,18 @@ services:
         value: 4
       - key: CELERY_BROKER_URL
         fromDatabase:
+          name: forum-app-redis
+          type: redis
+          property: connectionString
+  - type: worker
+    name: queue
+    region: ohio
+    env: python
+    # buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery --app tasks worker --loglevel info --concurrency 4"
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
           name: forum-app-redis
           type: redis
           property: connectionString
