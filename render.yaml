@@ -26,6 +26,7 @@ services:
   - type: redis
     name: forum-app-redis
     region: ohio
+    ipAllowList: []
 #    env: python
 #    envVars:
 #      - key: REDIS_URL
