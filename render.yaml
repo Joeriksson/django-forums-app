@@ -26,7 +26,7 @@ services:
   - type: redis
     name: forum-app-redis
     region: ohio
-    env: python
+#    env: python
 #    envVars:
 #      - key: REDIS_URL
 #        fromService:
