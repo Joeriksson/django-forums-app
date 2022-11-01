@@ -27,13 +27,6 @@ services:
     name: forum-app-redis
     region: ohio
     ipAllowList: []
-    env: python
-    envVars:
-      - key: REDIS_URL
-        fromService:
-          name: forum-app-redis
-          type: redis
-          property: connectionString
   - type: worker
     name: queue
     region: ohio
