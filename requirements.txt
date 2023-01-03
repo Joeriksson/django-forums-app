@@ -40,7 +40,7 @@ coreschema==0.0.4
     # via coreapi
 coverage[toml]==6.4
     # via pytest-cov
-cryptography==37.0.2
+cryptography==38.0.3
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
