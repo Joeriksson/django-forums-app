@@ -14,7 +14,7 @@ billiard==3.6.4.0
     # via celery
 celery==5.2.7
     # via -r requirements.in
-certifi==2022.5.18.1
+certifi==2022.12.7
     # via
     #   requests
     #   sentry-sdk
@@ -163,8 +163,6 @@ sqlparse==0.4.2
     #   django-debug-toolbar
 toml==0.10.2
     # via pytest
-tomli==2.0.1
-    # via coverage
 uritemplate==4.1.1
     # via coreapi
 urllib3==1.26.9
