@@ -1,4 +1,3 @@
-[![CircleCI](https://circleci.com/gh/Joeriksson/django-forums-app/tree/master.svg?style=svg)](https://circleci.com/gh/Joeriksson/django-forums-app/tree/master)
 ![django test workflow](https://github.com/joeriksson/django-forums-app/actions/workflows/django.yml/badge.svg)
 
 # Django Forums
