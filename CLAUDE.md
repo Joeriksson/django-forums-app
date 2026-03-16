@@ -18,7 +18,7 @@ make dev_down    # Stop containers
 ### Manual Setup
 
 1. Create a `.env` file with required variables (see below)
-2. Install dependencies: `pip install -r requirements.txt`
+2. Install dependencies: `uv sync`
 3. Apply migrations: `python manage.py migrate --settings=project.settings.development`
 4. Create superuser: `python manage.py createsuperuser --settings=project.settings.development`
 5. Run server: `python manage.py runserver --settings=project.settings.development`
@@ -37,7 +37,7 @@ pytest tests/ -v --disable-warnings
 python manage.py test --settings=project.settings.test --parallel
 ```
 
-Tests use `project.settings.test` settings. Coverage is configured in `.coveragerc`.
+Tests use `project.settings.test` settings. Coverage and pytest configuration are in `pyproject.toml`.
 
 ## Key Commands (Makefile)
 
@@ -113,3 +113,5 @@ When there’s a bug, start by writing a test that reproduces it, then fix it un
 Every time I correct you, reflect on what you did wrong and come up with a plan to never make the same mistake again.
 
 Never push to remote repositories. When changes are ready to push, tell the user to run `git push` instead.
+
+Always ask for approval before committing. Show the user what will be committed and wait for confirmation.
