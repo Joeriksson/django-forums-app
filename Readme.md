@@ -21,51 +21,89 @@ Includes:
 - caching with Redis
 - e-mail task queue with Celery
 
+## Tech stack
+
+- **Python** 3.12
+- **Django** 4.2 (LTS)
+- **PostgreSQL** 16
+- **Redis** (caching and Celery broker)
+- **Celery** (async task queue)
+- **uv** (dependency management)
+- **Docker** / **Docker Compose** (containerised development and production)
+
 ## Production and development settings
- 
-The setting file are split up in production and a development settings files. Also the project have one docker-compose.yml for production and one for development. Within the docker-compose files you can find the parameter for which settings file to use on the runserver command. To make it easier and less to type for each command, there is a Makefile with different common operations.
+
+The settings files are split into production and development. The project also has one `docker-compose-dev.yml` for development and one `docker-compose-prod.yml` for production. To make it easier and less to type for each command, there is a Makefile with the most common operations.
 
 ## Quick start
 
-> Note: I haven't tested setting this up this project as below on Windows or Linux. Only on MacOS.
-
 1. Clone this repository
 
-`https://github.com/Joeriksson/django-forums-app.git`
+```
+git clone https://github.com/Joeriksson/django-forums-app.git
+```
 
 2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop) to be able to use the docker environment.
 
-3. Create an .env file in the root folder with the the following parameters:
+3. Create a `.env` file in the root folder with the following parameters:
 
-```ENVIRONMENT='development'
-SENDGRID_PASSWORD=<you sendgrid password>
-SENDGRID_USERNAME=<your sendgrid username>
+```
+ENVIRONMENT=development
 SECRET_KEY=<your secret key>
 DEBUG=True
+ADMIN1=<Name, email@example.com>
+ADMIN2=<Name, email@example.com>
+SENDGRID_PASSWORD=<your sendgrid password>
+SENDGRID_USERNAME=<your sendgrid username>
 SENTRY_KEY=<your sentry key>
 SENTRY_PROJECT=<your sentry project id>
 ```
-> *Note: you don't need a Sendgrid account when using the development settings. It sends mail to the console by default. You can just put in some random values for those. 
-> Also you don't need to use sentry for logging. Just comment out the sentry settings in /settings/base.py.*
 
-3. In the directory where you cloned the repository, run the following command:
+> **Note:** `SENDGRID_PASSWORD`, `SENDGRID_USERNAME`, `SENTRY_KEY`, and `SENTRY_PROJECT` are optional for development. The development settings send email to the console by default, so you can leave those as empty strings or omit them.
 
-`make dev_build`
+4. In the directory where you cloned the repository, build and start the containers:
 
-4. The container should now be up and running. Check in you browser that you see a start web page at `http://127.0.0.1:8080`
+```
+make dev_build
+```
 
-5. Run a migration to build the databases
+5. The containers should now be up and running. Check in your browser that you see a start page at `http://127.0.0.1:8000`
 
-`make dev_web_exec cmd='python manage.py migrate'`
+6. Run the database migrations:
 
-6. Create a Django super user to log in to the admin
+```
+make dev_web_exec cmd='python manage.py migrate'
+```
 
-`make dev_web_exec cmd='python manage.py createsuperuser'`
+7. Create a Django superuser to log in to the admin:
 
-7. Goto the admin pages (see urls.py) and login with the super user account you just created.
+```
+make dev_web_exec cmd='python manage.py createsuperuser'
+```
 
-If you want to stop the container run:
+8. Go to the admin pages (see `urls.py`) and log in with the superuser account you just created.
 
-`make dev_down`
+To stop the containers:
 
+```
+make dev_down
+```
 
+## Running tests
+
+Two test suites are available. Run them inside the Docker containers:
+
+```bash
+make dev_pytest      # pytest (tests/ directory)
+make dev_test        # Django test runner (parallel)
+```
+
+## Dependency management
+
+Dependencies are managed with [uv](https://github.com/astral-sh/uv). The `pyproject.toml` file defines all direct dependencies and the `uv.lock` file pins the full dependency tree.
+
+To add or update dependencies, edit `pyproject.toml` and run:
+
+```
+uv lock
+```
