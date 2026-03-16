@@ -126,7 +126,11 @@ These require actual code edits, not just version bumps:
   - Set `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` to silence W042 warnings
   - Added `LocMemCache` override to test settings (avoids Redis connection during tests)
   - Django check passes: 0 issues
-- [ ] Phase 2: Django 4.0.8 → 4.2 (included in Phase 1 — Django 4.2.29 installed)
-- [ ] Phase 3: Dependency version updates (included in Phase 1 — all deps updated via uv)
-- [ ] Phase 4: Code changes for breaking deps (partially done in Phase 1; run tests to find remaining)
-- [ ] Phase 5: Tooling files (Dockerfile, CI, Makefile) — Dockerfile and CI done in Phase 1
+- [x] Phase 2: Django 4.0.8 → 4.2 — Django 4.2.29 installed; DEFAULT_AUTO_FIELD set; USE_L10N already True; manage.py check: 0 issues
+- [x] Phase 3: Dependency version updates — all deps updated via uv; breaking changes audited: dj-database-url API unchanged, debug-toolbar JQUERY_URL silently ignored, allauth flat ACCOUNT_* settings still work in 0.63
+- [x] Phase 4: Code changes for breaking deps — all 30 tests pass; development settings check: 0 issues
+- [x] Phase 5: Tooling files — Dockerfile (python:3.12-slim + uv + /opt/venv), CI (setup-uv + Python 3.12), Makefile (docker compose), docker-compose-dev.yml (postgres:16, POSTGRES_PASSWORD), docker-compose-prod.yml (postgres:16, POSTGRES_PASSWORD)
+
+## Follow-up tasks (post-merge)
+- Remove deprecated `JQUERY_URL` from `DEBUG_TOOLBAR_CONFIG` in `development.py` (removed in debug-toolbar 4.x)
+- Migrate flat `ACCOUNT_*` allauth settings in `base.py` to the new dict-based format (deprecated in allauth 0.50+)
