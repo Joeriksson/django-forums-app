@@ -65,7 +65,14 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        python -m pip install --no-build-isolation -r requirements.txt
+        # django-allauth 0.47.0 setup.py does __import__("allauth") at build
+        # time, which fails in pip's isolated build env. Pre-build it by
+        # setting PYTHONPATH to the extracted source so the import resolves.
+        tmpdir=$(mktemp -d)
+        python -m pip download --no-deps django-allauth==0.47.0 -d $tmpdir -q
+        tar xzf $tmpdir/django-allauth-0.47.0.tar.gz -C $tmpdir
+        PYTHONPATH=$tmpdir/django-allauth-0.47.0 python -m pip install --no-build-isolation --no-deps $tmpdir/django-allauth-0.47.0
+        python -m pip install -r requirements.txt
     - name: Run Tests
       run: |
         python manage.py test --settings=project.settings.test --parallel 

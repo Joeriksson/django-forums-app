@@ -65,7 +65,7 @@ django-crispy-forms==1.13.0
     # via -r requirements.in
 django-debug-toolbar==3.2.4
     # via -r requirements.in
-django-lifecycle==0.9.3
+django-lifecycle==1.1.0
     # via -r requirements.in
 django-permissions-auditor==1.1.0
     # via -r requirements.in
@@ -91,8 +91,16 @@ markdown==3.3.4
     # via martor
 markupsafe==2.1.1
     # via jinja2
-martor==1.6.13
+bleach==6.3.0
+    # via martor
+martor==1.7.10
     # via -r requirements.in
+tzdata==2025.3
+    # via martor
+webencodings==0.5.1
+    # via bleach
+zipp==3.23.0
+    # via martor
 more-itertools==8.12.0
     # via -r requirements.in
 oauthlib==3.2.1
