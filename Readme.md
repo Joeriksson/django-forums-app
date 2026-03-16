@@ -102,8 +102,12 @@ make dev_test        # Django test runner (parallel)
 
 Dependencies are managed with [uv](https://github.com/astral-sh/uv). The `pyproject.toml` file defines all direct dependencies and the `uv.lock` file pins the full dependency tree.
 
-To add or update dependencies, edit `pyproject.toml` and run:
+Common commands:
 
-```
-uv lock
+```bash
+uv add <package>        # Add a runtime dependency
+uv add --dev <package>  # Add a development dependency
+uv remove <package>     # Remove a dependency
+uv sync                 # Install all dependencies from uv.lock
+uv lock                 # Regenerate uv.lock after manual edits to pyproject.toml
 ```

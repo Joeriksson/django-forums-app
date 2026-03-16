@@ -111,3 +111,5 @@ If a task requires changes to more than 3 files, stop and break it into smaller 
 When there’s a bug, start by writing a test that reproduces it, then fix it until the test passes.
 
 Every time I correct you, reflect on what you did wrong and come up with a plan to never make the same mistake again.
+
+Never push to remote repositories. When changes are ready to push, tell the user to run `git push` instead.
