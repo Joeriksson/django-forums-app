@@ -67,7 +67,7 @@ django-debug-toolbar==3.2.4
     # via -r requirements.in
 django-lifecycle==0.9.3
     # via -r requirements.in
-django-permissions-auditor==1.0.4
+django-permissions-auditor==1.1.0
     # via -r requirements.in
 django-redis==5.1.0
     # via -r requirements.in
