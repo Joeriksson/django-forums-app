@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 
-from forums.models import Forum, Thread, UserProfile
+from forums.models import Forum, Thread, UserProfile, Post, Notification
 
 
 @pytest.mark.django_db
@@ -75,3 +75,28 @@ def test_user_profile_model(create_user):
 
     assert user_profile
     assert user_profile.gender == 'F'
+
+
+@pytest.mark.django_db
+def test_notify_subscribers_excludes_post_author(add_forum, add_user, add_thread, monkeypatch):
+    """Post author should not receive a notification for their own post."""
+    forum = add_forum('Test Forum', 'Description')
+    author = add_user('author', 'author@example.com', 'pass123')
+    subscriber = add_user('subscriber', 'subscriber@example.com', 'pass123')
+    thread = add_thread('Test Thread', 'Thread text', forum, author)
+
+    Notification.objects.create(thread=thread, user=author)
+    Notification.objects.create(thread=thread, user=subscriber)
+
+    captured = {}
+
+    def fake_delay(thread_id, thread_title, username, full_url, email_addresses):
+        captured['email_addresses'] = email_addresses
+
+    monkeypatch.delenv('CI', raising=False)
+    monkeypatch.setattr('forums.tasks.send_notifications_task.delay', fake_delay)
+
+    Post.objects.create(text='A reply', thread=thread, user=author)
+
+    assert 'author@example.com' not in captured.get('email_addresses', [])
+    assert 'subscriber@example.com' in captured.get('email_addresses', [])
