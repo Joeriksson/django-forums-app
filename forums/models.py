@@ -82,11 +82,11 @@ class Post(LifecycleModelMixin, models.Model):
                 ['http://', str(Site.objects.get_current().domain), str(url)]
             )
 
-            notification_users = Notification.objects.filter(thread=self.thread)
+            notification_users = Notification.objects.filter(thread=self.thread).select_related('user')
             email_addresses = [
                 notification_user.user.email
                 for notification_user in notification_users
-                if notification_user != self.user
+                if notification_user.user != self.user
             ]
 
             task = send_notifications_task.delay(
