@@ -64,6 +64,8 @@ make dev_export_data                                       # Export DB as JSON f
 make dev_redis_exec cmd='redis-cli'                        # Access Redis CLI
 ```
 
+`manage.py` defaults to `project.settings.base`, which has no `EMAIL_BACKEND` (falls back to SMTP on localhost, so e.g. `createsuperuser` fails when the welcome mail hook fires). Set `DJANGO_SETTINGS_MODULE=project.settings.development` in `.env`, or pass `--settings=project.settings.development` to management commands.
+
 ## Project Structure
 
 ```
@@ -212,6 +214,7 @@ Required in a `.env` file:
 |---|---|
 | `SECRET_KEY` | Django secret key |
 | `ENVIRONMENT` | `development`, `production`, `CI`, or `test` |
+| `DJANGO_SETTINGS_MODULE` | `project.settings.development` for local/Docker dev (otherwise `manage.py` uses `base`, Celery uses `production`) |
 | `DEBUG` | `True` for development |
 | `SENDGRID_USERNAME` | Email sending (optional, defaults to console backend) |
 | `SENDGRID_PASSWORD` | Email sending (optional) |
