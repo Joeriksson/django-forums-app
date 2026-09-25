@@ -1,7 +1,8 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 
-from forums.models import Forum, Thread, UserProfile, Post, Notification
+from forums.models import Forum, Thread, UserProfile, Post, Notification, UpVote
 
 
 @pytest.mark.django_db
@@ -100,3 +101,30 @@ def test_notify_subscribers_excludes_post_author(add_forum, add_user, add_thread
 
     assert 'author@example.com' not in captured.get('email_addresses', [])
     assert 'subscriber@example.com' in captured.get('email_addresses', [])
+
+
+@pytest.mark.django_db
+def test_upvote_unique_per_user(add_forum, add_user, add_thread, add_post):
+    forum = add_forum('Test Forum', 'Description')
+    author = add_user('author', 'author@example.com', 'pass123')
+    voter = add_user('voter', 'voter@example.com', 'pass123')
+    thread = add_thread('Test Thread', 'Thread text', forum, author)
+    post = add_post('A reply', thread, author)
+
+    UpVote.objects.create(post=post, user=voter)
+
+    with pytest.raises(IntegrityError):
+        UpVote.objects.create(post=post, user=voter)
+
+
+@pytest.mark.django_db
+def test_notification_unique_per_user(add_forum, add_user, add_thread):
+    forum = add_forum('Test Forum', 'Description')
+    author = add_user('author', 'author@example.com', 'pass123')
+    subscriber = add_user('subscriber', 'subscriber@example.com', 'pass123')
+    thread = add_thread('Test Thread', 'Thread text', forum, author)
+
+    Notification.objects.create(thread=thread, user=subscriber)
+
+    with pytest.raises(IntegrityError):
+        Notification.objects.create(thread=thread, user=subscriber)
