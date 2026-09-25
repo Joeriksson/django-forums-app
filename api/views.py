@@ -22,11 +22,17 @@ class ThreadViewSet(viewsets.ModelViewSet):
     queryset = Thread.objects.all().order_by('-added')
     serializer_class = ThreadSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrReadOnly & IsAuthenticatedOrReadOnly,)
     queryset = Post.objects.all().order_by('-added')
     serializer_class = PostSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class UserViewSet(viewsets.ModelViewSet):

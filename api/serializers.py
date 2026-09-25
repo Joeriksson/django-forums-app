@@ -9,6 +9,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         # fields = ('url', 'id', 'text', 'thread', 'upvotes', 'user')
         fields = ('id', 'text', 'thread', 'upvotes', 'user', 'added', 'edited')
+        read_only_fields = ('user', 'upvotes', 'added', 'edited')
 
 
 class ThreadSerializer(serializers.ModelSerializer):
@@ -19,6 +20,7 @@ class ThreadSerializer(serializers.ModelSerializer):
         model = Thread
         # fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
         fields = ('id', 'title', 'text', 'forum', 'user', 'posts', 'added', 'edited')
+        read_only_fields = ('user', 'added', 'edited')
 
 
 class ForumSerializer(serializers.ModelSerializer):

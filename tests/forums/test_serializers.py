@@ -43,6 +43,8 @@ def test_valid_thread_serializer(add_forum, add_user):
     }
     serializer = ThreadSerializer(data=valid_serializer_data)
     assert serializer.is_valid()
+    # user is read-only, so it's dropped from the validated data
+    valid_serializer_data.pop('user')
     assert serializer.data == valid_serializer_data
     assert serializer.errors == {}
 
@@ -68,6 +70,8 @@ def test_invalid_thread_serializer(add_forum, add_user):
 
     assert not serializer.is_valid()
     assert serializer.validated_data == {}
+    # user is read-only, so it's dropped from the serializer data
+    invalid_serializer_data.pop('user')
     assert serializer.data == invalid_serializer_data
     assert 'This field is required' in serializer.errors['text'][0]
 
