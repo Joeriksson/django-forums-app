@@ -7,7 +7,8 @@ from django.contrib.auth.mixins import (
 )
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
-from django.db.models import Q
+from django.core.exceptions import PermissionDenied
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -226,12 +227,15 @@ class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 class PostUpvote(LoginRequiredMixin, View):
     model = Post
 
-    def get(self, request, **kwargs):
-        post = Post.objects.get(id=self.kwargs['pk'])
-        post.upvotes += 1
-        post.save()
-        upvote = UpVote.objects.create(post=post, user=self.request.user)
-        upvote.save()
+    def post(self, request, **kwargs):
+        post = get_object_or_404(Post, id=self.kwargs['pk'])
+        if post.user == request.user:
+            raise PermissionDenied
+        _, created = UpVote.objects.get_or_create(post=post, user=request.user)
+        if created:
+            # update() skips lifecycle hooks, so clear the post cache by hand
+            Post.objects.filter(id=post.id).update(upvotes=F('upvotes') + 1)
+            post.invalidate_cache()
         return HttpResponseRedirect(
             reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']})
         )
@@ -240,18 +244,13 @@ class PostUpvote(LoginRequiredMixin, View):
 class ThreadNotification(LoginRequiredMixin, View):
     model = Thread
 
-    def get(self, request, **kwargs):
-        thread = Thread.objects.get(id=self.kwargs['pk'])
-        if existing_notification := Notification.objects.filter(
-            thread=thread, user=self.request.user
-        ):
-            existing_notification.delete()
-        else:
-            notification = Notification.objects.create(
-                thread=thread, user=self.request.user
-            )
-
-            notification.save()
+    def post(self, request, **kwargs):
+        thread = get_object_or_404(Thread, id=self.kwargs['pk'])
+        deleted, _ = Notification.objects.filter(
+            thread=thread, user=request.user
+        ).delete()
+        if not deleted:
+            Notification.objects.create(thread=thread, user=request.user)
         return HttpResponseRedirect(
             reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
         )
