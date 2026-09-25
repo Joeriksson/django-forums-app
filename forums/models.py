@@ -172,6 +172,11 @@ class UpVote(models.Model):
 
     class Meta:
         ordering = ['added']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['post', 'user'], name='unique_upvote_per_user'
+            ),
+        ]
 
 
 class Notification(models.Model):
@@ -185,3 +190,8 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['added']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['thread', 'user'], name='unique_notification_per_user'
+            ),
+        ]

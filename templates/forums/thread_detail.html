@@ -37,12 +37,14 @@
 
         <div class="pb-3">
             {% if user.is_authenticated %}
-                {% if subscribed %}
-                    <a href="{% url 'thread_notification' thread.id %}"
-                       class="btn btn-outline-secondary active">Subscribed</a>
-                {% else %}
-                    <a href="{% url 'thread_notification' thread.id %}" class="btn btn-outline-secondary ">Subscribe</a>
-                {% endif %}
+                <form method="post" action="{% url 'thread_notification' thread.id %}" class="d-inline">
+                    {% csrf_token %}
+                    {% if subscribed %}
+                        <button type="submit" class="btn btn-outline-secondary active">Subscribed</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-outline-secondary">Subscribe</button>
+                    {% endif %}
+                </form>
             {% endif %}
         </div>
 
@@ -119,8 +121,10 @@
                         <!-- TBD Don't show upvote button for the users own posts -->
                         {% if user.is_authenticated %}
                             {% if post.user != user %}
-                                <a href="{% url 'post_upvote' thread.id post.id %}"
-                                   class="btn btn-outline-secondary  p-1">+</a>
+                                <form method="post" action="{% url 'post_upvote' thread.id post.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-secondary p-1">+</button>
+                                </form>
                             {% endif %}
 
                         {% endif %}
