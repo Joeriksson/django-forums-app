@@ -73,8 +73,7 @@ project/           # Django project settings and configuration
   settings/
     base.py        # Shared config (installed apps, middleware, REST, cache, Celery)
     development.py # Local dev overrides
-    test.py        # Test settings (used by pytest)
-    ci.py          # CI/CD pipeline settings
+    test.py        # Test settings (used by pytest and CI)
     production.py  # Production settings
   celery.py        # Celery app definition
   urls.py          # Root URL configuration
@@ -162,7 +161,7 @@ static/            # Static files (CSS)
 /forums/<pk>/add/          → ThreadCreate (login required)
 /forums/<fpk>/delete/<pk>  → ThreadDelete (owner or forums.delete_thread)
 /forums/thread/<pk>        → ThreadDetail
-/forums/thread/<pk>/update/→ ThreadUpdate (owner or forums.update_thread)
+/forums/thread/<pk>/update/→ ThreadUpdate (owner or forums.change_thread)
 /forums/thread/<pk>/notify → ThreadNotification (toggle subscription)
 /forums/thread/<pk>/post   → PostCreate
 /forums/thread/<tpk>/post/<pk>/delete  → PostDelete
@@ -203,7 +202,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - Broker and result backend: Redis
 - `send_notifications_task`: sends BCC email to thread subscribers when a new post is created
-- In non-production environments, `CELERY_ALWAYS_EAGER = True` (tasks run synchronously)
+- `base.py` sets `CELERY_ALWAYS_EAGER = True` outside production, but it has **no effect**: with the `CELERY` namespace Celery only reads `CELERY_TASK_ALWAYS_EAGER`, so tasks go to the worker (see `docs/code-review-project-config.md`)
 - Tasks skipped entirely in CI (`os.environ.get('CI')` check in `Post.notify_subscribers`)
 
 ## Environment Variables
@@ -240,8 +239,7 @@ Required in a `.env` file:
 
 - `project.settings.base` — Shared configuration (all environments inherit this)
 - `project.settings.development` — Local development
-- `project.settings.test` — Testing (used by pytest, configured in `pyproject.toml`)
-- `project.settings.ci` — CI/CD pipelines
+- `project.settings.test` — Testing (used by pytest, configured in `pyproject.toml`). CI uses it too; `ENVIRONMENT=CI` switches the database in `base.py`
 - `project.settings.production` — Production deployment
 
 ## Key Dependencies
