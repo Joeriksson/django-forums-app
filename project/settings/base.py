@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlsplit
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 # One os.path.dirname added after moving this file into a sub folder of the project
@@ -285,18 +286,25 @@ elif os.environ.get('REDIS_LOCALHOST'):
 else:
     redis_host = f'redis://redis:6379/0'
 
+
+def redis_url_with_db(url, db):
+    """Return the Redis URL pointing at database number `db`."""
+    return urlsplit(url)._replace(path=f'/{db}').geturl()
+
+
+# Cache on database 0, Celery broker and results on database 1
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': redis_host,
+        'LOCATION': redis_url_with_db(redis_host, 0),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }
 
-CELERY_BROKER_URL = redis_host
-CELERY_RESULT_BACKEND = redis_host
+CELERY_BROKER_URL = redis_url_with_db(redis_host, 1)
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
