@@ -219,8 +219,6 @@ Required in a `.env` file:
 | `DJANGO_EMAIL_CONSOLE` | Production only: `true` to print mail to the console instead of SMTP, e.g. for trying out the production compose file locally |
 | `EMAIL_PORT` / `EMAIL_USE_TLS` | Optional SMTP settings (default: `587`, `true` for STARTTLS) |
 | `DEFAULT_FROM_EMAIL` | Optional sender address (default: `EMAIL_HOST_USER`) |
-| `SENTRY_KEY` | Error tracking (optional, production only) |
-| `SENTRY_PROJECT` | Error tracking (optional, production only) |
 | `ADMIN1` | Admin contact, format: `Name, email@example.com` |
 | `ADMIN2` | Admin contact, format: `Name, email@example.com` |
 | `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`) |
@@ -236,7 +234,6 @@ Required in a `.env` file:
 - **Redis**: Caching and Celery message broker
 - **Celery**: Async task queue for email notifications
 - **Email**: SMTP in production (required, see `EMAIL_*` above); console backend in development
-- **Sentry**: Error tracking in production
 - **Whitenoise**: Static file serving
 
 ## Settings Modules

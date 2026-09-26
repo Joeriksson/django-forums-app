@@ -149,3 +149,16 @@ def test_smtp_wins_over_console_opt_in(load_production):
     )
 
     assert production.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend'
+
+
+def test_base_settings_load_in_production_without_sentry(monkeypatch):
+    monkeypatch.setenv('ENVIRONMENT', 'production')
+    monkeypatch.delenv('SENTRY_KEY', raising=False)
+    monkeypatch.delenv('SENTRY_PROJECT', raising=False)
+    original = sys.modules.pop('project.settings.base')
+    try:
+        base = importlib.import_module('project.settings.base')
+        # Production uses the Celery worker, not eager tasks
+        assert not hasattr(base, 'CELERY_TASK_ALWAYS_EAGER')
+    finally:
+        sys.modules['project.settings.base'] = original

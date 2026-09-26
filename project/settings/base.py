@@ -258,25 +258,6 @@ MARTOR_SEARCH_USERS_URL = '/martor/search-user/' # default
 MARTOR_MARKDOWN_BASE_EMOJI_URL = 'https://github.githubassets.com/images/icons/emoji/'                  # default from github
 MARTOR_MARKDOWN_BASE_MENTION_URL = 'https://python.web.id/author/'
 
-# SENTRY
-# Comment out all Sentry settings below if you don't want to use sentry logging
-
-if os.environ.get('ENVIRONMENT') == 'production':
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-
-    SENTRY_KEY = os.environ.get('SENTRY_KEY')
-    SENTRY_PROJECT = os.environ.get('SENTRY_PROJECT')
-
-    sentry_sdk.init(
-        dsn=f'https://{SENTRY_KEY}@sentry.io/{SENTRY_PROJECT}',
-        integrations=[DjangoIntegration()],
-
-        # If you wish to associate users to errors (assuming you are using
-        # django.contrib.auth) you may enable sending PII data.
-        send_default_pii=True
-    )
-
 CACHE_MIDDLEWARE_ALIAS = 'default'
 
 if os.environ.get('REDIS_URL') is not None:
