@@ -151,8 +151,8 @@ static/            # Static files (CSS)
 
 ### CustomUser (`users.CustomUser`)
 - Extends `AbstractUser`
-- Uses **email** for authentication (not username)
-- `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`; skipped if the user has no email
+- Uses **email** for authentication (not username); the database requires it to be non-empty and unique ignoring case (migration `users/0003`)
+- `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`
 
 ## URL Structure
 
