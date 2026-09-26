@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
-from forums.models import Forum, Thread, UserProfile, Post, Notification, UpVote
+from forums.models import Forum, Thread, UserProfile, Post, Notification, UpVote, Gender
 
 
 @pytest.mark.django_db
@@ -70,12 +70,23 @@ def test_user_model(create_user):
     assert not user.is_staff
 
 
-def test_user_profile_model(create_user):
-    user = create_user(username='palle')
-    user_profile = UserProfile(user=user, gender='F')
+@pytest.mark.django_db
+def test_profile_created_for_new_user(add_user):
+    user = add_user('palle', 'palle@example.com', 'pass123')
 
-    assert user_profile
-    assert user_profile.gender == 'F'
+    profiles = UserProfile.objects.filter(user=user)
+    assert profiles.count() == 1
+    assert profiles.get().gender == Gender.NOTPROVIDED
+
+
+@pytest.mark.django_db
+def test_saving_user_again_does_not_duplicate_profile(add_user):
+    user = add_user('palle', 'palle@example.com', 'pass123')
+
+    user.first_name = 'Palle'
+    user.save()
+
+    assert UserProfile.objects.filter(user=user).count() == 1
 
 
 @pytest.mark.django_db
