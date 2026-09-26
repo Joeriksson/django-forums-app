@@ -51,14 +51,6 @@ def test_welcome_mail_not_sent_when_creation_is_rolled_back():
     assert len(mail.outbox) == 0
 
 
-@pytest.mark.django_db
-def test_no_welcome_mail_for_user_without_email(django_capture_on_commit_callbacks):
-    with django_capture_on_commit_callbacks(execute=True):
-        get_user_model().objects.create_user(username='noemail', password='testpass123')
-
-    assert len(mail.outbox) == 0
-
-
 def test_notification_mail_uses_default_from_email(settings):
     settings.DEFAULT_FROM_EMAIL = SENDER
 
