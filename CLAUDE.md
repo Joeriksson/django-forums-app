@@ -174,7 +174,7 @@ static/            # Static files (CSS)
 /api/forums/               → ForumViewSet (read-only anon, write authenticated)
 /api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly)
 /api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly)
-/api/users/                → UserViewSet (IsAdminUser only)
+/api/users/                → UserViewSet (read-only, staff only via IsAdminUser)
 /api/schema/               → OpenAPI schema
 /api/api-auth              → DRF browsable API login
 

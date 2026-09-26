@@ -35,7 +35,7 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAdminUser,)
     queryset = CustomUser.objects.all().order_by('username')
     serializer_class = UserSerializer
