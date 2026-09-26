@@ -1,11 +1,14 @@
 from rest_framework import permissions
 
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
+class IsOwnerOrModeratorOrReadOnly(permissions.BasePermission):
     """
-    Object-level permission to only allow owners of an object to edit it.
-    Assumes the model instance has an `owner` attribute.
+    Object-level permission: anyone can read, the object's `user` can edit
+    and delete it, and so can users with the matching model permission
+    (e.g. forums.delete_post), like the moderation checks in the web views.
     """
+
+    actions = {'PUT': 'change', 'PATCH': 'change', 'DELETE': 'delete'}
 
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request,
@@ -14,4 +17,11 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Instance must have an attribute named `user`.
-        return obj.user == request.user
+        if obj.user == request.user:
+            return True
+
+        action = self.actions.get(request.method)
+        opts = obj._meta
+        return action is not None and request.user.has_perm(
+            f'{opts.app_label}.{action}_{opts.model_name}'
+        )
