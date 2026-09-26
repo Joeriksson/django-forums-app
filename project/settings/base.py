@@ -15,8 +15,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 #ALLOWED_HOSTS = ['127.0.0.1']
 ALLOWED_HOSTS = []
-if RENDER_EXTERNAL_HOSTNAME := os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 
@@ -206,7 +204,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-# Heroku
+# Override the database with DATABASE_URL when it is set
 import dj_database_url
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
