@@ -52,7 +52,7 @@ def test_add_post_not_logged_in(add_forum, add_thread, add_user):
     client = APIClient()
 
     resp = client.post(
-        "/api/threads/",
+        "/api/posts/",
         json.dumps(
             {
                 "text": "This is a new reply in a thread",
