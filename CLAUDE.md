@@ -221,8 +221,10 @@ Required in a `.env` file:
 | `DEFAULT_FROM_EMAIL` | Optional sender address (default: `EMAIL_HOST_USER`) |
 | `ADMIN1` | Admin contact, format: `Name, email@example.com` |
 | `ADMIN2` | Admin contact, format: `Name, email@example.com` |
-| `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`) |
+| `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`). The database number is replaced: cache uses `/0`, Celery uses `/1`. Set automatically by `docker-compose-prod.yml` |
 | `REDIS_LOCALHOST` | Set to `true` when using local Redis |
+| `POSTGRES_PASSWORD` | `docker-compose-prod.yml` only (required): Postgres password; also used to build `DATABASE_URL`. Use URL-safe characters |
+| `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
 | `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
@@ -230,8 +232,8 @@ Required in a `.env` file:
 
 ## Services
 
-- **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres`)
-- **Redis**: Caching and Celery message broker
+- **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres` in dev and CI, `POSTGRES_PASSWORD` in production)
+- **Redis**: Caching and Celery message broker (password-protected and not published in `docker-compose-prod.yml`)
 - **Celery**: Async task queue for email notifications
 - **Email**: SMTP in production (required, see `EMAIL_*` above); console backend in development
 - **Whitenoise**: Static file serving
