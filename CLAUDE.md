@@ -94,6 +94,7 @@ forums/            # Core app — Forum, Thread, Post, UpVote, Notification, Use
 
 users/             # Custom user model (email-based auth)
   models.py        # CustomUser extends AbstractUser; sends welcome email on create
+  tasks.py         # Celery task send_welcome_email_task
 
 pages/             # Static pages (home, etc.)
 api/               # Django REST Framework API
@@ -151,7 +152,7 @@ static/            # Static files (CSS)
 ### CustomUser (`users.CustomUser`)
 - Extends `AbstractUser`
 - Uses **email** for authentication (not username)
-- `send_welcome_mail` lifecycle hook fires on user creation
+- `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`; skipped if the user has no email
 
 ## URL Structure
 
@@ -206,6 +207,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - Broker and result backend: Redis
 - `send_notifications_task`: sends BCC email to thread subscribers when a new post is created
+- `send_welcome_email_task` (`users/tasks.py`): sends the welcome email to a new user; retries up to 3 times on failure
 - Outside production, `CELERY_TASK_ALWAYS_EAGER = True` and `CELERY_TASK_EAGER_PROPAGATES = True`: tasks run synchronously in the web process and their errors are raised there, so the Celery worker is idle in dev
 - Tasks skipped entirely in CI (`os.environ.get('CI')` check in `Post.notify_subscribers`)
 
