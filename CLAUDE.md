@@ -25,6 +25,10 @@ make dev_down    # Stop containers
 
 Server runs at `http://127.0.0.1:8000`
 
+## Production Deployment
+
+Production runs `docker-compose-prod.yml` on a VPS behind a host reverse proxy (Caddy). See `docs/deployment-vps.md` for the proxy config, the `.env` checklist, first deploy, updates, backups and troubleshooting.
+
 ## Running Tests
 
 ```bash
@@ -77,7 +81,7 @@ project/           # Django project settings and configuration
     production.py  # Production settings
   celery.py        # Celery app definition
   urls.py          # Root URL configuration
-  utils.py         # send_mail helper using SendGrid
+  utils.py         # send_mail helper (BCC via the configured email backend)
 
 forums/            # Core app — Forum, Thread, Post, UpVote, Notification, UserProfile models
   models.py        # All core models with django-lifecycle hooks and Redis cache invalidation
@@ -202,7 +206,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - Broker and result backend: Redis
 - `send_notifications_task`: sends BCC email to thread subscribers when a new post is created
-- `base.py` sets `CELERY_ALWAYS_EAGER = True` outside production, but it has **no effect**: with the `CELERY` namespace Celery only reads `CELERY_TASK_ALWAYS_EAGER`, so tasks go to the worker (see `docs/code-review-project-config.md`)
+- Outside production, `CELERY_TASK_ALWAYS_EAGER = True` and `CELERY_TASK_EAGER_PROPAGATES = True`: tasks run synchronously in the web process and their errors are raised there, so the Celery worker is idle in dev
 - Tasks skipped entirely in CI (`os.environ.get('CI')` check in `Post.notify_subscribers`)
 
 ## Environment Variables
@@ -215,24 +219,27 @@ Required in a `.env` file:
 | `ENVIRONMENT` | `development`, `production`, `CI`, or `test` |
 | `DJANGO_SETTINGS_MODULE` | `project.settings.development` for local/Docker dev (otherwise `manage.py` uses `base`, Celery uses `production`) |
 | `DEBUG` | `True` for development |
-| `SENDGRID_USERNAME` | Email sending (optional, defaults to console backend) |
-| `SENDGRID_PASSWORD` | Email sending (optional) |
-| `SENTRY_KEY` | Error tracking (optional, production only) |
-| `SENTRY_PROJECT` | Error tracking (optional, production only) |
+| `EMAIL_HOST` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Production SMTP server and login. All three are required: production refuses to start (`ImproperlyConfigured`) if any is missing, unless `DJANGO_EMAIL_CONSOLE=true` |
+| `DJANGO_EMAIL_CONSOLE` | Production only: `true` to print mail to the console instead of SMTP, e.g. for trying out the production compose file locally |
+| `EMAIL_PORT` / `EMAIL_USE_TLS` | Optional SMTP settings (default: `587`, `true` for STARTTLS) |
+| `DEFAULT_FROM_EMAIL` | Optional sender address (default: `EMAIL_HOST_USER`) |
 | `ADMIN1` | Admin contact, format: `Name, email@example.com` |
 | `ADMIN2` | Admin contact, format: `Name, email@example.com` |
-| `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`) |
+| `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`). The database number is replaced: cache uses `/0`, Celery uses `/1`. Set automatically by `docker-compose-prod.yml` |
 | `REDIS_LOCALHOST` | Set to `true` when using local Redis |
+| `POSTGRES_PASSWORD` | `docker-compose-prod.yml` only (required): Postgres password; also used to build `DATABASE_URL`. Use URL-safe characters |
+| `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
-| `RENDER_EXTERNAL_HOSTNAME` | Automatically added to `ALLOWED_HOSTS` on Render |
+| `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
+| `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
+| `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | Opt-in HSTS flags (default: `false`) |
 
 ## Services
 
-- **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres`)
-- **Redis**: Caching and Celery message broker
+- **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres` in dev and CI, `POSTGRES_PASSWORD` in production)
+- **Redis**: Caching and Celery message broker (password-protected and not published in `docker-compose-prod.yml`)
 - **Celery**: Async task queue for email notifications
-- **SendGrid**: Email delivery via `project/utils.py`
-- **Sentry**: Error tracking in production
+- **Email**: SMTP in production (required, see `EMAIL_*` above); console backend in development
 - **Whitenoise**: Static file serving
 
 ## Settings Modules

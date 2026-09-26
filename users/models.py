@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import EmailMultiAlternatives
 
@@ -9,7 +10,7 @@ class CustomUser(LifecycleModelMixin, AbstractUser):
 
     @hook('after_create')
     def send_welcome_mail(self):
-        subject, from_email = 'Welcome to Wildvasa Forums', 'info@wildvasa.com'
+        subject, from_email = 'Welcome to Wildvasa Forums', settings.DEFAULT_FROM_EMAIL
 
         to = (self.email,)
 

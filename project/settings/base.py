@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlsplit
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 # One os.path.dirname added after moving this file into a sub folder of the project
@@ -15,8 +16,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 #ALLOWED_HOSTS = ['127.0.0.1']
 ALLOWED_HOSTS = []
-if RENDER_EXTERNAL_HOSTNAME := os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 
@@ -206,7 +205,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-# Heroku
+# Override the database with DATABASE_URL when it is set
 import dj_database_url
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
@@ -259,25 +258,6 @@ MARTOR_SEARCH_USERS_URL = '/martor/search-user/' # default
 MARTOR_MARKDOWN_BASE_EMOJI_URL = 'https://github.githubassets.com/images/icons/emoji/'                  # default from github
 MARTOR_MARKDOWN_BASE_MENTION_URL = 'https://python.web.id/author/'
 
-# SENTRY
-# Comment out all Sentry settings below if you don't want to use sentry logging
-
-if os.environ.get('ENVIRONMENT') == 'production':
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-
-    SENTRY_KEY = os.environ.get('SENTRY_KEY')
-    SENTRY_PROJECT = os.environ.get('SENTRY_PROJECT')
-
-    sentry_sdk.init(
-        dsn=f'https://{SENTRY_KEY}@sentry.io/{SENTRY_PROJECT}',
-        integrations=[DjangoIntegration()],
-
-        # If you wish to associate users to errors (assuming you are using
-        # django.contrib.auth) you may enable sending PII data.
-        send_default_pii=True
-    )
-
 CACHE_MIDDLEWARE_ALIAS = 'default'
 
 if os.environ.get('REDIS_URL') is not None:
@@ -287,23 +267,32 @@ elif os.environ.get('REDIS_LOCALHOST'):
 else:
     redis_host = f'redis://redis:6379/0'
 
+
+def redis_url_with_db(url, db):
+    """Return the Redis URL pointing at database number `db`."""
+    return urlsplit(url)._replace(path=f'/{db}').geturl()
+
+
+# Cache on database 0, Celery broker and results on database 1
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': redis_host,
+        'LOCATION': redis_url_with_db(redis_host, 0),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }
 
-CELERY_BROKER_URL = redis_host
-CELERY_RESULT_BACKEND = redis_host
+CELERY_BROKER_URL = redis_url_with_db(redis_host, 1)
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 if not os.environ.get('ENVIRONMENT') == 'production':
-    CELERY_ALWAYS_EAGER = True
+    # Run tasks in-process outside production, so errors surface in the web log
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
 
 
 # An example below how to set up a scheduled task
