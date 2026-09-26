@@ -10,6 +10,8 @@ CustomUser = get_user_model()
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
+    # The post_save signal creates the profile, so the admin mustn't delete it.
+    can_delete = False
 
 
 class CustomUserAdmin(UserAdmin):
@@ -18,6 +20,12 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     inlines = [UserProfileInline]
     list_display = ['email', 'username', 'is_staff', 'is_active', 'date_joined']
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'username', 'password1', 'password2'),
+        }),
+    )
     # list_filter = ('date_joined',)
 
     list_filter = (
@@ -26,6 +34,13 @@ class CustomUserAdmin(UserAdmin):
         ('is_active', admin.BooleanFieldListFilter),
         ('date_joined', admin.DateFieldListFilter),
     )
+
+    def get_inline_instances(self, request, obj=None):
+        # No profile inline on "add": the signal creates the profile when the
+        # user is saved, and a second one from the inline would clash with it.
+        if obj is None:
+            return []
+        return super().get_inline_instances(request, obj)
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
