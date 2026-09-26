@@ -1,4 +1,5 @@
 from celery import shared_task
+from django.conf import settings
 
 from project.utils import send_mail
 
@@ -15,7 +16,7 @@ def send_notifications_task(
     # TODO: Look into how to send multiple mails via header instead of BCC
 
     # Compose message to subscribers
-    subject, from_email = f'New post added by {user_name}', 'info@wildvasa.com'
+    subject, from_email = f'New post added by {user_name}', settings.DEFAULT_FROM_EMAIL
 
     bcc = email_addresses
 
