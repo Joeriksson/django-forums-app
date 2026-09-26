@@ -116,8 +116,8 @@ def test_update_forum(add_forum, add_super_user, get_user_client):
 
     resp_two = client.get(f"/api/forums/{forum.id}/")
     assert resp_two.status_code == 200
-    assert resp.data["title"] == "This is an updated title"
-    assert resp.data["description"] == "This is an updated description"
+    assert resp_two.data["title"] == "This is an updated title"
+    assert resp_two.data["description"] == "This is an updated description"
 
 
 @pytest.mark.django_db

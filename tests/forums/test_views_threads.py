@@ -123,8 +123,8 @@ def test_update_thread(add_forum, add_user, add_thread, get_user_client):
 
     resp_two = client.get(f"/api/threads/{thread.id}/")
     assert resp_two.status_code == 200
-    assert resp.data["title"] == "This is an updated title"
-    assert resp.data["text"] == "This is an updated text"
+    assert resp_two.data["title"] == "This is an updated title"
+    assert resp_two.data["text"] == "This is an updated text"
 
 
 @pytest.mark.django_db
