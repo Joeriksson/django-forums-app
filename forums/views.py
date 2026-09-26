@@ -60,22 +60,6 @@ class ForumCreate(PermissionRequiredMixin, CreateView):
     fields = '__all__'
     permission_required = 'forums.add_forum'
     success_url = reverse_lazy('forum_list')
-    login_url = ''
-
-    def get_login_url(self):
-        """
-        Override this method to override the login_url attribute.
-        """
-        if login_url := self.login_url:
-            return str(login_url)
-        else:
-            raise NotImplementedError(
-                (
-                    '{0} is missing the login_url attribute. Define {0}.login_url, settings.LOGIN_URL, or override {0}.get_login_url().'.format(
-                        self.__class__.__name__
-                    )
-                )
-            )
 
 
 class ForumUpdate(PermissionRequiredMixin, UpdateView):
@@ -121,14 +105,13 @@ class ThreadDetail(DetailView):
 class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Thread
     fields = ('title', 'text')
-    # permission_required = 'forums.change_thread'
     template_name_suffix = '_update_form'
 
     def test_func(self):
         """
         User must be author to update
         """
-        if self.request.user.has_perm('forums.update_thread'):
+        if self.request.user.has_perm('forums.change_thread'):
             return True
         obj = self.get_object()
         return obj.user == self.request.user
