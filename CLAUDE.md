@@ -77,7 +77,7 @@ project/           # Django project settings and configuration
     production.py  # Production settings
   celery.py        # Celery app definition
   urls.py          # Root URL configuration
-  utils.py         # send_mail helper using SendGrid
+  utils.py         # send_mail helper (BCC via the configured email backend)
 
 forums/            # Core app — Forum, Thread, Post, UpVote, Notification, UserProfile models
   models.py        # All core models with django-lifecycle hooks and Redis cache invalidation
@@ -215,8 +215,9 @@ Required in a `.env` file:
 | `ENVIRONMENT` | `development`, `production`, `CI`, or `test` |
 | `DJANGO_SETTINGS_MODULE` | `project.settings.development` for local/Docker dev (otherwise `manage.py` uses `base`, Celery uses `production`) |
 | `DEBUG` | `True` for development |
-| `SENDGRID_USERNAME` | Email sending (optional, defaults to console backend) |
-| `SENDGRID_PASSWORD` | Email sending (optional) |
+| `EMAIL_HOST` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Production SMTP server and login. When all three are set, production sends via SMTP; otherwise it uses the console backend |
+| `EMAIL_PORT` / `EMAIL_USE_TLS` | Optional SMTP settings (default: `587`, `true` for STARTTLS) |
+| `DEFAULT_FROM_EMAIL` | Optional sender address (default: `EMAIL_HOST_USER`) |
 | `SENTRY_KEY` | Error tracking (optional, production only) |
 | `SENTRY_PROJECT` | Error tracking (optional, production only) |
 | `ADMIN1` | Admin contact, format: `Name, email@example.com` |
@@ -224,14 +225,16 @@ Required in a `.env` file:
 | `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`) |
 | `REDIS_LOCALHOST` | Set to `true` when using local Redis |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
-| `RENDER_EXTERNAL_HOSTNAME` | Automatically added to `ALLOWED_HOSTS` on Render |
+| `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
+| `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
+| `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | Opt-in HSTS flags (default: `false`) |
 
 ## Services
 
 - **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres`)
 - **Redis**: Caching and Celery message broker
 - **Celery**: Async task queue for email notifications
-- **SendGrid**: Email delivery via `project/utils.py`
+- **Email**: SMTP in production when `EMAIL_HOST`/`EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` are set, console backend otherwise
 - **Sentry**: Error tracking in production
 - **Whitenoise**: Static file serving
 
