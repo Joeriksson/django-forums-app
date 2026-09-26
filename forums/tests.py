@@ -110,12 +110,14 @@ class ThreadDetailPageTests(TestCase):
         )
 
         url = reverse('thread_detail', args=(self.thread.id,))
-        self.client.login(username='forumuser@email.com', password='testpass123')
+        self.client.force_login(self.user)
 
         self.response = self.client.get(url)
 
     def test_thread_detail_template(self):
         self.assertEqual(self.response.status_code, 200)
+        # The page also renders for anonymous users, so check the login took effect
+        self.assertEqual(self.response.context['user'], self.user)
         self.assertTemplateUsed(self.response, 'forums/thread_detail.html')
         self.assertContains(self.response, 'Testtitle')
         self.assertNotContains(self.response, 'This should not be here')
