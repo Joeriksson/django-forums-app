@@ -11,6 +11,14 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'thread', 'upvotes', 'user', 'added', 'edited')
         read_only_fields = ('user', 'upvotes', 'added', 'edited')
 
+    def validate_thread(self, value):
+        # The thread is set on create; moving an existing post isn't allowed.
+        if self.instance is not None and value != self.instance.thread:
+            raise serializers.ValidationError(
+                'A post cannot be moved to another thread.'
+            )
+        return value
+
 
 class ThreadSerializer(serializers.ModelSerializer):
     posts = PostSerializer(many=True, read_only=True)
@@ -21,6 +29,14 @@ class ThreadSerializer(serializers.ModelSerializer):
         # fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
         fields = ('id', 'title', 'text', 'forum', 'user', 'posts', 'added', 'edited')
         read_only_fields = ('user', 'added', 'edited')
+
+    def validate_forum(self, value):
+        # The forum is set on create; moving an existing thread isn't allowed.
+        if self.instance is not None and value != self.instance.forum:
+            raise serializers.ValidationError(
+                'A thread cannot be moved to another forum.'
+            )
+        return value
 
 
 class ForumSerializer(serializers.ModelSerializer):
