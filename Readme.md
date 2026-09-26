@@ -4,6 +4,9 @@
 
 A sample forums app built on the Django framework. I built this app to learn Django more, and I wanted to learn how to do a parent/child database model to also learn that aspect of Django. It can also be seen as an example app to see how the features listed below could be implemented in Django.
 
+> [!NOTE]
+> I am currently continuing to build this forum app with Claude AI.
+
 Includes:
 
 - forums, threads and posts (reply in threads)
