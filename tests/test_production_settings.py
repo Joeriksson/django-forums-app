@@ -2,6 +2,7 @@ import importlib
 import sys
 
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 
 PRODUCTION_ENV_VARS = [
     'DJANGO_ALLOWED_HOSTS',
@@ -15,16 +16,21 @@ PRODUCTION_ENV_VARS = [
     'EMAIL_HOST_USER',
     'EMAIL_HOST_PASSWORD',
     'DEFAULT_FROM_EMAIL',
+    'DJANGO_EMAIL_CONSOLE',
 ]
 
 
 @pytest.fixture
 def load_production(monkeypatch):
-    """Import project.settings.production fresh with the given env vars."""
+    """
+    Import project.settings.production fresh with the given env vars.
+    Console email is allowed unless a test sets DJANGO_EMAIL_CONSOLE itself.
+    """
 
     def _load(**env):
         for name in PRODUCTION_ENV_VARS:
             monkeypatch.delenv(name, raising=False)
+        env = {'DJANGO_EMAIL_CONSOLE': 'true', **env}
         for name, value in env.items():
             monkeypatch.setenv(name, value)
         sys.modules.pop('project.settings.production', None)
@@ -123,7 +129,23 @@ def test_smtp_settings_from_env(load_production):
         {'EMAIL_HOST': 'smtp.example.com', 'EMAIL_HOST_USER': 'forum@example.com'},
     ],
 )
-def test_console_email_without_host_or_credentials(load_production, env):
-    production = load_production(**env)
+def test_incomplete_smtp_settings_fail_at_startup(load_production, env):
+    with pytest.raises(ImproperlyConfigured, match='EMAIL_'):
+        load_production(DJANGO_EMAIL_CONSOLE='', **env)
+
+
+def test_console_email_only_when_opted_in(load_production):
+    production = load_production(DJANGO_EMAIL_CONSOLE='true')
 
     assert production.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend'
+
+
+def test_smtp_wins_over_console_opt_in(load_production):
+    production = load_production(
+        DJANGO_EMAIL_CONSOLE='true',
+        EMAIL_HOST='smtp.example.com',
+        EMAIL_HOST_USER='forum@example.com',
+        EMAIL_HOST_PASSWORD='smtp-token',
+    )
+
+    assert production.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend'

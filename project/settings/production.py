@@ -1,3 +1,5 @@
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *
 
 DEBUG = False
@@ -15,7 +17,8 @@ ALLOWED_HOSTS = [
 ]
 CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS]
 
-# SMTP when host and credentials are set; otherwise mail is printed to the console
+# SMTP when host and credentials are set. Refuse to start otherwise, unless
+# DJANGO_EMAIL_CONSOLE=true opts in to printing mail to the console.
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
@@ -23,8 +26,18 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 if EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-else:
+elif env_bool('DJANGO_EMAIL_CONSOLE'):
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    missing = [
+        name
+        for name in ('EMAIL_HOST', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD')
+        if not os.environ.get(name)
+    ]
+    raise ImproperlyConfigured(
+        f'Missing SMTP settings: {", ".join(missing)}. '
+        'Set them, or set DJANGO_EMAIL_CONSOLE=true to print mail to the console.'
+    )
 
 # SMTP servers usually only accept senders that belong to the account
 DEFAULT_FROM_EMAIL = os.environ.get(

@@ -215,7 +215,8 @@ Required in a `.env` file:
 | `ENVIRONMENT` | `development`, `production`, `CI`, or `test` |
 | `DJANGO_SETTINGS_MODULE` | `project.settings.development` for local/Docker dev (otherwise `manage.py` uses `base`, Celery uses `production`) |
 | `DEBUG` | `True` for development |
-| `EMAIL_HOST` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Production SMTP server and login. When all three are set, production sends via SMTP; otherwise it uses the console backend |
+| `EMAIL_HOST` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Production SMTP server and login. All three are required: production refuses to start (`ImproperlyConfigured`) if any is missing, unless `DJANGO_EMAIL_CONSOLE=true` |
+| `DJANGO_EMAIL_CONSOLE` | Production only: `true` to print mail to the console instead of SMTP, e.g. for trying out the production compose file locally |
 | `EMAIL_PORT` / `EMAIL_USE_TLS` | Optional SMTP settings (default: `587`, `true` for STARTTLS) |
 | `DEFAULT_FROM_EMAIL` | Optional sender address (default: `EMAIL_HOST_USER`) |
 | `SENTRY_KEY` | Error tracking (optional, production only) |
@@ -234,7 +235,7 @@ Required in a `.env` file:
 - **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres`)
 - **Redis**: Caching and Celery message broker
 - **Celery**: Async task queue for email notifications
-- **Email**: SMTP in production when `EMAIL_HOST`/`EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` are set, console backend otherwise
+- **Email**: SMTP in production (required, see `EMAIL_*` above); console backend in development
 - **Sentry**: Error tracking in production
 - **Whitenoise**: Static file serving
 
