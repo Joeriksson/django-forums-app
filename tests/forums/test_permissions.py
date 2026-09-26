@@ -1,5 +1,5 @@
 import pytest
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.urls import reverse
 
 
@@ -118,3 +118,41 @@ def test_author_sees_thread_buttons(client, forum_with_thread):
 
     for url in thread_button_urls(forum, thread):
         assert url in content
+
+
+# Moderators group (created by migration 0016)
+
+
+@pytest.mark.django_db
+def test_moderators_group_has_only_moderation_permissions():
+    group = Group.objects.get(name='Moderators')
+
+    codenames = set(
+        group.permissions.values_list('content_type__app_label', 'codename')
+    )
+
+    assert codenames == {
+        ('forums', 'change_thread'),
+        ('forums', 'delete_thread'),
+        ('forums', 'delete_post'),
+    }
+
+
+@pytest.mark.django_db
+def test_moderators_group_member_can_moderate_other_users_content(
+    client, add_user, add_post, forum_with_thread
+):
+    forum, thread = forum_with_thread
+    post = add_post(text='A post by the author', thread=thread, user=thread.user)
+    moderator = add_user('moderator', 'moderator@email.com', 'testpass123')
+    moderator.groups.add(Group.objects.get(name='Moderators'))
+    client.force_login(moderator)
+
+    urls = (
+        reverse('thread_update', kwargs={'pk': thread.id}),
+        reverse('thread_delete', kwargs={'fpk': forum.id, 'pk': thread.id}),
+        reverse('post_delete', kwargs={'tpk': thread.id, 'pk': post.id}),
+    )
+
+    for url in urls:
+        assert client.get(url).status_code == 200, url
