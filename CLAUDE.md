@@ -202,7 +202,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - Broker and result backend: Redis
 - `send_notifications_task`: sends BCC email to thread subscribers when a new post is created
-- `base.py` sets `CELERY_ALWAYS_EAGER = True` outside production, but it has **no effect**: with the `CELERY` namespace Celery only reads `CELERY_TASK_ALWAYS_EAGER`, so tasks go to the worker (see `docs/code-review-project-config.md`)
+- Outside production, `CELERY_TASK_ALWAYS_EAGER = True` and `CELERY_TASK_EAGER_PROPAGATES = True`: tasks run synchronously in the web process and their errors are raised there, so the Celery worker is idle in dev
 - Tasks skipped entirely in CI (`os.environ.get('CI')` check in `Post.notify_subscribers`)
 
 ## Environment Variables

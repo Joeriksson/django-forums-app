@@ -303,7 +303,9 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 if not os.environ.get('ENVIRONMENT') == 'production':
-    CELERY_ALWAYS_EAGER = True
+    # Run tasks in-process outside production, so errors surface in the web log
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
 
 
 # An example below how to set up a scheduled task
