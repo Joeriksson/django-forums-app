@@ -25,6 +25,10 @@ make dev_down    # Stop containers
 
 Server runs at `http://127.0.0.1:8000`
 
+## Production Deployment
+
+Production runs `docker-compose-prod.yml` on a VPS behind a host reverse proxy (Caddy). See `docs/deployment-vps.md` for the proxy config, the `.env` checklist, first deploy, updates, backups and troubleshooting.
+
 ## Running Tests
 
 ```bash
