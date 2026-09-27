@@ -7,7 +7,6 @@ from users.models import CustomUser
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        # fields = ('url', 'id', 'text', 'thread', 'upvotes', 'user')
         fields = ('id', 'text', 'thread', 'upvotes', 'user', 'added', 'edited')
         read_only_fields = ('user', 'upvotes', 'added', 'edited')
 
@@ -23,11 +22,9 @@ class PostSerializer(serializers.ModelSerializer):
 class ThreadSerializer(serializers.ModelSerializer):
     # Posts are listed through /api/posts/?thread=<id>, not nested here
     post_count = serializers.IntegerField(read_only=True)
-    # user_name = serializers.CharField(source="user.username")
 
     class Meta:
         model = Thread
-        # fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
         fields = ('id', 'title', 'text', 'forum', 'user', 'post_count', 'added', 'edited')
         read_only_fields = ('user', 'added', 'edited')
 
@@ -46,23 +43,12 @@ class ForumSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Forum
-        # fields = ('url', 'id', 'title', 'description', 'threads')
         fields = ('id', 'title', 'description', 'thread_count')
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        # fields = (
-        #     'url',
-        #     'id',
-        #     'username',
-        #     'first_name',
-        #     'last_name',
-        #     'email',
-        #     'date_joined',
-        #     'last_login',
-        # )
         fields = (
             'id',
             'username',
