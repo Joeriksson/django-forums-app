@@ -56,7 +56,7 @@ tests/
     └── test_views_threads.py    # Thread view tests
 ```
 
-There are also legacy test files: `forums/tests.py`, `users/tests.py`, `pages/tests.py`, `api/tests.py`.
+There are also legacy test files: `forums/tests.py`, `users/tests.py`, `pages/tests.py`.
 
 ## Key Commands (Makefile)
 
@@ -177,7 +177,7 @@ static/            # Static files (CSS)
 /api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly); ?thread=<id> filters
 /api/users/                → UserViewSet (read-only, staff only via IsAdminUser)
 /api/schema/               → OpenAPI schema
-/api/api-auth              → DRF browsable API login
+/api/api-auth/login/       → DRF browsable API login
 
 /accounts/                 → django-allauth (login, signup, social auth)
 /user_profile/<pk>         → UserProfileUpdate
