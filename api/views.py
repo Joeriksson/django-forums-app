@@ -1,7 +1,11 @@
 from django.db.models import Count
 from rest_framework import serializers, viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    DjangoModelPermissionsOrAnonReadOnly,
+    IsAdminUser,
+    IsAuthenticatedOrReadOnly,
+)
 
 from forums.models import Forum, Thread, Post
 from users.models import CustomUser
@@ -29,6 +33,9 @@ def filter_by_id(queryset, request, param):
 
 
 class ForumViewSet(viewsets.ModelViewSet):
+    # Anyone can read; writing needs forums.add/change/delete_forum
+    permission_classes = (DjangoModelPermissionsOrAnonReadOnly,)
+    # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = Forum.objects.annotate(thread_count=Count('threads')).order_by('title')
     serializer_class = ForumSerializer
 
@@ -40,6 +47,7 @@ class ForumViewSet(viewsets.ModelViewSet):
 
 class ThreadViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
+    # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = Thread.objects.annotate(post_count=Count('posts')).order_by('-added')
     serializer_class = ThreadSerializer
 
@@ -54,7 +62,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
-    queryset = Post.objects.all().order_by('-added')
+    queryset = Post.objects.all()
     serializer_class = PostSerializer
 
     def get_queryset(self):

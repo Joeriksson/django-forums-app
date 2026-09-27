@@ -16,8 +16,8 @@ class IsOwnerOrModeratorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Instance must have an attribute named `user`.
-        if obj.user == request.user:
+        # Instance must have a `user` foreign key; comparing ids skips a query.
+        if obj.user_id == request.user.id:
             return True
 
         action = self.actions.get(request.method)
