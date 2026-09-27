@@ -21,13 +21,14 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class ThreadSerializer(serializers.ModelSerializer):
-    posts = PostSerializer(many=True, read_only=True)
+    # Posts are listed through /api/posts/?thread=<id>, not nested here
+    post_count = serializers.IntegerField(read_only=True)
     # user_name = serializers.CharField(source="user.username")
 
     class Meta:
         model = Thread
         # fields = ('url', 'id', 'title', 'text', 'forum', 'user', 'posts')
-        fields = ('id', 'title', 'text', 'forum', 'user', 'posts', 'added', 'edited')
+        fields = ('id', 'title', 'text', 'forum', 'user', 'post_count', 'added', 'edited')
         read_only_fields = ('user', 'added', 'edited')
 
     def validate_forum(self, value):
@@ -40,12 +41,13 @@ class ThreadSerializer(serializers.ModelSerializer):
 
 
 class ForumSerializer(serializers.ModelSerializer):
-    threads = ThreadSerializer(many=True, read_only=True)
+    # Threads are listed through /api/threads/?forum=<id>, not nested here
+    thread_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Forum
         # fields = ('url', 'id', 'title', 'description', 'threads')
-        fields = ('id', 'title', 'description', 'threads')
+        fields = ('id', 'title', 'description', 'thread_count')
 
 
 class UserSerializer(serializers.ModelSerializer):

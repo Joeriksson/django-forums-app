@@ -99,7 +99,7 @@ users/             # Custom user model (email-based auth)
 pages/             # Static pages (home, etc.)
 api/               # Django REST Framework API
   views.py         # ModelViewSet for Forum, Thread, Post, User
-  serializers.py   # Nested serializers (Thread includes Posts, Forum includes Threads)
+  serializers.py   # No nested lists: Forum has thread_count, Thread has post_count
   urls.py          # DRF router + schema endpoint
   permissions.py   # IsOwnerOrModeratorOrReadOnly custom permission
 
@@ -172,9 +172,9 @@ static/            # Static files (CSS)
 /forums/thread/<tpk>/post/<pk>/upvote  → PostUpvote
 /forums/search/            → SearchResultsView
 
-/api/forums/               → ForumViewSet (read-only anon, write authenticated)
-/api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly)
-/api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly)
+/api/forums/               → ForumViewSet (read for anyone; write needs forums.add/change/delete_forum)
+/api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly); ?forum=<id> filters
+/api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly); ?thread=<id> filters
 /api/users/                → UserViewSet (read-only, staff only via IsAdminUser)
 /api/schema/               → OpenAPI schema
 /api/api-auth              → DRF browsable API login

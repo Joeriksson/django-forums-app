@@ -1,4 +1,6 @@
-from rest_framework import viewsets
+from django.db.models import Count
+from rest_framework import serializers, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 
 from forums.models import Forum, Thread, Post
@@ -12,24 +14,51 @@ from .serializers import (
 )
 
 
+def filter_by_id(queryset, request, param):
+    """Filter `queryset` on the `param` query parameter, if given."""
+    value = request.query_params.get(param)
+    if value is None:
+        return queryset
+    # Primary keys are AutoFields (32-bit), so bigger values would crash the query
+    id_field = serializers.IntegerField(min_value=1, max_value=2**31 - 1)
+    try:
+        pk = id_field.run_validation(value)
+    except ValidationError as exc:
+        raise ValidationError({param: exc.detail})
+    return queryset.filter(**{f'{param}_id': pk})
+
+
 class ForumViewSet(viewsets.ModelViewSet):
-    queryset = Forum.objects.all().order_by('title')
+    queryset = Forum.objects.annotate(thread_count=Count('threads')).order_by('title')
     serializer_class = ForumSerializer
+
+    def perform_create(self, serializer):
+        forum = serializer.save()
+        # Not loaded through the annotated queryset, and has no threads yet
+        forum.thread_count = 0
 
 
 class ThreadViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
-    queryset = Thread.objects.all().order_by('-added')
+    queryset = Thread.objects.annotate(post_count=Count('posts')).order_by('-added')
     serializer_class = ThreadSerializer
 
+    def get_queryset(self):
+        return filter_by_id(super().get_queryset(), self.request, 'forum')
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        thread = serializer.save(user=self.request.user)
+        # Not loaded through the annotated queryset, and has no posts yet
+        thread.post_count = 0
 
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
     queryset = Post.objects.all().order_by('-added')
     serializer_class = PostSerializer
+
+    def get_queryset(self):
+        return filter_by_id(super().get_queryset(), self.request, 'thread')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
