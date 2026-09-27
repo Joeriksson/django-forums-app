@@ -100,18 +100,22 @@ def test_notify_subscribers_excludes_post_author(add_forum, add_user, add_thread
     Notification.objects.create(thread=thread, user=author)
     Notification.objects.create(thread=thread, user=subscriber)
 
-    captured = {}
-
-    def fake_delay(thread_id, thread_title, username, full_url, email_addresses):
-        captured['email_addresses'] = email_addresses
-
+    calls = []
     monkeypatch.delenv('CI', raising=False)
-    monkeypatch.setattr('forums.tasks.send_notifications_task.delay', fake_delay)
+    monkeypatch.setattr(
+        'forums.tasks.send_notifications_task.delay', lambda *args: calls.append(args)
+    )
 
     Post.objects.create(text='A reply', thread=thread, user=author)
 
-    assert 'author@example.com' not in captured.get('email_addresses', [])
-    assert 'subscriber@example.com' in captured.get('email_addresses', [])
+    assert len(calls) == 1
+    thread_id, thread_title, username, full_url, email_addresses = calls[0]
+    assert thread_id == thread.id
+    assert thread_title == 'Test Thread'
+    assert username == 'author'
+    assert full_url == f'http://example.com/forums/thread/{thread.id}'
+    # Exact list: no author, no duplicates
+    assert email_addresses == ['subscriber@example.com']
 
 
 @pytest.mark.django_db
