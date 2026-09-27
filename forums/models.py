@@ -53,7 +53,9 @@ class Thread(LifecycleModelMixin, models.Model):
     @hook(AFTER_DELETE)
     @hook(AFTER_CREATE)
     def invalidate_cache(self):
-        cache.delete(f'thread_objects_forum_{self.forum_id}')
+        # A thread moved to another forum must also leave the old forum's cache
+        forum_ids = {self.forum_id, self.initial_value('forum_id')}
+        cache.delete_many([f'thread_objects_forum_{pk}' for pk in forum_ids if pk])
 
 
 class Post(LifecycleModelMixin, models.Model):
@@ -121,7 +123,9 @@ class Post(LifecycleModelMixin, models.Model):
     @hook(AFTER_DELETE)
     @hook(AFTER_CREATE)
     def invalidate_cache(self):
-        cache.delete(f'post_objects_thread_{self.thread_id}')
+        # A post moved to another thread must also leave the old thread's cache
+        thread_ids = {self.thread_id, self.initial_value('thread_id')}
+        cache.delete_many([f'post_objects_thread_{pk}' for pk in thread_ids if pk])
 
 
 class Gender(models.TextChoices):
