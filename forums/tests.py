@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase, Client
 from .models import Forum, Thread, Post
 from django.urls import reverse, resolve
@@ -62,6 +63,7 @@ class ForumListPageTests(TestCase):
 
 class ForumDetailPageTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.user = get_user_model().objects.create_user(
             username='forumuser',
             email='forumuser@email.com',
@@ -95,7 +97,7 @@ class ForumDetailPageTests(TestCase):
 
 class ThreadDetailPageTests(TestCase):
     def setUp(self):
-
+        cache.clear()
         self.user = get_user_model().objects.create_user(
             username='forumuser',
             email='forumuser@email.com',

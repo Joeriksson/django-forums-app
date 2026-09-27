@@ -3,11 +3,11 @@ from django.core.cache import cache
 from django.urls import reverse
 
 
-@pytest.fixture(autouse=True)
-def clear_cache():
-    cache.clear()
-    yield
-    cache.clear()
+@pytest.mark.parametrize('run', [1, 2])
+def test_cache_starts_empty_in_every_test(run):
+    # Each run leaves a key behind; the shared clear_cache fixture must remove it
+    assert cache.get('leftover_from_earlier_test') is None
+    cache.set('leftover_from_earlier_test', run)
 
 
 @pytest.mark.django_db
