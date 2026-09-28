@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -35,6 +37,14 @@ def test_signup_page(client):
     assert resp.status_code == 200
     assertTemplateUsed(resp, 'account/signup.html')
     assertContains(resp, 'Sign Up')
+
+
+@pytest.mark.django_db
+def test_signup_form_asks_only_for_email_and_one_password(client):
+    resp = client.get(reverse('account_signup'))
+
+    fields = set(re.findall(r'<input[^>]*name="([^"]+)"', resp.content.decode()))
+    assert fields - {'csrfmiddlewaretoken'} == {'email', 'password1'}
 
 
 @pytest.mark.django_db

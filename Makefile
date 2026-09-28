@@ -42,10 +42,6 @@ prod_down:
 AUDIT_IGNORE += --ignore-vuln PYSEC-2026-198 --ignore-vuln PYSEC-2026-199 --ignore-vuln PYSEC-2026-201
 AUDIT_IGNORE += --ignore-vuln PYSEC-2026-2090 --ignore-vuln PYSEC-2026-2091 --ignore-vuln PYSEC-2026-2092
 AUDIT_IGNORE += --ignore-vuln PYSEC-2026-3717
-# django-allauth: fixed in 65.x (allauth upgrade)
-AUDIT_IGNORE += --ignore-vuln PYSEC-2025-110 --ignore-vuln PYSEC-2025-111 --ignore-vuln PYSEC-2026-56
-# markdown: fixed in 3.8.1, held back by martor 1.6 (allauth upgrade PR checks martor)
-AUDIT_IGNORE += --ignore-vuln PYSEC-2026-89
 
 # Check the locked dependencies (incl. dev) for known vulnerabilities; runs on the host with uv
 audit:

@@ -68,6 +68,16 @@ def test_thread_detail_page(client, post, author):
     assertContains(resp, 'A reply to a thread')
 
 
+@pytest.mark.django_db
+def test_thread_detail_renders_markdown_and_strips_scripts(client, add_post, thread, author):
+    add_post(text='**bold**\n\n<script>alert(1)</script>', thread=thread, user=author)
+
+    resp = client.get(reverse('thread_detail', args=(thread.id,)))
+
+    assertContains(resp, '<strong>bold</strong>')
+    assertNotContains(resp, '<script>alert(1)</script>')
+
+
 # Create views
 
 
