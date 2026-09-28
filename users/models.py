@@ -14,7 +14,7 @@ class CustomUser(LifecycleModelMixin, AbstractUser):
             # Email is the login, so it must be present and unique ignoring case.
             models.UniqueConstraint(Lower('email'), name='users_customuser_email_ci_unique'),
             models.CheckConstraint(
-                check=~models.Q(email=''), name='users_customuser_email_not_empty'
+                condition=~models.Q(email=''), name='users_customuser_email_not_empty'
             ),
         ]
 

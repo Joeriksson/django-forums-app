@@ -45,6 +45,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='customuser',
-            constraint=models.CheckConstraint(check=models.Q(('email', ''), _negated=True), name='users_customuser_email_not_empty'),
+            constraint=models.CheckConstraint(condition=models.Q(('email', ''), _negated=True), name='users_customuser_email_not_empty'),
         ),
     ]
