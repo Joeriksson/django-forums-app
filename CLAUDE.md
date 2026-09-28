@@ -34,11 +34,9 @@ Production runs `docker-compose-prod.yml` on a VPS behind a host reverse proxy (
 ```bash
 # Docker
 make dev_pytest        # Run pytest
-make dev_test          # Run Django test runner (parallel)
 
 # Manual
-pytest tests/ -v --disable-warnings
-python manage.py test --settings=project.settings.test --parallel
+pytest -v --disable-warnings
 ```
 
 Tests use `project.settings.test` settings. Coverage and pytest configuration are in `pyproject.toml`. Tests run in parallel (`-n auto`) via `pytest-xdist`.
@@ -46,17 +44,22 @@ Tests use `project.settings.test` settings. Coverage and pytest configuration ar
 ### Test Structure
 
 ```
+conftest.py                      # Autouse fixtures for every test: clear the cache, record notification tasks
 tests/
+├── test_pages.py                # Home page
+├── test_users.py                # User model, signup
+├── test_account_pages.py, test_user_*.py, test_email_senders.py, test_*settings.py
 └── forums/
-    ├── conftest.py              # Fixtures (users, forums, threads, posts)
+    ├── conftest.py              # Factory fixtures (add_user, add_forum, add_thread, add_post, get_user_client)
     ├── test_models.py           # Model unit tests
     ├── test_serializers.py      # DRF serializer tests
-    ├── test_views_forums.py     # Forum view tests
-    ├── test_views_posts.py      # Post view tests
-    └── test_views_threads.py    # Thread view tests
+    ├── test_views_web.py        # Web pages, create and delete views
+    ├── test_views_profile.py, test_views_upvote_subscribe.py, test_permissions.py
+    ├── test_views_forums.py, test_views_threads.py, test_views_posts.py  # API CRUD
+    └── test_api_*.py            # API ownership, moderation, nesting, users, URLs
 ```
 
-There are also legacy test files: `forums/tests.py`, `users/tests.py`, `pages/tests.py`.
+All tests live under `tests/` (`testpaths` in `pyproject.toml`); there are no `tests.py` files in the apps.
 
 ## Key Commands (Makefile)
 
@@ -269,7 +272,7 @@ Required in a `.env` file:
 GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `master`:
 1. Starts PostgreSQL and Redis as service containers
 2. Installs deps with `uv sync`
-3. Runs both `python manage.py test` and `pytest` in parallel
+3. Runs `pytest` (parallel via `pytest-xdist`)
 
 ## Architecture Notes
 

@@ -27,13 +27,6 @@ def test_thread_model(add_forum, add_user, add_thread):
 
 
 @pytest.mark.django_db
-def test_user_model(add_user):
-    user = add_user('palle', 'palle@example.com', 'pass123')
-    assert not user.is_superuser
-    assert not user.is_staff
-
-
-@pytest.mark.django_db
 def test_profile_created_for_new_user(add_user):
     user = add_user('palle', 'palle@example.com', 'pass123')
 
