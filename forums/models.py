@@ -3,8 +3,6 @@ import os
 from django.contrib.sites.models import Site
 from django.conf import settings
 from django.core.cache import cache
-
-# from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.urls import reverse_lazy
 from django_lifecycle import (
@@ -100,26 +98,6 @@ class Post(LifecycleModelMixin, models.Model):
                 full_url,
                 email_addresses,
             )
-
-        # # TODO: Look into how to send multiple mails via header instead of BCC
-        #
-        # # Check which users has subscribed to the thread which was posted to
-        # notification_users = Notification.objects.filter(thread=self.thread)
-        #
-        # # Compose message to subscribers
-        # subject, from_email = f'New post added by {self.user.username}', 'info@wildvasa.com'
-        #
-        # url = reverse_lazy('thread_detail', args=(self.thread_id,))
-        # full_url = ''.join(['http://', str(Site.objects.get_current().domain), str(url)])
-        #
-        # bcc = [notification_user.user.email for notification_user in notification_users if
-        #        notification_user != self.user]
-        # text_content = f'A new post was added to thread "{self.thread.title}" \n\nUrl: {full_url} \n\n'
-        #
-        # msg = EmailMultiAlternatives(
-        #     subject=subject, body=text_content, from_email=from_email, bcc=bcc)
-        #
-        # msg.send()
 
     @hook(AFTER_SAVE)
     @hook(AFTER_DELETE)
