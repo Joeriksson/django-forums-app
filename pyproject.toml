@@ -51,7 +51,7 @@ omit = [
     "*migrations/*",
     "*tests/*",
     "forums/tests.py",
-    "pages/*",
+    "pages/tests.py",
     "users/tests.py",
 ]
 branch = true
