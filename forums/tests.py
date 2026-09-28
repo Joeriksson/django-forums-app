@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.test import TestCase, Client
+from django.test import TestCase
 from .models import Forum, Thread, Post
-from django.urls import reverse, resolve
+from django.urls import reverse
 
 
 class ForumTests(TestCase):
