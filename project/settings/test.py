@@ -1,5 +1,9 @@
 from project.settings.base import *
 
+# staticfiles/ only exists in the built image (collectstatic in the Dockerfile). Here WhiteNoise
+# serves from the source directories, so don't look for it.
+STATIC_ROOT = None
+
 DEBUG = False
 
 PASSWORD_HASHERS = [

@@ -68,7 +68,6 @@ All tests live under `tests/` (`testpaths` in `pyproject.toml`); there are no `t
 ```bash
 make dev_web_exec cmd='python manage.py migrate'          # Run management commands
 make dev_web_exec cmd='python manage.py createsuperuser'
-make dev_web_exec cmd='python manage.py collectstatic --noinput'
 make dev_export_data                                       # Export DB as JSON fixture
 make dev_redis_exec cmd='redis-cli'                        # Access Redis CLI
 make audit                                                 # Check uv.lock for known vulnerabilities (runs on the host)
@@ -113,7 +112,7 @@ api/               # Django REST Framework API
 
 tests/             # pytest test suite
 templates/         # HTML templates (extends _base.html)
-static/            # Static files (CSS)
+static/            # Static file sources (CSS, Font Awesome, bootstrap-social); collected into staticfiles/ at image build, not committed
 ```
 
 ## Data Models
