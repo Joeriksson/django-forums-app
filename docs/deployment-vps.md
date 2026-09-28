@@ -87,7 +87,7 @@ docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 
 Migrations don't run automatically. **Back up the database before migrating** (see below); some migrations change data. For example, `forums.0015` deletes duplicate upvotes and subscriptions, and that can't be undone.
 
-Static files come from the `staticfiles/` directory in the repository. After changing anything under `static/`, run `collectstatic` locally and commit the result.
+Static files are collected into the image when it's built (`collectstatic` in the `Dockerfile`), and WhiteNoise serves them. `--build` in the commands above picks up changes under `static/` and new package versions; there's nothing to run by hand.
 
 ## 5. Backups
 
