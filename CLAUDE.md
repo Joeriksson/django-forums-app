@@ -34,11 +34,9 @@ Production runs `docker-compose-prod.yml` on a VPS behind a host reverse proxy (
 ```bash
 # Docker
 make dev_pytest        # Run pytest
-make dev_test          # Run Django test runner (parallel)
 
 # Manual
-pytest tests/ -v --disable-warnings
-python manage.py test --settings=project.settings.test --parallel
+pytest -v --disable-warnings
 ```
 
 Tests use `project.settings.test` settings. Coverage and pytest configuration are in `pyproject.toml`. Tests run in parallel (`-n auto`) via `pytest-xdist`.
@@ -269,7 +267,7 @@ Required in a `.env` file:
 GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `master`:
 1. Starts PostgreSQL and Redis as service containers
 2. Installs deps with `uv sync`
-3. Runs both `python manage.py test` and `pytest` in parallel
+3. Runs `pytest` (parallel via `pytest-xdist`)
 
 ## Architecture Notes
 

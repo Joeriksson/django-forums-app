@@ -53,6 +53,4 @@ jobs:
     - name: Install Dependencies
       run: uv sync
     - name: Run Tests
-      run: |
-        uv run python manage.py test --settings=project.settings.test --parallel
-        uv run pytest tests/ -v --disable-warnings
+      run: uv run pytest -v --disable-warnings
