@@ -51,11 +51,10 @@ def add_user():
 @pytest.fixture(scope="function")
 def add_super_user():
     def _add_super_user(username, email, password):
-        super_user = get_user_model().objects.create_user(
+        super_user = get_user_model().objects.create_superuser(
             username=username,
             email=email,
             password=password,
-            is_superuser=True,
         )
         return super_user
 
