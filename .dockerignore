@@ -1,0 +1,22 @@
+# Keep secrets and local files out of the image. docker compose passes .env at runtime (env_file).
+.env
+.env.*
+
+# Version control, CI and editor files
+.git
+.github
+.gitignore
+.idea
+.vscode
+
+# Local Python environment, caches and test output (the image builds its own venv in /opt/venv)
+.venv
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.coverage
+htmlcov
+
+# Local runtime files
+celerybeat-schedule
+media
