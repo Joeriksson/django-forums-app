@@ -27,7 +27,7 @@ Includes:
 ## Tech stack
 
 - **Python** 3.12
-- **Django** 4.2 (LTS)
+- **Django** 5.2 (LTS)
 - **PostgreSQL** 16
 - **Redis** (caching and Celery broker)
 - **Celery** (async task queue)

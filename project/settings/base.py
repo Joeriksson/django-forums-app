@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
     'martor',
-    'permissions_auditor',
     # Local
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
@@ -135,8 +134,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
