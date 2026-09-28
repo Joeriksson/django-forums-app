@@ -1,32 +1,22 @@
 import pytest
-from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
-from forums.models import Forum, Thread, UserProfile, Post, Notification, UpVote, Gender
+from forums.models import UserProfile, Post, Notification, UpVote, Gender
 
 
 @pytest.mark.django_db
 def test_forum_model(add_forum):
-    forum = Forum(title='Test Forum', description='This is a Test Forum')
-    forum.save()
+    forum = add_forum('Test Forum', 'This is a Test Forum')
     assert forum.title == 'Test Forum'
     assert forum.description == 'This is a Test Forum'
     assert str(forum) == f'Forum: {forum.title}'
 
 
 @pytest.mark.django_db
-def test_thread_model():
-    forum = Forum(title='Test Forum', description='This is a Test Forum')
-    forum.save()
-    user = get_user_model().objects.create_user(
-        username='forumuser',
-        email='forumuser@email.com',
-        password='testpass123',
-    )
-    thread = Thread(
-        title='A new thread', text='The text of the thread', forum=forum, user=user
-    )
-    thread.save()
+def test_thread_model(add_forum, add_user, add_thread):
+    forum = add_forum('Test Forum', 'This is a Test Forum')
+    user = add_user('forumuser', 'forumuser@email.com', 'testpass123')
+    thread = add_thread('A new thread', 'The text of the thread', forum, user)
     assert thread.title == 'A new thread'
     assert thread.text == 'The text of the thread'
     assert thread.forum == forum
@@ -36,36 +26,9 @@ def test_thread_model():
     assert str(thread) == f'Thread: {thread.title} - (started by {thread.user})'
 
 
-'''
-Test User model and User Profile model
-'''
-
-
-@pytest.fixture
-def test_password():
-    return 'strong-test-pass'
-
-
-@pytest.fixture
-def test_email():
-    return 'test@email.com'
-
-
-@pytest.fixture
-def create_user(db, django_user_model, test_password, test_email):
-    def make_user(**kwargs):
-        kwargs['password'] = test_password
-        kwargs['email'] = test_email
-        if 'username' not in kwargs:
-            kwargs['username'] = 'testuser'
-        return django_user_model.objects.create_user(**kwargs)
-
-    return make_user
-
-
 @pytest.mark.django_db
-def test_user_model(create_user):
-    user = create_user(username='palle')
+def test_user_model(add_user):
+    user = add_user('palle', 'palle@example.com', 'pass123')
     assert not user.is_superuser
     assert not user.is_staff
 
