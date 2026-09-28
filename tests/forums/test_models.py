@@ -90,7 +90,9 @@ def test_saving_user_again_does_not_duplicate_profile(add_user):
 
 
 @pytest.mark.django_db
-def test_notify_subscribers_excludes_post_author(add_forum, add_user, add_thread, monkeypatch):
+def test_notify_subscribers_excludes_post_author(
+    add_forum, add_user, add_thread, notification_calls
+):
     """Post author should not receive a notification for their own post."""
     forum = add_forum('Test Forum', 'Description')
     author = add_user('author', 'author@example.com', 'pass123')
@@ -100,16 +102,10 @@ def test_notify_subscribers_excludes_post_author(add_forum, add_user, add_thread
     Notification.objects.create(thread=thread, user=author)
     Notification.objects.create(thread=thread, user=subscriber)
 
-    calls = []
-    monkeypatch.delenv('CI', raising=False)
-    monkeypatch.setattr(
-        'forums.tasks.send_notifications_task.delay', lambda *args: calls.append(args)
-    )
-
     Post.objects.create(text='A reply', thread=thread, user=author)
 
-    assert len(calls) == 1
-    thread_id, thread_title, username, full_url, email_addresses = calls[0]
+    assert len(notification_calls) == 1
+    thread_id, thread_title, username, full_url, email_addresses = notification_calls[0]
     assert thread_id == thread.id
     assert thread_title == 'Test Thread'
     assert username == 'author'
@@ -121,7 +117,7 @@ def test_notify_subscribers_excludes_post_author(add_forum, add_user, add_thread
 @pytest.mark.django_db
 @pytest.mark.parametrize('author_subscribed', [True, False], ids=['author-only', 'nobody'])
 def test_no_notification_task_without_recipients(
-    add_forum, add_user, add_thread, monkeypatch, author_subscribed
+    add_forum, add_user, add_thread, notification_calls, author_subscribed
 ):
     """No task is queued when nobody besides the author would get the email."""
     forum = add_forum('Test Forum', 'Description')
@@ -131,19 +127,15 @@ def test_no_notification_task_without_recipients(
     if author_subscribed:
         Notification.objects.create(thread=thread, user=author)
 
-    calls = []
-    monkeypatch.delenv('CI', raising=False)
-    monkeypatch.setattr(
-        'forums.tasks.send_notifications_task.delay', lambda *args: calls.append(args)
-    )
-
     Post.objects.create(text='A reply', thread=thread, user=author)
 
-    assert calls == []
+    assert notification_calls == []
 
 
 @pytest.mark.django_db
-def test_no_notification_task_in_ci(add_forum, add_user, add_thread, monkeypatch):
+def test_no_notification_task_in_ci(
+    add_forum, add_user, add_thread, notification_calls, monkeypatch
+):
     """No task is queued in CI, even when another user is subscribed."""
     forum = add_forum('Test Forum', 'Description')
     author = add_user('author', 'author@example.com', 'pass123')
@@ -152,15 +144,11 @@ def test_no_notification_task_in_ci(add_forum, add_user, add_thread, monkeypatch
 
     Notification.objects.create(thread=thread, user=subscriber)
 
-    calls = []
     monkeypatch.setenv('CI', 'true')
-    monkeypatch.setattr(
-        'forums.tasks.send_notifications_task.delay', lambda *args: calls.append(args)
-    )
 
     Post.objects.create(text='A reply', thread=thread, user=author)
 
-    assert calls == []
+    assert notification_calls == []
 
 
 @pytest.mark.django_db
