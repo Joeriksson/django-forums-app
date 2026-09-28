@@ -29,6 +29,8 @@ Server runs at `http://127.0.0.1:8000`
 
 Production runs `docker-compose-prod.yml` on a VPS behind a host reverse proxy (Caddy). See `docs/deployment-vps.md` for the proxy config, the `.env` checklist, first deploy, updates, backups and troubleshooting.
 
+The `Dockerfile` installs only runtime dependencies by default (`ARG UV_SYNC_FLAGS=--no-dev`); `docker-compose-dev.yml` passes an empty value so dev images also get the dev group (pytest etc.). `.dockerignore` keeps `.env`, `.git` and `.venv` out of the image; compose passes `.env` in at runtime via `env_file`.
+
 ## Running Tests
 
 ```bash
