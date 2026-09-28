@@ -35,7 +35,8 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-python_files = ["tests.py", "test_*.py", "*_tests.py"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
 norecursedirs = [".*", "venv", ".venv"]
 # --ds wins over a DJANGO_SETTINGS_MODULE env var (e.g. from .env); the ini key doesn't
 addopts = "-n auto --ds=project.settings.test"
@@ -50,8 +51,5 @@ omit = [
     "manage.py",
     "*migrations/*",
     "*tests/*",
-    "forums/tests.py",
-    "pages/tests.py",
-    "users/tests.py",
 ]
 branch = true
