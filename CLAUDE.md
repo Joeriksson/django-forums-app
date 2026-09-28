@@ -182,7 +182,7 @@ static/            # Static files (CSS)
 /api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly); ?forum=<id> filters
 /api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly); ?thread=<id> filters
 /api/users/                → UserViewSet (read-only, staff only via IsAdminUser)
-/api/schema/               → OpenAPI schema
+/api/schema/               → OpenAPI schema (YAML; ?format=openapi-json for JSON)
 /api/api-auth/login/       → DRF browsable API login
 
 /accounts/                 → django-allauth (login, signup, social auth)
@@ -264,6 +264,7 @@ Required in a `.env` file:
 - **martor** — Markdown editor widget (`MartorField`)
 - **django-allauth** — authentication + GitHub OAuth
 - **djangorestframework** — REST API
+- **inflection, uritemplate, pyyaml** — needed by DRF's OpenAPI schema (`/api/schema/`); nothing imports them directly, so keep them in the main dependencies
 - **django-redis** — Redis cache backend
 - **celery** — async task queue
 - **whitenoise** — static file serving
