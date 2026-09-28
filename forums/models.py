@@ -90,8 +90,10 @@ class Post(LifecycleModelMixin, models.Model):
                 for notification_user in notification_users
                 if notification_user.user != self.user
             ]
+            if not email_addresses:
+                return
 
-            task = send_notifications_task.delay(
+            send_notifications_task.delay(
                 self.thread_id,
                 self.thread.title,
                 self.user.username,

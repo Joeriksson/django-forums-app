@@ -119,6 +119,30 @@ def test_notify_subscribers_excludes_post_author(add_forum, add_user, add_thread
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize('author_subscribed', [True, False], ids=['author-only', 'nobody'])
+def test_no_notification_task_without_recipients(
+    add_forum, add_user, add_thread, monkeypatch, author_subscribed
+):
+    """No task is queued when nobody besides the author would get the email."""
+    forum = add_forum('Test Forum', 'Description')
+    author = add_user('author', 'author@example.com', 'pass123')
+    thread = add_thread('Test Thread', 'Thread text', forum, author)
+
+    if author_subscribed:
+        Notification.objects.create(thread=thread, user=author)
+
+    calls = []
+    monkeypatch.delenv('CI', raising=False)
+    monkeypatch.setattr(
+        'forums.tasks.send_notifications_task.delay', lambda *args: calls.append(args)
+    )
+
+    Post.objects.create(text='A reply', thread=thread, user=author)
+
+    assert calls == []
+
+
+@pytest.mark.django_db
 def test_upvote_unique_per_user(add_forum, add_user, add_thread, add_post):
     forum = add_forum('Test Forum', 'Description')
     author = add_user('author', 'author@example.com', 'pass123')
