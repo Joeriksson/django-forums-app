@@ -69,7 +69,10 @@ make dev_web_exec cmd='python manage.py createsuperuser'
 make dev_web_exec cmd='python manage.py collectstatic --noinput'
 make dev_export_data                                       # Export DB as JSON fixture
 make dev_redis_exec cmd='redis-cli'                        # Access Redis CLI
+make audit                                                 # Check uv.lock for known vulnerabilities (runs on the host)
 ```
+
+`make audit` runs `pip-audit` on the locked dependencies, dev ones included. Known vulnerabilities that can't be fixed yet are listed in `AUDIT_IGNORE` in the `Makefile`; remove each entry with the upgrade that fixes it.
 
 `manage.py` defaults to `project.settings.base`, which has no `EMAIL_BACKEND` (falls back to SMTP on localhost, so e.g. `createsuperuser` fails when the welcome mail hook fires). Set `DJANGO_SETTINGS_MODULE=project.settings.development` in `.env`, or pass `--settings=project.settings.development` to management commands.
 
@@ -273,6 +276,8 @@ GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `mas
 1. Starts PostgreSQL and Redis as service containers
 2. Installs deps with `uv sync`
 3. Runs `pytest` (parallel via `pytest-xdist`)
+
+A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
 ## Architecture Notes
 
