@@ -293,3 +293,6 @@ modules.xml
 
 # End of https://www.gitignore.io/api/pycharm+all
 /forumsdata.json
+
+# Built by collectstatic during the Docker image build
+staticfiles/

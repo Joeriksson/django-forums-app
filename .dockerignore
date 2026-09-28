@@ -17,6 +17,7 @@
 .coverage
 htmlcov
 
-# Local runtime files
+# Local runtime files; staticfiles/ is built fresh by collectstatic in the Dockerfile
+staticfiles
 celerybeat-schedule
 media
