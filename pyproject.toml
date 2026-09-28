@@ -12,7 +12,6 @@ dependencies = [
     "django-crispy-forms>=2.1",
     "django-debug-toolbar>=4.2",
     "django-lifecycle>=1.0",
-    "django-permissions-auditor>=1.2",
     "django-redis>=5.4",
     "djangorestframework>=3.14",
     "gunicorn>=23",

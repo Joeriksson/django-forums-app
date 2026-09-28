@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
     'martor',
-    'permissions_auditor',
     # Local
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
