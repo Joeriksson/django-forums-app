@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Django-based discussion forum platform with forums, threads, posts, user authentication, REST API, and email notifications. Built with Django 4.2, Python 3.12, and managed with `uv`.
+Django-based discussion forum platform with forums, threads, posts, user authentication, REST API, and email notifications. Built with Django 5.2, Python 3.12, and managed with `uv`.
 
 ## Development Setup
 
@@ -259,7 +259,7 @@ Required in a `.env` file:
 
 ## Key Dependencies
 
-- **Django 4.2** — web framework
+- **Django 5.2** — web framework
 - **django-lifecycle** — model hooks (`@hook` decorator) for cache invalidation and notifications
 - **martor** — Markdown editor widget (`MartorField`)
 - **django-allauth** — authentication + GitHub OAuth
