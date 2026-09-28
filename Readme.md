@@ -56,11 +56,7 @@ SECRET_KEY=<your secret key>
 DEBUG=True
 ADMIN1=<Name, email@example.com>
 ADMIN2=<Name, email@example.com>
-SENDGRID_PASSWORD=<your sendgrid password>
-SENDGRID_USERNAME=<your sendgrid username>
 ```
-
-> **Note:** `SENDGRID_PASSWORD` and `SENDGRID_USERNAME` are optional for development. The development settings send email to the console by default, so you can leave those as empty strings or omit them.
 
 4. In the directory where you cloned the repository, build and start the containers:
 
