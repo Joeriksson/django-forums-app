@@ -38,10 +38,8 @@ prod:
 prod_down:
 	@docker compose -f docker-compose-prod.yml down
 # Known vulnerabilities that can't be fixed yet. Remove each line with the upgrade that fixes it.
-# Django 4.2 is past end of support; fixed only in 5.2 (Django 5.2 LTS upgrade)
-AUDIT_IGNORE += --ignore-vuln PYSEC-2026-198 --ignore-vuln PYSEC-2026-199 --ignore-vuln PYSEC-2026-201
-AUDIT_IGNORE += --ignore-vuln PYSEC-2026-2090 --ignore-vuln PYSEC-2026-2091 --ignore-vuln PYSEC-2026-2092
-AUDIT_IGNORE += --ignore-vuln PYSEC-2026-3717
+# Add them as: AUDIT_IGNORE += --ignore-vuln <ID>   (with a comment on which upgrade fixes it)
+AUDIT_IGNORE =
 
 # Check the locked dependencies (incl. dev) for known vulnerabilities; runs on the host with uv
 audit:
