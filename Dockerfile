@@ -14,9 +14,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Set working dir
 WORKDIR /code
 
-# Install dependencies into /opt/venv
+# Install dependencies into /opt/venv. The default leaves out the dev group (pytest etc.)
+# for production; docker-compose-dev.yml passes an empty value to install it.
+ARG UV_SYNC_FLAGS=--no-dev
 COPY pyproject.toml uv.lock /code/
-RUN uv sync --frozen
+RUN uv sync --frozen $UV_SYNC_FLAGS
 
 # Copy project
 COPY . /code/

@@ -1,10 +1,16 @@
 version: '3.7'
 
+# Dev images include the dev dependency group (pytest etc.), see Dockerfile
+x-build: &build
+  context: .
+  args:
+    UV_SYNC_FLAGS: ""
+
 services:
   web:
     env_file:
       - .env
-    build: .
+    build: *build
     command: python /code/manage.py runserver 0.0.0.0:8000 --settings=project.settings.development
     # gunicorn project.wsgi -b 0.0.0.0:8000
     volumes:
@@ -28,7 +34,7 @@ services:
     - 6379:6379
   celery:
     env_file: .env
-    build: .
+    build: *build
     command: celery -A project worker -l DEBUG
     volumes:
       - .:/code
@@ -36,7 +42,7 @@ services:
       - redis
   celery-beat:
     env_file: .env
-    build: .
+    build: *build
     command: celery -A project beat -l INFO
     volumes:
       - .:/code
