@@ -31,6 +31,8 @@ Production runs `docker-compose-prod.yml` on a VPS behind a host reverse proxy (
 
 The `Dockerfile` installs only runtime dependencies by default (`ARG UV_SYNC_FLAGS=--no-dev`); `docker-compose-dev.yml` passes an empty value so dev images also get the dev group (pytest etc.). `.dockerignore` keeps `.env`, `.git` and `.venv` out of the image; compose passes `.env` in at runtime via `env_file`.
 
+uv is pinned to an exact version (`COPY --from=ghcr.io/astral-sh/uv:<version>` in the `Dockerfile`). `make audit` doesn't cover it, so bump it when upgrading dependencies, and check uv's release notes for security fixes.
+
 ## Running Tests
 
 ```bash
@@ -280,6 +282,8 @@ GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `mas
 3. Runs `pytest` (parallel via `pytest-xdist`)
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
+
+A `prod-image` job builds the production image and runs `check --deploy --fail-level WARNING` in it with production settings and fake env values (no database, Redis or secrets needed). Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
 ## Architecture Notes
 

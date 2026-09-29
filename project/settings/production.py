@@ -52,6 +52,8 @@ SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', 3600))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS')
 SECURE_HSTS_PRELOAD = env_bool('DJANGO_SECURE_HSTS_PRELOAD')
+# Both flags above are deliberate opt-ins, so check --deploy (run in CI) doesn't warn about them
+SILENCED_SYSTEM_CHECKS = ['security.W005', 'security.W021']
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
