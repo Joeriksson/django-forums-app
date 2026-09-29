@@ -77,10 +77,10 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build the production image
       run: docker build -t forums-prod .
-    # Fake values only: the check needs no database, Redis or real secrets
-    - name: Run the deployment checks
+    # Fake values only: the checks need no database, Redis or real secrets
+    - name: Start the image with production settings
       run: >-
-        docker run --rm
+        docker run -d --name prod
         -e DJANGO_SETTINGS_MODULE=project.settings.production
         -e ENVIRONMENT=production
         -e SECRET_KEY=ci-only-placeholder-secret-key-not-used-anywhere-else-0123456789
@@ -91,4 +91,11 @@ jobs:
         -e DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
         -e REDIS_URL=redis://redis:6379/0
         forums-prod
-        python manage.py check --deploy --fail-level WARNING
+    - name: Run the deployment checks
+      run: docker exec prod python manage.py check --deploy --fail-level WARNING
+    - name: Check that static file URLs are hashed
+      run: >-
+        docker exec prod python manage.py shell -c
+        "import re; from django.templatetags.static import static;
+        url = static('css/base.css'); print(url);
+        assert re.fullmatch(r'/static/css/base\.[0-9a-f]{12}\.css', url)"

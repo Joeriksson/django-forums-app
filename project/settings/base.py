@@ -147,6 +147,13 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
+# collectstatic (in the Dockerfile) adds a content hash to each file name and gzips it, so
+# browsers can cache static files forever and still get new ones after a deploy. A
+# {% static %} path missing from the manifest raises an error when DEBUG is False.
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
 
 # custom settings
 AUTH_USER_MODEL = 'users.CustomUser'

@@ -3,6 +3,8 @@ from project.settings.base import *
 # staticfiles/ only exists in the built image (collectstatic in the Dockerfile). Here WhiteNoise
 # serves from the source directories, so don't look for it.
 STATIC_ROOT = None
+# Plain storage: the hashed names and their manifest only exist after collectstatic
+STORAGES = {**STORAGES, 'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}}
 
 DEBUG = False
 
