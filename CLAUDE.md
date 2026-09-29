@@ -270,7 +270,7 @@ Required in a `.env` file:
 - **inflection, uritemplate, pyyaml** — needed by DRF's OpenAPI schema (`/api/schema/`); nothing imports them directly, so keep them in the main dependencies
 - **django-redis** — Redis cache backend
 - **celery** — async task queue
-- **whitenoise** — static file serving
+- **whitenoise** — static file serving. `base.py` uses `CompressedManifestStaticFilesStorage`: `collectstatic` (in the `Dockerfile`) adds a content hash to each file name and gzips it, so browsers cache static files forever and still get new ones after a deploy. With `DEBUG=False`, a `{% static %}` path that doesn't exist makes the page fail with a 500 (`tests/test_static_files.py` checks the project templates). Development and test settings use Django's plain `StaticFilesStorage`, since there is no manifest there
 - **uv** — package/project manager (replaces pip/pipenv)
 - **pytest + pytest-django + pytest-xdist** — parallel test runner
 
@@ -283,7 +283,7 @@ GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `mas
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
-A `prod-image` job builds the production image and runs `check --deploy --fail-level WARNING` in it with production settings and fake env values (no database, Redis or secrets needed). Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
+A `prod-image` job builds the production image, starts it with production settings and fake env values (no database, Redis or secrets needed), runs `check --deploy --fail-level WARNING` and checks that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
 ## Architecture Notes
 
