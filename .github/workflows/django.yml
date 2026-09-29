@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+
 env:
   ENVIRONMENT: CI
   SECRET_KEY: 1234
