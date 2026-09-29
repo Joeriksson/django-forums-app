@@ -281,6 +281,8 @@ GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `mas
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
+A `prod-image` job builds the production image and runs `check --deploy --fail-level WARNING` in it with production settings and fake env values (no database, Redis or secrets needed). Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
+
 ## Architecture Notes
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
