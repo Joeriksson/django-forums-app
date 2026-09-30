@@ -1,8 +1,15 @@
 {% extends '_base.html' %}
+{% load signup %}
 
 {% block title %}Sign Up Closed{% endblock %}
 
 {% block content %}
 <h1>Sign Up Closed</h1>
+{% invited_email as invited %}
+{% if invited %}
+<p>Your invitation is for <strong>{{ invited }}</strong>, but your GitHub account doesn't have that address as a verified email.
+    <a href="{% url 'account_signup' %}">Sign up with {{ invited }} and a password</a> instead.</p>
+{% else %}
 <p>Sign up is closed at the moment. If you already have an account, <a href="{% url 'account_login' %}">log in</a>.</p>
+{% endif %}
 {% endblock content %}
