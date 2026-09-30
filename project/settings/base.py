@@ -1,6 +1,8 @@
 import os
 from urllib.parse import urlsplit
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 # One os.path.dirname added after moving this file into a sub folder of the project
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -173,14 +175,27 @@ AUTHENTICATION_BACKENDS = (
 )
 
 
-ADMIN1 = tuple(os.environ.get('ADMIN1').split(','))
-ADMIN2 = tuple(os.environ.get('ADMIN2').split(','))
+def admins_from_env():
+    """
+    Return ADMINS from DJANGO_ADMINS, a comma-separated list of email addresses.
+    Django's default logging mails them the traceback of every 500 when DEBUG is False.
+    """
+    addresses = [
+        address.strip()
+        for address in os.environ.get('DJANGO_ADMINS', '').split(',')
+        if address.strip()
+    ]
+    for address in addresses:
+        if '@' not in address:
+            raise ImproperlyConfigured(
+                f'DJANGO_ADMINS must be email addresses separated by commas, got {address!r}'
+            )
+    # Django 5.2 expects (name, address) pairs but never uses the name.
+    # Django 6 takes plain addresses: return `addresses` then.
+    return [(address, address) for address in addresses]
 
-ADMINS = [ADMIN1, ADMIN2]
-# ADMINS.append(ADMIN1)
-# ADMINS.append(ADMIN2)
 
-# ADMINS = os.environ.get('ADMINS')
+ADMINS = admins_from_env()
 
 ACCOUNT_SESSION_REMEMBER = True
 # Log in with email; sign up with email and one password field (no username)
