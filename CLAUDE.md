@@ -17,7 +17,7 @@ make dev_down    # Stop containers
 
 ### Manual Setup
 
-1. Create a `.env` file with required variables (see below)
+1. Copy `.env.example` to `.env` and fill it in (see below)
 2. Install dependencies: `uv sync`
 3. Apply migrations: `python manage.py migrate --settings=project.settings.development`
 4. Create superuser: `python manage.py createsuperuser --settings=project.settings.development`
@@ -222,20 +222,18 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 ## Environment Variables
 
-Required in a `.env` file:
+`.env.example` lists every variable with comments; copy it to `.env`. `DEBUG` is not read from the environment: each settings module sets it.
 
 | Variable | Description |
 |---|---|
 | `SECRET_KEY` | Django secret key |
 | `ENVIRONMENT` | `development`, `production`, `CI`, or `test` |
 | `DJANGO_SETTINGS_MODULE` | `project.settings.development` for local/Docker dev (otherwise `manage.py` uses `base`, Celery uses `production`) |
-| `DEBUG` | `True` for development |
 | `EMAIL_HOST` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Production SMTP server and login. All three are required: production refuses to start (`ImproperlyConfigured`) if any is missing, unless `DJANGO_EMAIL_CONSOLE=true` |
 | `DJANGO_EMAIL_CONSOLE` | Production only: `true` to print mail to the console instead of SMTP, e.g. for trying out the production compose file locally |
 | `EMAIL_PORT` / `EMAIL_USE_TLS` | Optional SMTP settings (default: `587`, `true` for STARTTLS) |
 | `DEFAULT_FROM_EMAIL` | Optional sender address (default: `EMAIL_HOST_USER`) |
-| `ADMIN1` | Admin contact, format: `Name, email@example.com` |
-| `ADMIN2` | Admin contact, format: `Name, email@example.com` |
+| `DJANGO_ADMINS` | Optional: comma-separated email addresses that Django's default logging mails the traceback of every 500 when `DEBUG=False`. Empty means no error mails. Addresses only: Django never uses the name, and Django 6 drops the `(name, address)` pairs `base.py` still builds for 5.2 |
 | `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`). The database number is replaced: cache uses `/0`, Celery uses `/1`. Set automatically by `docker-compose-prod.yml` |
 | `REDIS_LOCALHOST` | Set to `true` when using local Redis |
 | `POSTGRES_PASSWORD` | `docker-compose-prod.yml` only (required): Postgres password; also used to build `DATABASE_URL`. Use URL-safe characters |

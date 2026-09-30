@@ -53,7 +53,7 @@ To also serve `www.forum.example.com`, add it to the site address (`forum.exampl
 
 ## 2. `.env` checklist
 
-Create `.env` next to `docker-compose-prod.yml` and restrict it with `chmod 600 .env`. Docker Compose reads it both for the containers and for the `${...}` values in the compose file.
+Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.example .env`), fill in the production values below, and restrict it with `chmod 600 .env`. Leave out the lines the example says to leave out in production. Docker Compose reads it both for the containers and for the `${...}` values in the compose file.
 
 **Required:**
 
@@ -66,12 +66,12 @@ Create `.env` next to `docker-compose-prod.yml` and restrict it with `chmod 600 
 | `EMAIL_HOST` | Your SMTP server |
 | `EMAIL_HOST_USER` | SMTP login (usually the sending address) |
 | `EMAIL_HOST_PASSWORD` | SMTP password or token |
-| `ADMIN1`, `ADMIN2` | Admin contacts for error emails, format `Name,email@example.com`. The app won't start without them |
 
 **Optional:**
 
 | Variable | Default | Notes |
 |---|---|---|
+| `DJANGO_ADMINS` | empty | Email addresses, comma-separated, that get the traceback of every server error (500). Set it: without it you only see errors in the logs |
 | `DEFAULT_FROM_EMAIL` | `EMAIL_HOST_USER` | Must be an address the SMTP account may send from |
 | `EMAIL_PORT` / `EMAIL_USE_TLS` | `587` / `true` | STARTTLS submission |
 | `DJANGO_SECURE_HSTS_SECONDS` | `3600` | See [HSTS](#6-raising-hsts) |
@@ -85,7 +85,7 @@ Create `.env` next to `docker-compose-prod.yml` and restrict it with `chmod 600 
 
 ```bash
 git clone <repo-url> forum && cd forum
-# create .env as above
+cp .env.example .env   # then fill it in as above
 docker compose -f docker-compose-prod.yml up -d --build
 docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 docker compose -f docker-compose-prod.yml exec web python manage.py createsuperuser

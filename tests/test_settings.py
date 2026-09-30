@@ -1,4 +1,9 @@
+import importlib
+import sys
+
+import pytest
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 
 def test_pytest_uses_test_settings():
@@ -29,3 +34,43 @@ def test_redis_url_with_db_keeps_password():
         == 'redis://:secret@redis:6379/1'
     )
     assert redis_url_with_db('redis://redis:6379', 1) == 'redis://redis:6379/1'
+
+
+JANE = ('jane@example.com', 'jane@example.com')
+JOHN = ('john@example.com', 'john@example.com')
+
+
+@pytest.mark.parametrize(
+    'value, expected',
+    [
+        (None, []),
+        ('', []),
+        ('jane@example.com', [JANE]),
+        ('jane@example.com,john@example.com', [JANE, JOHN]),
+        (' jane@example.com , john@example.com ,', [JANE, JOHN]),
+    ],
+)
+def test_admins_from_env(monkeypatch, value, expected):
+    if value is None:
+        monkeypatch.delenv('DJANGO_ADMINS', raising=False)
+    else:
+        monkeypatch.setenv('DJANGO_ADMINS', value)
+
+    assert load_base().ADMINS == expected
+
+
+def test_admins_from_env_rejects_names(monkeypatch):
+    # The old ADMIN1 format 'Name, email' must not turn the name into an address
+    monkeypatch.setenv('DJANGO_ADMINS', 'Jane Doe, jane@example.com')
+
+    with pytest.raises(ImproperlyConfigured, match="'Jane Doe'"):
+        load_base()
+
+
+def load_base():
+    """Import project.settings.base fresh, then put the original module back."""
+    original = sys.modules.pop('project.settings.base')
+    try:
+        return importlib.import_module('project.settings.base')
+    finally:
+        sys.modules['project.settings.base'] = original

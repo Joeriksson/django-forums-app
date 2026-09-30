@@ -23,10 +23,9 @@ RUN uv sync --frozen $UV_SYNC_FLAGS
 # Copy project
 COPY . /code/
 
-# Collect static files into /code/staticfiles, served by WhiteNoise. Settings need these
-# variables at import time; the throwaway values exist only for this step.
-RUN SECRET_KEY=collectstatic ADMIN1=x,x@example.com ADMIN2=x,x@example.com \
-    python manage.py collectstatic --noinput --settings=project.settings.base
+# Collect static files into /code/staticfiles, served by WhiteNoise. Settings need a
+# SECRET_KEY at import time; the throwaway value exists only for this step.
+RUN SECRET_KEY=collectstatic python manage.py collectstatic --noinput --settings=project.settings.base
 
 # Command for container to not shut down
 CMD tail -f /dev/null
