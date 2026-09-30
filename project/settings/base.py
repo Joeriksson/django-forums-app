@@ -3,6 +3,11 @@ from urllib.parse import urlsplit
 
 from django.core.exceptions import ImproperlyConfigured
 
+
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)).strip().lower() in ('1', 'true', 'yes')
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 # One os.path.dirname added after moving this file into a sub folder of the project
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
