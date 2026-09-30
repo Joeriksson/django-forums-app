@@ -48,14 +48,10 @@ git clone https://github.com/Joeriksson/django-forums-app.git
 
 2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop) to be able to use the docker environment.
 
-3. Create a `.env` file in the root folder with the following parameters:
+3. Copy `.env.example` to `.env` in the root folder and set `SECRET_KEY`. The comments in the file explain every variable:
 
 ```
-ENVIRONMENT=development
-SECRET_KEY=<your secret key>
-DEBUG=True
-ADMIN1=<Name, email@example.com>
-ADMIN2=<Name, email@example.com>
+cp .env.example .env
 ```
 
 4. In the directory where you cloned the repository, build and start the containers:

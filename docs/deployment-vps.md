@@ -66,12 +66,12 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `EMAIL_HOST` | Your SMTP server |
 | `EMAIL_HOST_USER` | SMTP login (usually the sending address) |
 | `EMAIL_HOST_PASSWORD` | SMTP password or token |
-| `ADMIN1`, `ADMIN2` | Admin contacts for error emails, format `Name,email@example.com`. The app won't start without them |
 
 **Optional:**
 
 | Variable | Default | Notes |
 |---|---|---|
+| `DJANGO_ADMINS` | empty | Email addresses, comma-separated, that get the traceback of every server error (500). Set it: without it you only see errors in the logs |
 | `DEFAULT_FROM_EMAIL` | `EMAIL_HOST_USER` | Must be an address the SMTP account may send from |
 | `EMAIL_PORT` / `EMAIL_USE_TLS` | `587` / `true` | STARTTLS submission |
 | `DJANGO_SECURE_HSTS_SECONDS` | `3600` | See [HSTS](#6-raising-hsts) |

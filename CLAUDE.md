@@ -233,8 +233,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 | `DJANGO_EMAIL_CONSOLE` | Production only: `true` to print mail to the console instead of SMTP, e.g. for trying out the production compose file locally |
 | `EMAIL_PORT` / `EMAIL_USE_TLS` | Optional SMTP settings (default: `587`, `true` for STARTTLS) |
 | `DEFAULT_FROM_EMAIL` | Optional sender address (default: `EMAIL_HOST_USER`) |
-| `ADMIN1` | Admin contact, format: `Name, email@example.com` |
-| `ADMIN2` | Admin contact, format: `Name, email@example.com` |
+| `DJANGO_ADMINS` | Optional: comma-separated email addresses that Django's default logging mails the traceback of every 500 when `DEBUG=False`. Empty means no error mails. Addresses only: Django never uses the name, and Django 6 drops the `(name, address)` pairs `base.py` still builds for 5.2 |
 | `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`). The database number is replaced: cache uses `/0`, Celery uses `/1`. Set automatically by `docker-compose-prod.yml` |
 | `REDIS_LOCALHOST` | Set to `true` when using local Redis |
 | `POSTGRES_PASSWORD` | `docker-compose-prod.yml` only (required): Postgres password; also used to build `DATABASE_URL`. Use URL-safe characters |
