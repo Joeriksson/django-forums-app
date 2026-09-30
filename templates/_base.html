@@ -1,4 +1,4 @@
-{% load static %}
+{% load static signup %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -65,9 +65,12 @@
                         <form class="form-inline ml-auto">
                             <a href="{% url 'account_login' %}" class="btn bg-dark text-light btn-outline-secondary">Log
                                 in</a>
-                            <a href="{% url 'account_signup' %}"
-                               class="btn bg-dark text-light btn-outline-secondary ml-2">Sign
-                                up</a>
+                            {% signup_is_open as signup_open %}
+                            {% if signup_open %}
+                                <a href="{% url 'account_signup' %}"
+                                   class="btn bg-dark text-light btn-outline-secondary ml-2">Sign
+                                    up</a>
+                            {% endif %}
                         </form>
 
                     {% endif %}

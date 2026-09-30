@@ -5,10 +5,6 @@ from .base import *
 DEBUG = False
 
 
-def env_bool(name, default=False):
-    return os.environ.get(name, str(default)).strip().lower() in ('1', 'true', 'yes')
-
-
 # Comma-separated hosts the app is served on, e.g. 'forum.example.com'
 ALLOWED_HOSTS = [
     host.strip()

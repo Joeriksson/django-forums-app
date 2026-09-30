@@ -67,6 +67,20 @@ def test_admins_from_env_rejects_names(monkeypatch):
         load_base()
 
 
+@pytest.mark.parametrize(
+    'value, expected',
+    [(None, False), ('', False), ('false', False), ('true', True), ('1', True)],
+)
+def test_signup_closed_unless_env_opens_it(monkeypatch, value, expected):
+    # base.py's value is what production uses: it doesn't set SIGNUP_OPEN itself
+    if value is None:
+        monkeypatch.delenv('DJANGO_SIGNUP_OPEN', raising=False)
+    else:
+        monkeypatch.setenv('DJANGO_SIGNUP_OPEN', value)
+
+    assert load_base().SIGNUP_OPEN is expected
+
+
 def load_base():
     """Import project.settings.base fresh, then put the original module back."""
     original = sys.modules.pop('project.settings.base')

@@ -77,6 +77,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `DJANGO_SECURE_HSTS_SECONDS` | `3600` | See [HSTS](#6-raising-hsts) |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | `false` | See [HSTS](#6-raising-hsts) |
 | `ADMIN_URL` | `nimda` | Path of the Django admin |
+| `DJANGO_SIGNUP_OPEN` | `false` | `true` lets anyone create an account, by email or GitHub. While it's closed, the signup page says so and the navbar hides its link; existing users can still log in. Create accounts in the admin meanwhile |
 | `DJANGO_EMAIL_CONSOLE` | `false` | `true` prints mail to the logs instead of using SMTP. Only for trying the stack out |
 
 **Don't set** `DJANGO_SETTINGS_MODULE`, `ENVIRONMENT`, `DATABASE_URL` or `REDIS_URL`: the compose file sets them, and its values take priority.

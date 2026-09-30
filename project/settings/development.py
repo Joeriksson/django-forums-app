@@ -18,6 +18,9 @@ MIDDLEWARE += [
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Open by default here, so local signup works without setting DJANGO_SIGNUP_OPEN
+SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN', True)
+
 DEBUG_TOOLBAR_CONFIG = {
     'JQUERY_URL': '',
 }

@@ -3,6 +3,11 @@ from urllib.parse import urlsplit
 
 from django.core.exceptions import ImproperlyConfigured
 
+
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)).strip().lower() in ('1', 'true', 'yes')
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 # One os.path.dirname added after moving this file into a sub folder of the project
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -202,6 +207,10 @@ ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
 ACCOUNT_UNIQUE_EMAIL = True
+# New accounts, by email or GitHub, only while DJANGO_SIGNUP_OPEN is true. Closed by
+# default, so a missing variable never opens a production forum by accident.
+ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
+SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN')
 
 DEFAULT_FROM_EMAIL = 'noreply@email.com'
 
