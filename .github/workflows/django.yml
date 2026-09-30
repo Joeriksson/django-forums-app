@@ -12,8 +12,6 @@ permissions:
 env:
   ENVIRONMENT: CI
   SECRET_KEY: 1234
-  ADMIN1: John, test@email.com
-  ADMIN2: Paul, test2@email.com
   REDIS_URL: redis://localhost:6379/0
 
 jobs:
@@ -84,8 +82,7 @@ jobs:
         -e DJANGO_SETTINGS_MODULE=project.settings.production
         -e ENVIRONMENT=production
         -e SECRET_KEY=ci-only-placeholder-secret-key-not-used-anywhere-else-0123456789
-        -e ADMIN1="Admin, admin@example.com"
-        -e ADMIN2="Admin, admin@example.com"
+        -e DJANGO_ADMINS=admin@example.com
         -e DJANGO_ALLOWED_HOSTS=forum.example.com
         -e DJANGO_EMAIL_CONSOLE=true
         -e DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
