@@ -1,25 +1,45 @@
 # Deploying on a VPS with Docker
 
-This guide runs the production stack from `docker-compose-prod.yml` on a VPS, behind a reverse proxy on the host that terminates HTTPS. The examples use Caddy and `forum.example.com`; replace the domain with your own.
+This guide runs the production stack from `docker-compose-prod.yml` on a VPS, behind a reverse proxy container that terminates HTTPS. The examples use Caddy and `forum.example.com`; replace the domain with your own.
 
 ```
-Internet ──HTTPS──> Caddy (host) ──HTTP──> 127.0.0.1:8000 ──> web (gunicorn)
-                                                                │
-                              db (Postgres) <──┬────────────────┤
-                              redis <──────────┴── celery, celery-beat
+Internet ──HTTPS──> Caddy (container, ports 80/443)
+                      │
+                      │ forum_proxy network, HTTP
+                      ▼
+                    web (gunicorn, alias forum-web)
+                      │ default network
+                      ├──> db (Postgres)
+                      └──> redis <── celery, celery-beat
 ```
 
-Only `web` is published, and only on `127.0.0.1`, so it can't be reached from outside except through the proxy. Postgres and Redis aren't published at all.
+The stack publishes no ports. The proxy is the only container with public ports, and it reaches `web` over the shared `forum_proxy` network by the name `forum-web`. Only `web` is on that network, so the proxy can't reach Postgres or Redis. The other services talk to each other on the stack's own default network.
 
 ## 1. Reverse proxy (Caddy)
 
-Add a site block to the Caddyfile on the host:
+`docker-compose-prod.yml` creates the `forum_proxy` network. Caddy runs in its own compose stack, outside this repo. In that stack's compose file, declare `forum_proxy` as external and add it to the Caddy service's networks:
+
+```yaml
+# Caddy's own compose file (not docker-compose-prod.yml)
+services:
+  caddy:
+    # ...
+    networks:
+      - forum_proxy
+networks:
+  forum_proxy:
+    external: true
+```
+
+Add a site block to the Caddyfile:
 
 ```caddyfile
 forum.example.com {
-	reverse_proxy 127.0.0.1:8000
+	reverse_proxy forum-web:8000
 }
 ```
+
+Use `forum-web`, not `web`: if the proxy is on other apps' networks as well, `web` may be the name of a service there too.
 
 That is all the app needs:
 
@@ -71,6 +91,8 @@ docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 docker compose -f docker-compose-prod.yml exec web python manage.py createsuperuser
 ```
 
+The first `up` creates the `forum_proxy` network. Start (or restart) the Caddy stack only after that, with its own `docker compose up -d`, since Caddy can't join a network that doesn't exist yet.
+
 Then:
 
 1. **Set the site domain.** Log in to `https://forum.example.com/<ADMIN_URL>/`, open *Sites*, and change `example.com` to `forum.example.com`. Notification emails build their thread links from this domain.
@@ -84,6 +106,8 @@ git pull
 docker compose -f docker-compose-prod.yml up -d --build
 docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 ```
+
+Use `up`, not `down` followed by `up`. `down` tries to remove `forum_proxy`, which fails with "network has active endpoints" while Caddy is attached. If you do need `down`, stop Caddy first.
 
 Migrations don't run automatically. **Back up the database before migrating** (see below); some migrations change data. For example, `forums.0015` deletes duplicate upvotes and subscriptions, and that can't be undone.
 
@@ -123,5 +147,28 @@ Restart with `docker compose -f docker-compose-prod.yml up -d` after changing `.
 | Forms fail with **CSRF verification failed** | Same: `CSRF_TRUSTED_ORIGINS` is built from `DJANGO_ALLOWED_HOSTS` |
 | Endless redirect loop | The proxy doesn't send `X-Forwarded-Proto: https` |
 | Links in notification emails point to `example.com` | The *Sites* domain hasn't been set (step 3.1) |
+| **502 Bad Gateway** from Caddy | `web` isn't running, or Caddy isn't on `forum_proxy` (it was started before the network existed: restart the Caddy stack) |
+| `network forum_proxy ... has active endpoints` on `down` | Caddy is still attached; see [Updating](#4-updating) |
 
 Logs: `docker compose -f docker-compose-prod.yml logs -f web celery`
+
+## Testing the stack locally
+
+The stack can be started locally to check that it comes up, but not browsed: the production settings redirect HTTP to HTTPS and use secure cookies, and no port is published. In `.env`, set `DJANGO_ALLOWED_HOSTS=localhost` and `DJANGO_EMAIL_CONSOLE=true`, then:
+
+```bash
+docker compose -f docker-compose-prod.yml up -d --build
+docker compose -f docker-compose-prod.yml ps                  # all five services running
+docker compose -f docker-compose-prod.yml exec web python manage.py migrate
+docker compose -f docker-compose-prod.yml exec web python manage.py check --deploy
+docker compose -f docker-compose-prod.yml exec web python manage.py sendtestemail you@example.com  # mail shows in the logs
+docker compose -f docker-compose-prod.yml logs celery celery-beat
+```
+
+To fetch a page from inside the container, send the headers the proxy would add:
+
+```bash
+docker compose -f docker-compose-prod.yml exec web python -c "import urllib.request as u; r = u.urlopen(u.Request('http://localhost:8000/', headers={'Host': 'localhost', 'X-Forwarded-Proto': 'https'})); print(r.status)"
+```
+
+`docker compose -f docker-compose-prod.yml down -v` removes everything again, including the local database volume.

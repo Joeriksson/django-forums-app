@@ -1,6 +1,6 @@
-# Production stack for a VPS. A reverse proxy on the host (e.g. Caddy)
-# terminates HTTPS and forwards to 127.0.0.1:8000.
-# POSTGRES_PASSWORD and REDIS_PASSWORD must be set in .env.
+# Production stack for a VPS. A reverse proxy container (e.g. Caddy)
+# terminates HTTPS, joins the forum_proxy network and forwards to forum-web:8000.
+# No ports are published. POSTGRES_PASSWORD and REDIS_PASSWORD must be set in .env.
 
 x-app-environment: &app-environment
   DJANGO_SETTINGS_MODULE: project.settings.production
@@ -15,9 +15,12 @@ services:
     env_file:
       - .env
     environment: *app-environment
-    ports:
-      # Only reachable from the host, i.e. through the reverse proxy
-      - 127.0.0.1:8000:8000
+    networks:
+      default:
+      proxy:
+        # Unique name for the proxy, which may be on other apps' networks too
+        aliases:
+          - forum-web
     depends_on:
       - db
       - redis
@@ -52,5 +55,10 @@ services:
     depends_on:
       - redis
     restart: unless-stopped
+networks:
+  # Shared with the reverse proxy. Only web is on it, so the proxy can't reach db or redis.
+  # Fixed name, so it doesn't depend on the directory the repo is cloned into.
+  proxy:
+    name: forum_proxy
 volumes:
   postgres_data:

@@ -33,7 +33,7 @@ dev_pytest:
 	@docker compose -f docker-compose-dev.yml exec web pytest -v --disable-warnings
 
 prod:
-	@docker compose -f docker-compose-prod.yml down && docker compose -f docker-compose-prod.yml up -d
+	@docker compose -f docker-compose-prod.yml up -d --force-recreate
 
 prod_down:
 	@docker compose -f docker-compose-prod.yml down
