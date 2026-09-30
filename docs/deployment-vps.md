@@ -53,7 +53,7 @@ To also serve `www.forum.example.com`, add it to the site address (`forum.exampl
 
 ## 2. `.env` checklist
 
-Create `.env` next to `docker-compose-prod.yml` and restrict it with `chmod 600 .env`. Docker Compose reads it both for the containers and for the `${...}` values in the compose file.
+Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.example .env`), fill in the production values below, and restrict it with `chmod 600 .env`. Leave out the lines the example says to leave out in production. Docker Compose reads it both for the containers and for the `${...}` values in the compose file.
 
 **Required:**
 
@@ -85,7 +85,7 @@ Create `.env` next to `docker-compose-prod.yml` and restrict it with `chmod 600 
 
 ```bash
 git clone <repo-url> forum && cd forum
-# create .env as above
+cp .env.example .env   # then fill it in as above
 docker compose -f docker-compose-prod.yml up -d --build
 docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 docker compose -f docker-compose-prod.yml exec web python manage.py createsuperuser
