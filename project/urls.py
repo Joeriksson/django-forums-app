@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+from users import views as user_views
+
 from . import views
 
 ADMIN_URL = os.getenv('ADMIN_URL', 'nimda')
@@ -14,6 +16,11 @@ urlpatterns = [
     path(f'{ADMIN_URL}/', admin.site.urls),
     # path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
     # user management
+    path(
+        'accounts/invite/<str:key>/',
+        user_views.accept_invitation,
+        name='accept_invitation',
+    ),
     path('accounts/', include('allauth.urls')),
     path(
         'user_profile/<int:pk>',
