@@ -211,6 +211,8 @@ ACCOUNT_UNIQUE_EMAIL = True
 # default, so a missing variable never opens a production forum by accident.
 ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
 SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN')
+# Invitation links (users.Invitation) let one address sign up while signup is closed
+INVITATION_EXPIRY_DAYS = 7
 
 DEFAULT_FROM_EMAIL = 'noreply@email.com'
 
