@@ -163,6 +163,12 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social); 
 - Uses **email** for authentication (not username); the database requires it to be non-empty and unique ignoring case (migration `users/0003`)
 - `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`
 
+### Invitation (`users.Invitation`)
+- `email`, `key` (random, unique), `invited_by`, `created`, `accepted_at`, `accepted_by`
+- Valid while unused and younger than `INVITATION_EXPIRY_DAYS` (7, in `base.py`): `Invitation.objects.valid()` / `is_valid()`
+- Created in the Django admin (needs `users.add_invitation`); the change page shows the link, built from the *Sites* domain
+- The link `/accounts/invite/<key>/` stores the key in the session (`Invitation.SESSION_KEY`) and stashes the address as verified, then redirects to signup. While signup is closed, it opens signup for that address only: the signup form refuses other addresses, and a GitHub signup needs the address among GitHub's verified emails. allauth's `user_signed_up` signal marks it used (`users/models.py`)
+
 ## URL Structure
 
 ```
@@ -188,6 +194,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social); 
 /api/schema/               → OpenAPI schema (YAML; ?format=openapi-json for JSON)
 /api/api-auth/login/       → DRF browsable API login
 
+/accounts/invite/<key>/    → accept_invitation (valid link: opens signup for the invited address)
 /accounts/                 → django-allauth (login, signup, social auth)
 /user_profile/<pk>         → UserProfileUpdate
 /<ADMIN_URL>/              → Django admin (default: /nimda/)
@@ -239,7 +246,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 | `POSTGRES_PASSWORD` | `docker-compose-prod.yml` only (required): Postgres password; also used to build `DATABASE_URL`. Use URL-safe characters |
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
-| `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users.adapters.AccountAdapter.is_open_for_signup` decides, and allauth's social adapter asks it too. The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
+| `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
 | `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | Opt-in HSTS flags (default: `false`) |
