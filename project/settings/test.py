@@ -30,3 +30,5 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+# Signup is closed by default; tests of the closed state switch it off themselves
+SIGNUP_OPEN = True
