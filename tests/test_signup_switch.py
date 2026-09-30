@@ -65,41 +65,6 @@ def test_login_works_while_signup_closed(client, signup_closed):
     assert client.session['_auth_user_id'] == str(user.pk)
 
 
-@pytest.fixture
-def github_login(client, monkeypatch):
-    """
-    Log in with GitHub through allauth's real views. Only the calls to GitHub
-    are faked: the token exchange and the profile with its email address.
-    """
-    from urllib.parse import parse_qs, urlsplit
-
-    from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
-    from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-
-    def _login(email, uid=12345):
-        monkeypatch.setattr(
-            OAuth2Client, 'get_access_token', lambda *args, **kwargs: {'access_token': 'token'}
-        )
-        profile = {
-            'id': uid,
-            'login': 'octocat',
-            'email': email,
-            'emails': [{'email': email, 'verified': True, 'primary': True}],
-        }
-        monkeypatch.setattr(
-            GitHubOAuth2Adapter,
-            'complete_login',
-            lambda self, request, app, token, **kwargs: self.get_provider().sociallogin_from_response(
-                request, profile
-            ),
-        )
-        redirect = client.post(reverse('github_login'))
-        state = parse_qs(urlsplit(redirect['Location']).query)['state'][0]
-        return client.get(reverse('github_callback'), {'code': 'code', 'state': state})
-
-    return _login
-
-
 @pytest.mark.django_db
 def test_closed_signup_refuses_new_github_user(client, github_login, signup_closed):
     resp = github_login('octocat@example.com')
