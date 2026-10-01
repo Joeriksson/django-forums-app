@@ -114,7 +114,7 @@ api/               # Django REST Framework API
 
 tests/             # pytest test suite
 templates/         # HTML templates (extends _base.html)
-static/            # Static file sources (CSS, Font Awesome, bootstrap-social, highlight.js); collected into staticfiles/ at image build, not committed
+static/            # Static file sources (CSS, Font Awesome, bootstrap-social, highlight.js, EasyMDE); collected into staticfiles/ at image build, not committed
 ```
 
 ## Data Models
@@ -186,6 +186,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 /forums/thread/<tpk>/post/<pk>/delete  → PostDelete
 /forums/thread/<tpk>/post/<pk>/upvote  → PostUpvote
 /forums/search/            → SearchResultsView
+/forums/preview/           → MarkdownPreview (POST, login required: Markdown text → HTML for the editor's preview)
 
 /api/forums/               → ForumViewSet (read for anyone; write needs forums.add/change/delete_forum)
 /api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly); ?forum=<id> filters
@@ -280,7 +281,11 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - **Django 5.2** — web framework
 - **django-lifecycle** — model hooks (`@hook` decorator) for cache invalidation and notifications
-- **markdown-it-py + nh3** — render thread and post text (`forums/markdown.py`, template filter `render_markdown`). Raw HTML in the text is off, so it shows as text; nh3 then keeps only the listed tags, attributes and URL schemes (`http`, `https`, `mailto`). A new Markdown feature needs both the parser rule and the tag in `ALLOWED_TAGS`. The text is typed in a plain textarea (no editor widget). Code blocks on the thread page are coloured by highlight.js, a single file kept in `static/js/highlight.min.js` (`make audit` doesn't cover it: replace the file to upgrade)
+- **markdown-it-py + nh3** — render thread and post text (`forums/markdown.py`, template filter `render_markdown`). Raw HTML in the text is off, so it shows as text; nh3 then keeps only the listed tags, attributes and URL schemes (`http`, `https`, `mailto`). A new Markdown feature needs both the parser rule and the tag in `ALLOWED_TAGS`. Code blocks on the thread page are coloured by highlight.js, a single file kept in `static/js/highlight.min.js` (`make audit` doesn't cover it: replace the file to upgrade)
+- **EasyMDE** — Markdown editor on the thread and post forms: `templates/forums/_editor.html` loads `static/js/easymde.min.js`, its stylesheet and our `static/js/editor.js` (toolbar, settings). The preview button posts the text to `/forums/preview/`, so it shows what the saved text will look like. Without JavaScript the plain textarea still works. Like highlight.js it is a file in `static/` that `make audit` doesn't cover; it loads nothing from other sites (its spell checker and Font Awesome download are off). To upgrade it:
+  1. Replace the two `easymde.min.*` files with the ones from the new npm package (check its integrity hash) and read the release notes for renamed options and anything new that loads from another site
+  2. The tests don't run JavaScript, so check in a browser, logged in, on the new thread, new post and edit thread pages: the toolbar is on one line with all icons, the preview matches the saved result, the Markdown hint under the field is hidden, an empty text shows the form error, and the edit page loads the saved text
+  3. If the toolbar wraps, see the `button.table` rule in `_editor.html` (EasyMDE's class name clashes with Bootstrap's `.table`)
 - **django-allauth** — authentication + GitHub OAuth
 - **djangorestframework** — REST API
 - **inflection, uritemplate, pyyaml** — needed by DRF's OpenAPI schema (`/api/schema/`); nothing imports them directly, so keep them in the main dependencies
