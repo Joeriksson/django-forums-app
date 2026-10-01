@@ -1,10 +1,9 @@
 import os
 
-from django.contrib.sites.models import Site
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
-from django.urls import reverse_lazy
+from django.urls import reverse
 from django_lifecycle import (
     LifecycleModelMixin,
     hook,
@@ -77,10 +76,7 @@ class Post(LifecycleModelMixin, models.Model):
     @hook(AFTER_CREATE)
     def notify_subscribers(self):
         if not os.environ.get('CI'):
-            url = reverse_lazy('thread_detail', args=(self.thread_id,))
-            full_url = ''.join(
-                ['http://', str(Site.objects.get_current().domain), str(url)]
-            )
+            full_url = settings.SITE_URL + reverse('thread_detail', args=(self.thread_id,))
 
             notification_users = Notification.objects.filter(thread=self.thread).select_related('user')
             email_addresses = [

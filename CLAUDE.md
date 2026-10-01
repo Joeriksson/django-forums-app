@@ -257,7 +257,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
 | `DJANGO_STAFF_REQUIRE_MFA` | Staff need an authenticator app for the admin and `/api/users/`, and their API tokens are refused (`settings.STAFF_REQUIRE_MFA`). Default `true`; `development.py` defaults to `false` |
-| `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. Notification emails still use the *Sites* domain |
+| `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()` and `Post.notify_subscribers`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
 | `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | Opt-in HSTS flags (default: `false`) |
@@ -306,7 +306,7 @@ A `prod-image` job builds the production image, starts it with production settin
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
 - `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` — integer PKs (not BigAutoField)
-- `SITE_ID = 1` — required by `django.contrib.sites` (used for notification email URLs)
+- `SITE_ID = 1` — required by `django.contrib.sites`, which allauth uses for the site name in its emails. Our own email links use `SITE_URL`, not the *Sites* domain
 - CORS allowed from `localhost:3000` / `127.0.0.1:3000` (for potential frontend clients)
 - Admin URL is configurable via `ADMIN_URL` env var (defaults to `nimda`) as a security measure
 
