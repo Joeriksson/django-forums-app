@@ -195,6 +195,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social); 
 /api/api-auth/login/       → DRF browsable API login
 
 /accounts/invite/<key>/    → accept_invitation (valid link: opens signup for the invited address)
+/accounts/2fa/             → allauth.mfa (set up an authenticator app, recovery codes; code prompt at login)
 /accounts/                 → django-allauth (login, signup, social auth)
 /user_profile/<pk>         → UserProfileUpdate
 /<ADMIN_URL>/              → Django admin (default: /nimda/)
@@ -214,6 +215,8 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - `django-allauth` handles auth with email-only login (no username required)
 - GitHub OAuth social login is configured (`allauth.socialaccount.providers.github`)
+- Two-factor login (`allauth.mfa`, needs the `django-allauth[mfa]` extra): optional for every user, an authenticator app (TOTP) plus recovery codes, no passkeys (`MFA_SUPPORTED_TYPES` in `base.py`). Users turn it on under *Two-factor authentication* in the user menu; after that both password and GitHub logins ask for a code. allauth refuses setup while the account has an unverified email address
+- allauth pages without a template of our own (the two-factor pages) get the site layout from `templates/allauth/layouts/base.html`, which extends `_base.html`
 - Session + Token authentication for the REST API
 - Permission checks: Django model permissions for forum creation and editing; `UserPassesTestMixin` for thread edit/delete and post delete (owner, or a user with `forums.change_thread` / `forums.delete_thread` / `forums.delete_post`)
 - **Moderators group**: created by migration `forums/0016_moderators_group` with exactly `change_thread`, `delete_thread` and `delete_post`, so members can edit and delete other users' threads and delete their posts, on the website and through the API. Add users to it in the Django admin
