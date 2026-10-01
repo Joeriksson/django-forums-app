@@ -5,8 +5,10 @@ from allauth.account.signals import user_signed_up
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.sites.models import Site
 from django.db.models.functions import Lower
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone
 
 from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook
@@ -59,6 +61,8 @@ class Invitation(models.Model):
     )
     # When the link was made; the expiry counts from here
     created = models.DateTimeField(default=timezone.now)
+    # When the invitation email went out; empty if it hasn't (yet)
+    sent_at = models.DateTimeField(null=True, blank=True)
     accepted_at = models.DateTimeField(null=True, blank=True)
     accepted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -78,8 +82,23 @@ class Invitation(models.Model):
 
     def is_valid(self):
         # Same rule as InvitationQuerySet.valid(), without a query
-        cutoff = timezone.now() - timedelta(days=settings.INVITATION_EXPIRY_DAYS)
-        return self.accepted_at is None and self.created > cutoff
+        return self.accepted_at is None and self.expires_at > timezone.now()
+
+    @property
+    def expires_at(self):
+        return self.created + timedelta(days=settings.INVITATION_EXPIRY_DAYS)
+
+    def get_link(self):
+        # Same domain as the links in notification emails (Sites)
+        path = reverse('accept_invitation', args=[self.key])
+        return f'https://{Site.objects.get_current().domain}{path}'
+
+    def renew(self):
+        """Replace the link with a new one, valid for the full expiry time again."""
+        self.key = new_invitation_key()
+        self.created = timezone.now()
+        self.sent_at = None
+        self.save(update_fields=['key', 'created', 'sent_at'])
 
     @classmethod
     def from_session(cls, request):
