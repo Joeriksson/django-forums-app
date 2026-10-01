@@ -17,10 +17,10 @@ LIST_URL = reverse('admin:users_invitation_changelist')
 
 
 @pytest.fixture
-def staff_client(client, db):
-    client.force_login(
-        User.objects.create_superuser(username='boss', email='boss@example.com')
-    )
+def staff_client(client, add_totp):
+    boss = User.objects.create_superuser(username='boss', email='boss@example.com')
+    add_totp(boss)
+    client.force_login(boss)
     return client
 
 

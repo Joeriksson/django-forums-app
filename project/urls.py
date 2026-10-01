@@ -1,5 +1,6 @@
 import os
 
+from allauth.account.decorators import secure_admin_login
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -10,6 +11,9 @@ from users import views as user_views
 from . import views
 
 ADMIN_URL = os.getenv('ADMIN_URL', 'nimda')
+
+# The admin logs in through allauth's login page, so it gets the two-factor step
+admin.site.login = secure_admin_login(admin.site.login)
 
 urlpatterns = [
     # django admin

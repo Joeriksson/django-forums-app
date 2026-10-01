@@ -1,16 +1,18 @@
 import pytest
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from rest_framework.test import APIClient
 
 
-def test_api_login_url_has_slash_after_prefix():
-    assert reverse('rest_framework:login') == '/api/api-auth/login/'
-    assert reverse('rest_framework:logout') == '/api/api-auth/logout/'
+def test_api_has_no_login_page_of_its_own():
+    # DRF's login view would skip the two-factor step: log in on the site instead
+    with pytest.raises(NoReverseMatch):
+        reverse('rest_framework:login')
+    assert APIClient().get('/api/api-auth/login/').status_code == 404
 
 
 @pytest.mark.django_db
-def test_api_login_page_loads():
-    resp = APIClient().get('/api/api-auth/login/')
+def test_browsable_api_page_loads_without_login_link():
+    resp = APIClient().get('/api/forums/', HTTP_ACCEPT='text/html')
 
     assert resp.status_code == 200
 

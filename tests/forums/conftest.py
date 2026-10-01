@@ -62,14 +62,19 @@ def add_super_user():
 
 
 @pytest.fixture(scope="function")
-def get_user_client():
+def get_user_client(add_totp):
     def _get_user_client(user):
+        client = APIClient()
+
+        # Staff tokens are refused: staff use a session, with an authenticator app
+        if user.is_staff:
+            add_totp(user)
+            client.force_login(user)
+            return client
 
         token = Token.objects.create(
             user=user,
         )
-
-        client = APIClient()
         client.credentials(HTTP_AUTHORIZATION=f'TOKEN {token.key}')
 
         return client
