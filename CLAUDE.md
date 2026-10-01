@@ -43,7 +43,7 @@ make dev_pytest        # Run pytest
 pytest -v --disable-warnings
 ```
 
-Tests use `project.settings.test` settings. Coverage and pytest configuration are in `pyproject.toml`. Tests run in parallel (`-n auto`) via `pytest-xdist`.
+Tests use `project.settings.test` settings. Coverage and pytest configuration are in `pyproject.toml`. Tests run in parallel (`-n auto`) via `pytest-xdist`. A `RemovedInDjango60Warning` fails the test that triggers it (`filterwarnings` in `pyproject.toml`).
 
 ### Test Structure
 
