@@ -1,23 +1,8 @@
 <!DOCTYPE html>
 {% extends '_base.html' %}
-{% load static %}
 {% load crispy_forms_tags %}
-{% load martortags %}
 
 {% block title %}New post{% endblock title %}
-{% block stylesheets %}
-    {{ block.super }}
-    {#    <link href="{% static 'plugins/css/ace.min.css' %}" type="text/css" media="all" rel="stylesheet"/>#}
-
-    <link href="{% static 'plugins/css/semantic.min.css' %}" type="text/css" media="all" rel="stylesheet"/>
-    {#    <link href="{% static 'martor/css/martor.min.css' %}" type="text/css" media="all" rel="stylesheet"/>#}
-    <link href="{% static 'css/darcula.css' %}" type="text/css" media="all" rel="stylesheet"/>
-    <style>
-        .main-container {
-            margin-top: 7em
-        }
-    </style>
-{% endblock stylesheets %}
 {% block content %}
     <style>
         .heading {
@@ -35,6 +20,5 @@
         <button class="btn btn-success" type="submit">Post</button>
         <a href="{% url 'thread_detail' thread.id %}" class="btn btn-outline-secondary">Cancel</a>
     </form>
-    {{ form.media }}
 {% endblock content %}
 

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 {% extends '_base.html' %}
 {% load crispy_forms_tags %}
-{% load martortags %}
 
 {% block title %}New thread{% endblock title %}
 
@@ -22,5 +21,4 @@
         <button class="btn btn-success" type="submit">Post</button>
         <a href="{% url 'forum_detail' forum.id %}" class="btn btn-outline-secondary">Cancel</a>
     </form>
-    {{ form.media }}
 {% endblock content %}
