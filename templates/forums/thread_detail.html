@@ -4,10 +4,6 @@
 
 {% block stylesheets %}
     {{ block.super }}
-    {#    <link href="{% static 'plugins/css/ace.min.css' %}" type="text/css" media="all" rel="stylesheet"/>#}
-
-{#    <link href="{% static 'plugins/css/semantic.min.css' %}" type="text/css" media="all" rel="stylesheet"/>#}
-    {#    <link href="{% static 'martor/css/martor.min.css' %}" type="text/css" media="all" rel="stylesheet"/>#}
     <link href="{% static 'css/darcula.css' %}" type="text/css" media="all" rel="stylesheet"/>
     <style>
         .main-container {
@@ -143,7 +139,6 @@
 {% endblock %}
 {% block javascripts %}
     {{ block.super }}
-    <script type="text/javascript" src="{% static 'plugins/js/jquery.min.js' %}"></script>
     <style>
         blockquote {
             padding: 10px 20px;
@@ -171,12 +166,10 @@
             font-size: 1.1em;
         }
     </style>
-    <script type="text/javascript" src="{% static 'plugins/js/semantic.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'plugins/js/highlight.min.js' %}"></script>
+    <script src="{% static 'js/highlight.min.js' %}"></script>
     <script>
-        $('pre').each(function (i, block) {
-            hljs.highlightBlock(block);
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
         });
-        $('.ui.dropdown').dropdown();
     </script>
 {% endblock javascripts %}

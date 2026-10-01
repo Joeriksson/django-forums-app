@@ -11,9 +11,10 @@ from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
 )
-from martor.models import MartorField
 
 from forums.tasks import send_notifications_task
+
+MARKDOWN_HELP = 'You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and tables.'
 
 
 class Forum(models.Model):
@@ -29,8 +30,7 @@ class Forum(models.Model):
 
 class Thread(LifecycleModelMixin, models.Model):
     title = models.CharField(max_length=300)
-    # text = models.TextField()
-    text = MartorField()
+    text = models.TextField(help_text=MARKDOWN_HELP)
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
@@ -56,8 +56,7 @@ class Thread(LifecycleModelMixin, models.Model):
 
 
 class Post(LifecycleModelMixin, models.Model):
-    # text = models.TextField()
-    text = MartorField()
+    text = models.TextField(help_text=MARKDOWN_HELP)
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)

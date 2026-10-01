@@ -17,7 +17,6 @@ dependencies = [
     "gunicorn>=23",
     "inflection>=0.5",
     "markdown-it-py[linkify]>=4.0",
-    "martor>=1.8",
     "nh3>=0.3",
     "psycopg2-binary>=2.9.10",
     "pyjwt[crypto]>=2.8",

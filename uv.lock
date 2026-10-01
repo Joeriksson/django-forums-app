@@ -33,18 +33,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bleach"
-version = "6.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "webencodings" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/48/3c/e12ac860709702bd5ebeb9b56a4fe334f1001246ee1b8f2b7ee28912df7d/bleach-6.4.0.tar.gz", hash = "sha256:4202482733d85cedd04e59fcb2f89f4e4c7c385a78d3c3c23c30446843a37452", size = 204857, upload-time = "2026-06-05T13:01:13.734Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/9d/40b6267367182187139a4000b82a3b287d84d745bccd808e75d916920e9d/bleach-6.4.0-py3-none-any.whl", hash = "sha256:4b6b6a54fff2e69a3dde9d21cc6301220bee3c3cb792187d11403fd795031081", size = 165109, upload-time = "2026-06-05T13:01:12.504Z" },
-]
-
-[[package]]
 name = "celery"
 version = "5.6.2"
 source = { registry = "https://pypi.org/simple" }
@@ -508,7 +496,6 @@ dependencies = [
     { name = "gunicorn" },
     { name = "inflection" },
     { name = "markdown-it-py", extra = ["linkify"] },
-    { name = "martor" },
     { name = "nh3" },
     { name = "psycopg2-binary" },
     { name = "pyjwt", extra = ["crypto"] },
@@ -543,7 +530,6 @@ requires-dist = [
     { name = "gunicorn", specifier = ">=23" },
     { name = "inflection", specifier = ">=0.5" },
     { name = "markdown-it-py", extras = ["linkify"], specifier = ">=4.0" },
-    { name = "martor", specifier = ">=1.8" },
     { name = "nh3", specifier = ">=0.3" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
@@ -684,15 +670,6 @@ wheels = [
 ]
 
 [[package]]
-name = "markdown"
-version = "3.11"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/4f/700155c8c20d9e655dd0732b5fc3c7614f291b9148da271d7388e50bf774/markdown-3.11.tar.gz", hash = "sha256:180224db6aed87ba9ce1f2781ebcd5826253de8ff637112090e24b84502bbf9f", size = 485623, upload-time = "2026-09-25T13:46:23.473Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/1e/32971905a7ab47f8b66866ed949fa48b104ba1c4a6fa57794c4f2c4b2cb8/markdown-3.11-py3-none-any.whl", hash = "sha256:cd6c89e7eb308c8b332ed673215a52d208a43f8bacc030b1419376129408719e", size = 111296, upload-time = "2026-09-25T13:46:22.163Z" },
-]
-
-[[package]]
 name = "markdown-it-py"
 version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -707,24 +684,6 @@ wheels = [
 [package.optional-dependencies]
 linkify = [
     { name = "linkify-it-py" },
-]
-
-[[package]]
-name = "martor"
-version = "1.8.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "bleach" },
-    { name = "django" },
-    { name = "markdown" },
-    { name = "requests" },
-    { name = "tzdata" },
-    { name = "urllib3" },
-    { name = "zipp" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/04/43/77fc39ceab603ded0dcaa2766ee4b59d529c7fdb6a752f7ca3dc4d5f6a2a/martor-1.8.2.tar.gz", hash = "sha256:4e6ac65e8a3c36ecd6d6f797e69b8394f40b320fe8b208cf2e9a6122d522fb8d", size = 1508778, upload-time = "2026-06-22T15:00:41.325Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/8d/e423f7abea95d130b5ee55c22b88ad79b8f975cbfe0cd18a1b0b70826e62/martor-1.8.2-py3-none-any.whl", hash = "sha256:62ca67288a4c40c3b980a7ecc6870abe0af334b6d9a1c541f359fee89d6e81da", size = 1554880, upload-time = "2026-06-22T15:00:39.91Z" },
 ]
 
 [[package]]
@@ -1107,28 +1066,10 @@ wheels = [
 ]
 
 [[package]]
-name = "webencodings"
-version = "0.5.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0b/02/ae6ceac1baeda530866a85075641cec12989bd8d31af6d5ab4a3e8c92f47/webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923", size = 9721, upload-time = "2017-04-05T20:21:34.189Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl", hash = "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78", size = 11774, upload-time = "2017-04-05T20:21:32.581Z" },
-]
-
-[[package]]
 name = "whitenoise"
 version = "6.12.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/cb/2a/55b3f3a4ec326cd077c1c3defeee656b9298372a69229134d930151acd01/whitenoise-6.12.0.tar.gz", hash = "sha256:f723ebb76a112e98816ff80fcea0a6c9b8ecde835f8ddda25df7a30a3c2db6ad", size = 26841, upload-time = "2026-02-27T00:05:42.028Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/db/eb/d5583a11486211f3ebd4b385545ae787f32363d453c19fffd81106c9c138/whitenoise-6.12.0-py3-none-any.whl", hash = "sha256:fc5e8c572e33ebf24795b47b6a7da8da3c00cff2349f5b04c02f28d0cc5a3cc2", size = 20302, upload-time = "2026-02-27T00:05:40.086Z" },
-]
-
-[[package]]
-name = "zipp"
-version = "4.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b9/d8/eab98a517c14134c0b2eb4e2387bc5f457334293ec5d2dd3857ec2966802/zipp-4.1.0.tar.gz", hash = "sha256:4cb57381f544315db7688e976e922a2b18cdb513d21cc194eb42232ba2a3e602", size = 26214, upload-time = "2026-05-18T20:08:57.967Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/13/547360d81e6d88d58492968ffda9f9542854f11310ee556fef14260cc886/zipp-4.1.0-py3-none-any.whl", hash = "sha256:25ad4e16390cd314347dd8f1de67a2ac538ae658ed4ab9db16029c07c188e97f", size = 10238, upload-time = "2026-05-18T20:08:57.045Z" },
 ]

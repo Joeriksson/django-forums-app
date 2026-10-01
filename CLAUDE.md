@@ -114,7 +114,7 @@ api/               # Django REST Framework API
 
 tests/             # pytest test suite
 templates/         # HTML templates (extends _base.html)
-static/            # Static file sources (CSS, Font Awesome, bootstrap-social); collected into staticfiles/ at image build, not committed
+static/            # Static file sources (CSS, Font Awesome, bootstrap-social, highlight.js); collected into staticfiles/ at image build, not committed
 ```
 
 ## Data Models
@@ -126,7 +126,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social); 
 
 ### Thread
 - `title` (CharField, max 300)
-- `text` (MartorField — Markdown)
+- `text` (TextField — Markdown)
 - `added`, `edited` (DateTimeField)
 - `forum` (ForeignKey → Forum)
 - `user` (ForeignKey → AUTH_USER_MODEL)
@@ -134,7 +134,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social); 
 - **Lifecycle hooks**: invalidates Redis cache key `thread_objects_forum_<forum_id>` on save/delete/create
 
 ### Post
-- `text` (MartorField — Markdown)
+- `text` (TextField — Markdown)
 - `upvotes` (IntegerField, default 0)
 - `added`, `edited` (DateTimeField)
 - `thread` (ForeignKey → Thread)
@@ -198,7 +198,6 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social); 
 /accounts/                 → django-allauth (login, signup, social auth)
 /user_profile/<pk>         → UserProfileUpdate
 /<ADMIN_URL>/              → Django admin (default: /nimda/); logs in through /accounts/login/
-/martor/                   → Martor markdown endpoints
 /__debug__/                → Django Debug Toolbar (DEBUG only)
 ```
 
@@ -281,8 +280,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - **Django 5.2** — web framework
 - **django-lifecycle** — model hooks (`@hook` decorator) for cache invalidation and notifications
-- **martor** — Markdown editor widget (`MartorField`); only the editor, it no longer renders anything
-- **markdown-it-py + nh3** — render thread and post text (`forums/markdown.py`, template filter `render_markdown`). Raw HTML in the text is off, so it shows as text; nh3 then keeps only the listed tags, attributes and URL schemes (`http`, `https`, `mailto`). A new Markdown feature needs both the parser rule and the tag in `ALLOWED_TAGS`
+- **markdown-it-py + nh3** — render thread and post text (`forums/markdown.py`, template filter `render_markdown`). Raw HTML in the text is off, so it shows as text; nh3 then keeps only the listed tags, attributes and URL schemes (`http`, `https`, `mailto`). A new Markdown feature needs both the parser rule and the tag in `ALLOWED_TAGS`. The text is typed in a plain textarea (no editor widget). Code blocks on the thread page are coloured by highlight.js, a single file kept in `static/js/highlight.min.js` (`make audit` doesn't cover it: replace the file to upgrade)
 - **django-allauth** — authentication + GitHub OAuth
 - **djangorestframework** — REST API
 - **inflection, uritemplate, pyyaml** — needed by DRF's OpenAPI schema (`/api/schema/`); nothing imports them directly, so keep them in the main dependencies
