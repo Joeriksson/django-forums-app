@@ -81,6 +81,20 @@ def test_signup_closed_unless_env_opens_it(monkeypatch, value, expected):
     assert load_base().SIGNUP_OPEN is expected
 
 
+@pytest.mark.parametrize(
+    'value, expected',
+    [(None, 'http://127.0.0.1:8000'), ('http://localhost:8000/', 'http://localhost:8000')],
+)
+def test_site_url_defaults_to_the_dev_server(monkeypatch, value, expected):
+    # Outside production the variable is optional
+    if value is None:
+        monkeypatch.delenv('DJANGO_SITE_URL', raising=False)
+    else:
+        monkeypatch.setenv('DJANGO_SITE_URL', value)
+
+    assert load_base().SITE_URL == expected
+
+
 def load_base():
     """Import project.settings.base fresh, then put the original module back."""
     original = sys.modules.pop('project.settings.base')

@@ -2,7 +2,6 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.sites.models import Site
 from django.core import mail
 from django.template.defaultfilters import date as format_date
 from django.urls import reverse
@@ -25,18 +24,6 @@ def staff_client(client, db):
     return client
 
 
-@pytest.fixture
-def site_domain():
-    """Set the Sites domain; Site caches it, so clear the cache afterwards."""
-
-    def _set(domain):
-        Site.objects.filter(pk=Site.objects.get_current().pk).update(domain=domain)
-        Site.objects.clear_cache()
-
-    yield _set
-    Site.objects.clear_cache()
-
-
 def invite(staff_client, email, capture, execute=True):
     with capture(execute=execute) as callbacks:
         response = staff_client.post(ADD_URL, {'email': email})
@@ -56,10 +43,10 @@ def resend(staff_client, capture, *invitations):
 
 
 def test_adding_sends_the_invitation_email(
-    staff_client, settings, site_domain, django_capture_on_commit_callbacks
+    staff_client, settings, django_capture_on_commit_callbacks
 ):
     settings.DEFAULT_FROM_EMAIL = 'forum@example.com'
-    site_domain('forum.example.org')
+    settings.SITE_URL = 'https://forum.example.org'
 
     invite(staff_client, 'anna@example.com', django_capture_on_commit_callbacks)
 

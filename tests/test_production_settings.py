@@ -17,6 +17,7 @@ PRODUCTION_ENV_VARS = [
     'EMAIL_HOST_PASSWORD',
     'DEFAULT_FROM_EMAIL',
     'DJANGO_EMAIL_CONSOLE',
+    'DJANGO_SITE_URL',
 ]
 
 
@@ -24,13 +25,18 @@ PRODUCTION_ENV_VARS = [
 def load_production(monkeypatch):
     """
     Import project.settings.production fresh with the given env vars.
-    Console email is allowed unless a test sets DJANGO_EMAIL_CONSOLE itself.
+    Console email is allowed unless a test sets DJANGO_EMAIL_CONSOLE itself,
+    and DJANGO_SITE_URL has a valid value unless a test sets it.
     """
 
     def _load(**env):
         for name in PRODUCTION_ENV_VARS:
             monkeypatch.delenv(name, raising=False)
-        env = {'DJANGO_EMAIL_CONSOLE': 'true', **env}
+        env = {
+            'DJANGO_EMAIL_CONSOLE': 'true',
+            'DJANGO_SITE_URL': 'https://forum.example.com',
+            **env,
+        }
         for name, value in env.items():
             monkeypatch.setenv(name, value)
         sys.modules.pop('project.settings.production', None)
@@ -162,3 +168,25 @@ def test_base_settings_load_in_production_without_sentry(monkeypatch):
         assert not hasattr(base, 'CELERY_TASK_ALWAYS_EAGER')
     finally:
         sys.modules['project.settings.base'] = original
+
+
+@pytest.mark.parametrize(
+    'value, expected',
+    [
+        ('https://forum.example.com', 'https://forum.example.com'),
+        ('https://forum.example.com/', 'https://forum.example.com'),
+        (' https://forum.example.com:8443 ', 'https://forum.example.com:8443'),
+    ],
+)
+def test_site_url_from_env(load_production, value, expected):
+    assert load_production(DJANGO_SITE_URL=value).SITE_URL == expected
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['', 'forum.example.com', 'http://forum.example.com', 'https://forum.example.com/forum', 'https://'],
+    ids=['missing', 'no-scheme', 'http', 'with-path', 'no-host'],
+)
+def test_site_url_is_required_and_must_be_an_https_address(load_production, value):
+    with pytest.raises(ImproperlyConfigured, match='DJANGO_SITE_URL'):
+        load_production(DJANGO_SITE_URL=value)
