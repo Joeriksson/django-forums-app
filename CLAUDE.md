@@ -281,7 +281,8 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 
 - **Django 5.2** — web framework
 - **django-lifecycle** — model hooks (`@hook` decorator) for cache invalidation and notifications
-- **martor** — Markdown editor widget (`MartorField`)
+- **martor** — Markdown editor widget (`MartorField`); only the editor, it no longer renders anything
+- **markdown-it-py + nh3** — render thread and post text (`forums/markdown.py`, template filter `render_markdown`). Raw HTML in the text is off, so it shows as text; nh3 then keeps only the listed tags, attributes and URL schemes (`http`, `https`, `mailto`). A new Markdown feature needs both the parser rule and the tag in `ALLOWED_TAGS`
 - **django-allauth** — authentication + GitHub OAuth
 - **djangorestframework** — REST API
 - **inflection, uritemplate, pyyaml** — needed by DRF's OpenAPI schema (`/api/schema/`); nothing imports them directly, so keep them in the main dependencies
