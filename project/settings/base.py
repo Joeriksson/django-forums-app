@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
+    'allauth.mfa',
     'martor',
     # Local
     'users.apps.UsersConfig',
@@ -207,6 +208,9 @@ ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
 ACCOUNT_UNIQUE_EMAIL = True
+# Two-factor login: an authenticator app (TOTP) plus recovery codes. No passkeys.
+MFA_SUPPORTED_TYPES = ['totp', 'recovery_codes']
+MFA_TOTP_ISSUER = 'Wildvasa Forums'
 # New accounts, by email or GitHub, only while DJANGO_SIGNUP_OPEN is true. Closed by
 # default, so a missing variable never opens a production forum by accident.
 ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
