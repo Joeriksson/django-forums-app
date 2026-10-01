@@ -1,11 +1,13 @@
-from django.contrib import admin
+from functools import partial
+
+from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.sites.models import Site
-from django.urls import reverse
+from django.db import transaction
 
-from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .forms import CustomUserCreationForm, CustomUserChangeForm, InvitationAdminForm
 from .models import Invitation
+from .tasks import send_invitation_email_task
 from forums.models import UserProfile
 
 CustomUser = get_user_model()
@@ -51,10 +53,12 @@ admin.site.register(CustomUser, CustomUserAdmin)
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ['email', 'status', 'invited_by', 'created', 'accepted_by']
+    form = InvitationAdminForm
+    list_display = ['email', 'status', 'sent_at', 'invited_by', 'created', 'accepted_by']
     list_select_related = ['invited_by', 'accepted_by']
     search_fields = ['email']
-    fields = ['email', 'link', 'invited_by', 'created', 'accepted_at', 'accepted_by']
+    fields = ['email', 'link', 'invited_by', 'created', 'sent_at', 'accepted_at', 'accepted_by']
+    actions = ['resend_invitations']
 
     def get_fields(self, request, obj=None):
         # Adding asks only for the address; the rest is filled in
@@ -68,6 +72,34 @@ class InvitationAdmin(admin.ModelAdmin):
         if not change:
             obj.invited_by = request.user
         super().save_model(request, obj, form, change)
+        if not change:
+            self.send_email(obj)
+
+    def send_email(self, invitation):
+        # Only once the save has committed, so a rollback sends nothing
+        transaction.on_commit(partial(send_invitation_email_task.delay, invitation.pk))
+
+    @admin.action(
+        description='Resend invitation (new link, old one stops working)', permissions=['add']
+    )
+    def resend_invitations(self, request, queryset):
+        sent = skipped = 0
+        for invitation in queryset:
+            registered = CustomUser.objects.filter(email__iexact=invitation.email).exists()
+            if invitation.accepted_at or registered:
+                skipped += 1
+                continue
+            invitation.renew()
+            self.send_email(invitation)
+            sent += 1
+        if sent:
+            self.message_user(request, f'Sent {sent} new invitation link(s).', messages.SUCCESS)
+        if skipped:
+            self.message_user(
+                request,
+                f'Skipped {skipped}: already used, or the address has an account.',
+                messages.WARNING,
+            )
 
     @admin.display(description='Status')
     def status(self, obj):
@@ -77,6 +109,4 @@ class InvitationAdmin(admin.ModelAdmin):
 
     @admin.display(description='Invitation link')
     def link(self, obj):
-        # Same domain as the links in notification emails (Sites)
-        path = reverse('accept_invitation', args=[obj.key])
-        return f'https://{Site.objects.get_current().domain}{path}'
+        return obj.get_link()
