@@ -5,7 +5,6 @@ from allauth.account.signals import user_signed_up
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.sites.models import Site
 from django.db.models.functions import Lower
 from django.dispatch import receiver
 from django.urls import reverse
@@ -89,9 +88,7 @@ class Invitation(models.Model):
         return self.created + timedelta(days=settings.INVITATION_EXPIRY_DAYS)
 
     def get_link(self):
-        # Same domain as the links in notification emails (Sites)
-        path = reverse('accept_invitation', args=[self.key])
-        return f'https://{Site.objects.get_current().domain}{path}'
+        return settings.SITE_URL + reverse('accept_invitation', args=[self.key])
 
     def renew(self):
         """Replace the link with a new one, valid for the full expiry time again."""
