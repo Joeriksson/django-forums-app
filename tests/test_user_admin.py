@@ -8,10 +8,11 @@ ADD_URL = reverse('admin:users_customuser_add')
 
 
 @pytest.fixture
-def admin_client(client, db):
+def admin_client(client, add_totp):
     admin = get_user_model().objects.create_superuser(
         username='admin', email='admin@example.com', password='testpass123'
     )
+    add_totp(admin)
     client.force_login(admin)
     return client
 

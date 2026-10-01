@@ -223,7 +223,7 @@ def test_github_signup_without_invited_email_is_refused(client, github_login, in
 
 
 @pytest.fixture
-def admin_client_for(client):
+def admin_client_for(client, add_totp):
     def _client(*permissions):
         user = User.objects.create_user(
             username='staff', email='staff@example.com', password=PASSWORD, is_staff=True
@@ -231,6 +231,7 @@ def admin_client_for(client):
         user.user_permissions.add(
             *Permission.objects.filter(content_type__app_label='users', codename__in=permissions)
         )
+        add_totp(user)
         client.force_login(user)
         return client, user
 
