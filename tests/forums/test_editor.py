@@ -69,6 +69,23 @@ def test_post_is_saved_as_typed(client, author, form_urls, thread):
     assert Post.objects.get(thread=thread).text == text
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize('page', ['thread_add', 'thread_update', 'post_add'])
+def test_form_pages_load_the_editor(client, author, form_urls, page):
+    client.force_login(author)
+
+    resp = client.get(form_urls[page])
+
+    assertContains(resp, 'css/easymde.min.css')
+    assertContains(resp, 'js/easymde.min.js')
+    assertContains(resp, 'js/editor.js')
+    assertContains(resp, f'data-preview-url="{reverse("markdown_preview")}"')
+    # editor.js hides the Markdown hint by this id once the editor is running
+    assertContains(resp, '<textarea name="text"')
+    assertContains(resp, 'id="id_text"')
+    assertContains(resp, 'id="id_text_helptext"')
+
+
 # Thread page
 
 

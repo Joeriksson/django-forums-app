@@ -1,0 +1,12 @@
+{% load static %}
+{# Markdown editor for the "text" field; without JavaScript the plain textarea still works #}
+<link rel="stylesheet" href="{% static 'css/easymde.min.css' %}">
+<script src="{% static 'js/easymde.min.js' %}"></script>
+<script src="{% static 'js/editor.js' %}" data-preview-url="{% url 'markdown_preview' %}"></script>
+<style>
+    /* The table button has the class "table", which Bootstrap styles as a full-width table */
+    .editor-toolbar button.table {
+        width: auto;
+        margin-bottom: 0;
+    }
+</style>

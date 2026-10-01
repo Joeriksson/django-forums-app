@@ -20,5 +20,6 @@
         <button class="btn btn-success" type="submit">Post</button>
         <a href="{% url 'thread_detail' thread.id %}" class="btn btn-outline-secondary">Cancel</a>
     </form>
+    {% include 'forums/_editor.html' %}
 {% endblock content %}
 
