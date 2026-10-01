@@ -1,6 +1,6 @@
 {% extends '_base.html' %}
 {% load static %}
-{% load martortags %}
+{% load markdown %}
 
 {% block stylesheets %}
     {{ block.super }}
@@ -68,7 +68,7 @@
             </div>
             <div class="card-body">
 
-                <p class="card-text ">{{ thread.text|safe_markdown }}
+                <p class="card-text ">{{ thread.text|render_markdown }}
                     {% if thread.user.profile.signature %}
                         <br><br>
                         {% for line in thread.user.profile.signature.splitlines %}
@@ -104,7 +104,7 @@
 
 
                     <div class="card-body">
-                        <p class="card-text">{{ post.text|safe_markdown }}
+                        <p class="card-text">{{ post.text|render_markdown }}
                         {% if post.user.profile.signature %}
                         <br><br>
                         {% for line in post.user.profile.signature.splitlines %}
