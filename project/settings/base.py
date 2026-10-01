@@ -69,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'users.security.StaffMFAMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -211,6 +212,9 @@ ACCOUNT_UNIQUE_EMAIL = True
 # Two-factor login: an authenticator app (TOTP) plus recovery codes. No passkeys.
 MFA_SUPPORTED_TYPES = ['totp', 'recovery_codes']
 MFA_TOTP_ISSUER = 'Wildvasa Forums'
+# Staff need an authenticator app for the admin and /api/users/, and their API tokens
+# are refused (users/security.py, api/authentication.py). On unless switched off.
+STAFF_REQUIRE_MFA = env_bool('DJANGO_STAFF_REQUIRE_MFA', True)
 # New accounts, by email or GitHub, only while DJANGO_SIGNUP_OPEN is true. Closed by
 # default, so a missing variable never opens a production forum by accident.
 ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
@@ -236,7 +240,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'api.authentication.NonStaffTokenAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
