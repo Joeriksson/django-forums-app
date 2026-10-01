@@ -14,6 +14,7 @@ from .views import (
     PostDelete,
     PostUpvote,
     SearchResultsView,
+    MarkdownPreview,
 )
 
 
@@ -43,4 +44,5 @@ urlpatterns = [
         name='post_upvote',
     ),
     path('search/', SearchResultsView.as_view(), name='search_results'),
+    path('preview/', MarkdownPreview.as_view(), name='markdown_preview'),
 ]
