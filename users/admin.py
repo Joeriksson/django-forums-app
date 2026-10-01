@@ -3,7 +3,7 @@ from functools import partial
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.db import transaction
+from django.db import models, transaction
 
 from .forms import CustomUserCreationForm, CustomUserChangeForm, InvitationAdminForm
 from .models import Invitation
@@ -17,6 +17,8 @@ class UserProfileInline(admin.StackedInline):
     model = UserProfile
     # The post_save signal creates the profile, so the admin mustn't delete it.
     can_delete = False
+    # A URL typed without a scheme becomes https, as in Django 6
+    formfield_overrides = {models.URLField: {'assume_scheme': 'https'}}
 
 
 class CustomUserAdmin(UserAdmin):

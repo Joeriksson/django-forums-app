@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db import models
 
 from .models import Forum, Thread, Post, UserProfile, UpVote, Notification
 
@@ -30,6 +31,8 @@ class ThreadAdmin(admin.ModelAdmin):
 
 
 class UserProfileAdmin(admin.ModelAdmin):
+    # A URL typed without a scheme becomes https, as in Django 6
+    formfield_overrides = {models.URLField: {'assume_scheme': 'https'}}
     search_fields = ('first_name', 'last_name', 'user__username')
     list_display = ('user', 'first_name', 'last_name', 'gender', 'location')
     list_filter = (
