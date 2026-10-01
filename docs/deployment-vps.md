@@ -79,6 +79,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | `false` | See [HSTS](#6-raising-hsts) |
 | `ADMIN_URL` | `nimda` | Path of the Django admin |
 | `DJANGO_SIGNUP_OPEN` | `false` | `true` lets anyone create an account, by email or GitHub. While it's closed, the signup page says so and the navbar hides its link; existing users can still log in. Create accounts in the admin meanwhile |
+| `DJANGO_STAFF_REQUIRE_MFA` | `true` | Staff need two-factor authentication for the admin. Leave it on; see [Two-factor authentication for staff](#8-two-factor-authentication-for-staff) |
 | `DJANGO_EMAIL_CONSOLE` | `false` | `true` prints mail to the logs instead of using SMTP. Only for trying the stack out |
 
 **Don't set** `DJANGO_SETTINGS_MODULE`, `ENVIRONMENT`, `DATABASE_URL` or `REDIS_URL`: the compose file sets them, and its values take priority.
@@ -150,6 +151,24 @@ Signup is closed unless `DJANGO_SIGNUP_OPEN=true`. While it's closed, people joi
 The list shows each invitation as *Pending*, *Used* or *Expired*, and when its email was sent. To send a new link (expired, lost, or never arrived), select the invitation and run *Resend invitation*: the old link stops working and the 7 days start again. The link is also on the invitation's own page, if you'd rather send it yourself.
 
 Inviting needs the `users.add_invitation` permission. Superusers have it.
+
+## 8. Two-factor authentication for staff
+
+Everyone with admin access (staff and superusers) needs an authenticator app, such as any TOTP app on a phone. Other users can turn two-factor authentication on if they like.
+
+**First login.** After `createsuperuser`, log in on the site (the admin uses the site's login page). Opening the admin sends you to *Two-factor authentication*: activate the authenticator app by scanning the QR code and entering a code. Then store the recovery codes somewhere safe, away from the phone. From then on every login, with a password or GitHub, asks for a code.
+
+**New staff members** do the same the first time they open the admin. An account that signed up on the site must have confirmed its email address first (the link in the signup email); two-factor setup is refused until then.
+
+**What staff can't do:** use API tokens. A token would skip the code, so the API refuses tokens of staff accounts. Staff use the API in the browser, logged in on the site.
+
+**Lost phone.** Use a recovery code instead of the app's code at login; each works once. Without recovery codes, remove the account's two-factor authentication on the server:
+
+```bash
+docker compose -f docker-compose-prod.yml exec web python manage.py remove_mfa you@example.com
+```
+
+The account then logs in with the password alone and has to set two-factor authentication up again before reaching the admin. Setting `DJANGO_STAFF_REQUIRE_MFA=false` does not help here: the login still asks for the code of an account that has an authenticator app.
 
 ## Troubleshooting
 
