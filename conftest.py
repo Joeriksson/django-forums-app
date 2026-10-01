@@ -1,6 +1,7 @@
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
+from allauth.mfa.totp.internal import auth as totp
 from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.core.cache import cache
@@ -58,3 +59,15 @@ def github_login(client, monkeypatch):
         return client.get(reverse('github_callback'), {'code': 'code', 'state': state})
 
     return _login
+
+
+@pytest.fixture
+def add_totp(db):
+    """Give a user an authenticator app, as staff need for the admin; returns its secret."""
+
+    def _add_totp(user):
+        secret = totp.generate_totp_secret()
+        totp.TOTP.activate(user, secret)
+        return secret
+
+    return _add_totp
