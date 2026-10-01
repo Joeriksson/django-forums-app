@@ -61,6 +61,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 |---|---|
 | `SECRET_KEY` | A long random string, e.g. from `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
 | `DJANGO_ALLOWED_HOSTS` | Your domain(s), comma-separated: `forum.example.com` |
+| `DJANGO_SITE_URL` | The site's public address, with `https` and without a path: `https://forum.example.com`. Invitation emails build their link from it. The app won't start without it |
 | `POSTGRES_PASSWORD` | Database password. Use URL-safe characters (letters, digits, `-`, `_`), because it is put into `DATABASE_URL` as is |
 | `REDIS_PASSWORD` | Redis password. Also URL-safe, for the same reason |
 | `EMAIL_HOST` | Your SMTP server |
@@ -96,7 +97,7 @@ The first `up` creates the `forum_proxy` network. Start (or restart) the Caddy s
 
 Then:
 
-1. **Set the site domain.** Log in to `https://forum.example.com/<ADMIN_URL>/`, open *Sites*, and change `example.com` to `forum.example.com`. Notification emails build their thread links from this domain.
+1. **Set the site domain.** Log in to `https://forum.example.com/<ADMIN_URL>/`, open *Sites*, and change `example.com` to `forum.example.com`. Notification emails build their thread links from this domain, and the login emails (password reset, address confirmation) use the site's name. Invitation links use `DJANGO_SITE_URL` instead.
 2. **Check email:** `docker compose -f docker-compose-prod.yml exec web python manage.py sendtestemail you@example.com`
 3. **Optional, GitHub login:** add a *Social application* for GitHub in the admin. Without one, the login page simply doesn't show the GitHub button.
 
@@ -138,6 +139,18 @@ HSTS starts at one hour, so a mistake only locks browsers into HTTPS briefly. On
 
 Restart with `docker compose -f docker-compose-prod.yml up -d` after changing `.env`.
 
+## 7. Inviting people
+
+Signup is closed unless `DJANGO_SIGNUP_OPEN=true`. While it's closed, people join by invitation:
+
+1. Check `DJANGO_SITE_URL` in `.env`; the link in the email is built from it.
+2. In the admin, open *Invitations → Add*, enter the person's email address and save. The app emails them a link. Addresses that already have an account or a pending invitation are refused.
+3. The person opens the link and signs up, with that address and a password, or with a GitHub account that has that address verified. The link works once and for 7 days.
+
+The list shows each invitation as *Pending*, *Used* or *Expired*, and when its email was sent. To send a new link (expired, lost, or never arrived), select the invitation and run *Resend invitation*: the old link stops working and the 7 days start again. The link is also on the invitation's own page, if you'd rather send it yourself.
+
+Inviting needs the `users.add_invitation` permission. Superusers have it.
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
@@ -147,7 +160,10 @@ Restart with `docker compose -f docker-compose-prod.yml up -d` after changing `.
 | Every page returns **400 Bad Request** | The domain isn't in `DJANGO_ALLOWED_HOSTS` |
 | Forms fail with **CSRF verification failed** | Same: `CSRF_TRUSTED_ORIGINS` is built from `DJANGO_ALLOWED_HOSTS` |
 | Endless redirect loop | The proxy doesn't send `X-Forwarded-Proto: https` |
+| Invitation has no *Sent* time | The email failed (it's retried 3 times): check `logs celery` and the SMTP settings, then use *Resend invitation* |
 | Links in notification emails point to `example.com` | The *Sites* domain hasn't been set (step 3.1) |
+| Invitation links point to the wrong address | `DJANGO_SITE_URL` is wrong; fix it, restart, and use *Resend invitation* |
+| Containers exit with `ImproperlyConfigured: Set DJANGO_SITE_URL` | It's missing, or isn't an `https` address without a path |
 | **502 Bad Gateway** from Caddy | `web` isn't running, or Caddy isn't on `forum_proxy` (it was started before the network existed: restart the Caddy stack) |
 | `network forum_proxy ... has active endpoints` on `down` | Caddy is still attached; see [Updating](#4-updating) |
 
@@ -155,7 +171,7 @@ Logs: `docker compose -f docker-compose-prod.yml logs -f web celery`
 
 ## Testing the stack locally
 
-The stack can be started locally to check that it comes up, but not browsed: the production settings redirect HTTP to HTTPS and use secure cookies, and no port is published. In `.env`, set `DJANGO_ALLOWED_HOSTS=localhost` and `DJANGO_EMAIL_CONSOLE=true`, then:
+The stack can be started locally to check that it comes up, but not browsed: the production settings redirect HTTP to HTTPS and use secure cookies, and no port is published. In `.env`, set `DJANGO_ALLOWED_HOSTS=localhost`, `DJANGO_SITE_URL=https://localhost` and `DJANGO_EMAIL_CONSOLE=true`, then:
 
 ```bash
 docker compose -f docker-compose-prod.yml up -d --build

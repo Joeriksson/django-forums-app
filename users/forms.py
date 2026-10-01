@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
+from .models import Invitation
+
 
 class UniqueEmailMixin:
     def clean_email(self):
@@ -28,3 +30,20 @@ class CustomUserChangeForm(UniqueEmailMixin, UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = get_user_model()
         fields = ('email', 'username',)
+
+
+class InvitationAdminForm(forms.ModelForm):
+    class Meta:
+        model = Invitation
+        fields = ('email',)
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if get_user_model().objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('This address already has an account.')
+        if Invitation.objects.valid().filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'This address already has a pending invitation. '
+                'Use "Resend invitation" in the list instead.'
+            )
+        return email

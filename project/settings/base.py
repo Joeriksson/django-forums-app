@@ -215,6 +215,10 @@ SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN')
 # Invitation links (users.Invitation) let one address sign up while signup is closed
 INVITATION_EXPIRY_DAYS = 7
 
+# The site's public address, for links in emails. Production requires DJANGO_SITE_URL;
+# elsewhere it defaults to the development server.
+SITE_URL = os.environ.get('DJANGO_SITE_URL', 'http://127.0.0.1:8000').strip().rstrip('/')
+
 DEFAULT_FROM_EMAIL = 'noreply@email.com'
 
 

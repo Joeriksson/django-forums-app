@@ -84,6 +84,7 @@ jobs:
         -e SECRET_KEY=ci-only-placeholder-secret-key-not-used-anywhere-else-0123456789
         -e DJANGO_ADMINS=admin@example.com
         -e DJANGO_ALLOWED_HOSTS=forum.example.com
+        -e DJANGO_SITE_URL=https://forum.example.com
         -e DJANGO_EMAIL_CONSOLE=true
         -e DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
         -e REDIS_URL=redis://redis:6379/0

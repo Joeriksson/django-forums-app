@@ -164,9 +164,9 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social); 
 - `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`
 
 ### Invitation (`users.Invitation`)
-- `email`, `key` (random, unique), `invited_by`, `created`, `accepted_at`, `accepted_by`
+- `email`, `key` (random, unique), `invited_by`, `created`, `sent_at`, `accepted_at`, `accepted_by`
 - Valid while unused and younger than `INVITATION_EXPIRY_DAYS` (7, in `base.py`): `Invitation.objects.valid()` / `is_valid()`
-- Created in the Django admin (needs `users.add_invitation`); the change page shows the link, built from the *Sites* domain
+- Created in the Django admin (needs `users.add_invitation`). The add form (`InvitationAdminForm`) refuses addresses with an account or a pending invitation. Saving queues `send_invitation_email_task` on commit; the *Resend invitation* action calls `renew()` (new key, expiry restarts) and sends again. `get_link()` builds the link from `SITE_URL`
 - The link `/accounts/invite/<key>/` stores the key in the session (`Invitation.SESSION_KEY`) and stashes the address as verified, then redirects to signup. While signup is closed, it opens signup for that address only: the signup form refuses other addresses, and a GitHub signup needs the address among GitHub's verified emails. allauth's `user_signed_up` signal marks it used (`users/models.py`)
 
 ## URL Structure
@@ -224,6 +224,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 - Broker and result backend: Redis
 - `send_notifications_task`: sends BCC email to thread subscribers when a new post is created
 - `send_welcome_email_task` (`users/tasks.py`): sends the welcome email to a new user; retries up to 3 times on failure
+- `send_invitation_email_task` (`users/tasks.py`): sends an invitation's link (templates in `templates/users/`) and sets `sent_at`; sends nothing if the invitation is no longer valid; same retries
 - Outside production, `CELERY_TASK_ALWAYS_EAGER = True` and `CELERY_TASK_EAGER_PROPAGATES = True`: tasks run synchronously in the web process and their errors are raised there, so the Celery worker is idle in dev
 - Tasks skipped entirely in CI (`os.environ.get('CI')` check in `Post.notify_subscribers`)
 
@@ -247,6 +248,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
+| `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. Notification emails still use the *Sites* domain |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
 | `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | Opt-in HSTS flags (default: `false`) |

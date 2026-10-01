@@ -13,6 +13,15 @@ ALLOWED_HOSTS = [
 ]
 CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS]
 
+# Links in emails are built from this, so refuse to start without a usable value
+SITE_URL = os.environ.get('DJANGO_SITE_URL', '').strip().rstrip('/')
+_site_url = urlsplit(SITE_URL)
+if _site_url.scheme != 'https' or not _site_url.netloc or _site_url.path or _site_url.query:
+    raise ImproperlyConfigured(
+        'Set DJANGO_SITE_URL to the address of the site, with https and without a path, '
+        f'e.g. https://forum.example.com (got {SITE_URL!r}).'
+    )
+
 # SMTP when host and credentials are set. Refuse to start otherwise, unless
 # DJANGO_EMAIL_CONSOLE=true opts in to printing mail to the console.
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
