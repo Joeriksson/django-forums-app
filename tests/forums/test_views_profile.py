@@ -66,3 +66,27 @@ def test_missing_profile_returns_404(client, owner):
     resp = client.get(reverse('user_profile_edit', args=(99999,)))
 
     assert resp.status_code == 404
+
+
+@pytest.mark.django_db
+def test_url_without_scheme_is_saved_as_https(client, owner):
+    client.force_login(owner)
+    url = reverse('user_profile_edit', args=(owner.profile.id,))
+
+    resp = client.post(url, profile_data(web_site='example.com', github_url='github.com/owner'))
+
+    assert resp.status_code == 302
+    owner.profile.refresh_from_db()
+    assert owner.profile.web_site == 'https://example.com'
+    assert owner.profile.github_url == 'https://github.com/owner'
+
+
+@pytest.mark.django_db
+def test_url_with_http_scheme_is_kept(client, owner):
+    client.force_login(owner)
+    url = reverse('user_profile_edit', args=(owner.profile.id,))
+
+    client.post(url, profile_data(web_site='http://example.com'))
+
+    owner.profile.refresh_from_db()
+    assert owner.profile.web_site == 'http://example.com'

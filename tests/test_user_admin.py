@@ -105,3 +105,41 @@ def test_change_page_profile_inline_cannot_delete(admin_client):
     formsets = resp.context['inline_admin_formsets']
     assert len(formsets) == 1
     assert formsets[0].formset.can_delete is False
+
+
+# URLs typed without a scheme are saved as https (Django 6's default)
+
+
+def test_profile_inline_saves_url_without_scheme_as_https(admin_client):
+    other = get_user_model().objects.create_user(
+        username='other', email='other@example.com', password='testpass123'
+    )
+    url = reverse('admin:users_customuser_change', args=[other.id])
+    data = admin_client.get(url).context['adminform'].form.initial
+    data = {k: v for k, v in data.items() if v is not None and k != 'password'}
+    data.update(date_joined_0='2026-01-01', date_joined_1='00:00:00')
+    data.update({
+        'profile-TOTAL_FORMS': '1', 'profile-INITIAL_FORMS': '1',
+        'profile-0-id': other.profile.id, 'profile-0-user': other.id,
+        'profile-0-gender': other.profile.gender,
+        'profile-0-web_site': 'example.com',
+    })
+
+    resp = admin_client.post(url, data)
+
+    assert resp.status_code == 302
+    other.profile.refresh_from_db()
+    assert other.profile.web_site == 'https://example.com'
+
+
+def test_profile_admin_saves_url_without_scheme_as_https(admin_client):
+    profile = get_user_model().objects.get(username='admin').profile
+    url = reverse('admin:forums_userprofile_change', args=[profile.id])
+
+    resp = admin_client.post(
+        url, {'user': profile.user_id, 'gender': profile.gender, 'github_url': 'github.com/admin'}
+    )
+
+    assert resp.status_code == 302
+    profile.refresh_from_db()
+    assert profile.github_url == 'https://github.com/admin'
