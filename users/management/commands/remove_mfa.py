@@ -1,6 +1,10 @@
+import logging
+
 from allauth.mfa.models import Authenticator
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
+
+from users.audit import log_event
 
 
 class Command(BaseCommand):
@@ -19,6 +23,8 @@ class Command(BaseCommand):
             raise CommandError(f'No user with the email address {email}')
         deleted, _ = Authenticator.objects.filter(user=user).delete()
         if deleted:
+            # Deleting rows directly sends no allauth signal
+            log_event('mfa_removed_by_command', level=logging.WARNING, user=user.pk, count=deleted)
             self.stdout.write(self.style.SUCCESS(f'Removed two-factor authentication for {user.email}'))
         else:
             self.stdout.write(f'{user.email} has no two-factor authentication')
