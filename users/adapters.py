@@ -1,8 +1,10 @@
 from allauth.account.adapter import DefaultAccountAdapter
+from allauth.mfa.adapter import DefaultMFAAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+from .encryption import decrypt_secret, encrypt_secret
 from .models import Invitation
 
 # allauth also calls clean_email for e.g. password resets; only these pages sign up
@@ -46,3 +48,14 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             address.email.lower() for address in sociallogin.email_addresses if address.verified
         }
         return invitation.email.lower() in verified
+
+
+class MFAAdapter(DefaultMFAAdapter):
+    # allauth stores authenticator secrets and recovery-code seeds as they are unless
+    # these two are overridden
+
+    def encrypt(self, text):
+        return encrypt_secret(text)
+
+    def decrypt(self, encrypted_text):
+        return decrypt_secret(encrypted_text)
