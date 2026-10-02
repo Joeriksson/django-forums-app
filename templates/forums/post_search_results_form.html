@@ -14,6 +14,9 @@
     </div>
 
     <h1>Search Results</h1>
+    {% if limited %}
+        <p>Only the newest results are shown. Add a word to narrow the search.</p>
+    {% endif %}
     <ul>
 
         {% for object in object_list %}
@@ -46,7 +49,11 @@
                 {% endif %}
             {% endwith %}
         {% empty %}
-            Search for <i>"{{ request.GET.q }}"</i> didn't return any results!
+            {% if too_short %}
+                Type at least {{ min_query_length }} characters to search.
+            {% else %}
+                Search for <i>"{{ request.GET.q }}"</i> didn't return any results!
+            {% endif %}
         {% endfor %}
 
     </ul>
