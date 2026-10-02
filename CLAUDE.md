@@ -143,7 +143,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 - `user` (ForeignKey → AUTH_USER_MODEL)
 - Ordered by `added`
 - **Lifecycle hooks**:
-  - `notify_subscribers` (AFTER_CREATE): triggers `send_notifications_task` via Celery (skipped in CI)
+  - `notify_subscribers` (AFTER_CREATE, after the commit): queues `send_notifications_task` via Celery (skipped in CI). Tests need `django_capture_on_commit_callbacks(execute=True)` to see it run
 
 ### UserProfile
 - One-to-one with AUTH_USER_MODEL
@@ -208,7 +208,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 
 The forum and thread pages are not cached: each loads one page of threads or posts, with authors and counts, in a single query. Don't cache model instances with their users: that puts email addresses and password hashes in Redis.
 
-The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. Tests use an in-memory cache, cleared around every test (root `conftest.py`).
+The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. If Redis is down, the login, signup and password reset pages fail with a 500 rather than run without rate limits: a deliberate choice. Tests use an in-memory cache, cleared around every test (root `conftest.py`).
 
 ## Authentication & Permissions
 
@@ -243,8 +243,9 @@ The **security log** is the `security` logger: one line per event, `event key=va
 
 ## Async Tasks (Celery)
 
-- Broker and result backend: Redis
-- `send_notifications_task`: sends BCC email to thread subscribers when a new post is created
+- Broker: Redis. There is no result backend (`CELERY_TASK_IGNORE_RESULT`): the tasks only send mail and nothing reads their results
+- Queue mail tasks with `project.utils.queue_task(task, *args)`, not `.delay()`: if Redis is unreachable it logs an error (mailed to `DJANGO_ADMINS`) and the request carries on without the mail, since the post, user or invitation is already saved. Queuing gives up after 2 to 6 seconds (`CELERY_BROKER_TRANSPORT_OPTIONS`, `CELERY_TASK_PUBLISH_RETRY_POLICY` in `base.py`). The mail is not sent later
+- `send_notifications_task`: sends BCC email to thread subscribers when a new post is created; retries up to 3 times on failure
 - `send_welcome_email_task` (`users/tasks.py`): sends the welcome email to a new user; retries up to 3 times on failure
 - `send_invitation_email_task` (`users/tasks.py`): sends an invitation's link (templates in `templates/users/`) and sets `sent_at`; sends nothing if the invitation is no longer valid; same retries
 - Outside production, `CELERY_TASK_ALWAYS_EAGER = True` and `CELERY_TASK_EAGER_PROPAGATES = True`: tasks run synchronously in the web process and their errors are raised there, so the Celery worker is idle in dev
