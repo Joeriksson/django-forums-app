@@ -108,6 +108,7 @@ forums/            # Core app — Forum, Thread, Post, UpVote, Notification, Use
 
 users/             # Custom user model (email-based auth)
   models.py        # CustomUser extends AbstractUser; sends welcome email on create
+  encryption.py    # Encrypts two-factor secrets (encrypt_secret, decrypt_secret); key: MFA_ENCRYPTION_KEY
   audit.py         # Security log: log_event, signal receivers, refused-request middleware
   tasks.py         # Celery task send_welcome_email_task
 
@@ -220,6 +221,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. 
 - **Email addresses must be confirmed** (`ACCOUNT_EMAIL_VERIFICATION = 'mandatory'` in `base.py`, every environment): signup mails a link and logs nobody in before it is used. allauth checks at every login, so an account made without signup (`createsuperuser`, the admin) gets the mail at its first login; in development the link is printed to the console. Invitation and GitHub signups arrive verified. Tests that log in through the login form need the `verify_email` fixture (root `conftest.py`); `force_login` and API tokens don't
 - GitHub OAuth social login is configured (`allauth.socialaccount.providers.github`)
 - Two-factor login (`allauth.mfa`, needs the `django-allauth[mfa]` extra): optional for every user, an authenticator app (TOTP) plus recovery codes, no passkeys (`MFA_SUPPORTED_TYPES` in `base.py`). Users turn it on under *Two-factor authentication* in the user menu; after that both password and GitHub logins ask for a code. allauth refuses setup while the account has an unverified email address
+- Two-factor secrets are encrypted in the database: `users.adapters.MFAAdapter` (`MFA_ADAPTER`) encrypts the authenticator secret and the recovery-code seed with `users/encryption.py` (Fernet, values stored as `fernet:<token>`). There is no cleartext fallback: an unencrypted value is refused, and a wrong key raises `InvalidToken`. Migration `users/0006` encrypted the rows that existed. Code that reads `Authenticator.data` directly gets ciphertext: go through allauth (`authenticator.wrap()`) or `decrypt_secret`
 - allauth's rate limits (failed logins, signups, password resets) are partly per client address. Production sets `ALLAUTH_TRUSTED_PROXY_COUNT = 1`, so the address comes from the last `X-Forwarded-For` entry (the one the reverse proxy adds) instead of the proxy's own. Production only: without a proxy the header can be forged. A second proxy in front needs a count of 2
 - allauth pages without a template of our own (the two-factor pages) get the site layout from `templates/allauth/layouts/base.html`, which extends `_base.html`
 - The API is throttled (`REST_FRAMEWORK` in `base.py`): 60 requests a minute per address for anonymous clients, 120 per user when logged in; over that it answers 429, which the security log records as `denied status=429`. `NUM_PROXIES` is `0` in `base.py` and `1` in production, like `ALLAUTH_TRUSTED_PROXY_COUNT`; a second proxy needs 2. The counters are in the cache, so the API fails while Redis is down. DRF reads the rates at import: tests change them with the `rates` fixture in `tests/forums/conftest.py`
@@ -267,6 +269,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | Variable | Description |
 |---|---|
 | `SECRET_KEY` | Django secret key. Production refuses to start (`ImproperlyConfigured`) with fewer than 50 characters, fewer than 5 different ones, or a `django-insecure-` key |
+| `DJANGO_MFA_ENCRYPTION_KEY` | Fernet key (32 bytes, base64) that encrypts two-factor secrets in the database (`settings.MFA_ENCRYPTION_KEY`). Required in production (`ImproperlyConfigured` otherwise); elsewhere it is derived from `SECRET_KEY`, so a new dev `SECRET_KEY` makes the dev database's second factors unreadable (`remove_mfa`). Changing it has the same effect in production |
 | `ENVIRONMENT` | `development`, `production`, `CI`, or `test` |
 | `DJANGO_SETTINGS_MODULE` | `project.settings.development` for local/Docker dev (otherwise `manage.py` uses `base`, Celery uses `production`) |
 | `EMAIL_HOST` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Production SMTP server and login. All three are required: production refuses to start (`ImproperlyConfigured`) if any is missing, unless `DJANGO_EMAIL_CONSOLE=true` |
@@ -314,6 +317,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
   2. The tests don't run JavaScript, so check in a browser, logged in, on the new thread, new post and edit thread pages: the toolbar is on one line with all icons, the preview matches the saved result, the Markdown hint under the field is hidden, an empty text shows the form error, and the edit page loads the saved text
   3. If the toolbar wraps, see the `button.table` rule in `_editor.html` (EasyMDE's class name clashes with Bootstrap's `.table`)
 - **django-allauth** — authentication + GitHub OAuth
+- **cryptography** — Fernet encryption of the two-factor secrets (`users/encryption.py`)
 - **djangorestframework** — REST API
 - **inflection, uritemplate, pyyaml** — needed by DRF's OpenAPI schema (`/api/schema/`); nothing imports them directly, so keep them in the main dependencies
 - **django-redis** — Redis cache backend
