@@ -1,14 +1,506 @@
-h1 {
-    color: brown;
+/*
+ * The site's stylesheet: colours, type and the layout every page shares.
+ * Page-specific rules live in their own files (thread.css, editor.css).
+ */
+
+/* Typefaces, stored in static/fonts (SIL Open Font License, see the OFL files there) */
+
+@font-face {
+    font-family: 'Literata';
+    src: url('../fonts/literata.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Literata';
+    src: url('../fonts/literata-italic.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Schibsted Grotesk';
+    src: url('../fonts/schibsted-grotesk.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Tokens */
+
+:root {
+    color-scheme: light dark;
+
+    --ground: #f1f4f0;
+    --surface: #ffffff;
+    --ink: #16231f;
+    --quiet: #5e6b66;
+    --rule: #d5dbd6;
+    --spruce: #1f5b4c;
+    --spruce-strong: #17463a;
+    --on-spruce: #ffffff;
+    --lichen: #e3b505;
+    --lichen-wash: #fbf3cf;
+    --danger: #a3271f;
+
+    /* Reading (titles, post text) and interface (everything else) */
+    --serif: 'Literata', Georgia, 'Times New Roman', serif;
+    --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+    --size-small: 0.875rem;
+    --size-body: 1rem;
+    --size-reading: 1.125rem;
+    --size-h3: 1.25rem;
+    --size-h2: 1.5rem;
+    --size-h1: 2.25rem;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 1rem;
+    --space-4: 1.5rem;
+    --space-5: 2.5rem;
+    --space-6: 4rem;
+
+    --page: 48rem;
+    --measure: 40rem;
+    --radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --ground: #12201c;
+        --surface: #1a2b26;
+        --ink: #e6ece8;
+        --quiet: #9db0a8;
+        --rule: #2c423b;
+        --spruce: #7fc8ae;
+        --spruce-strong: #a3dcc7;
+        --on-spruce: #0e1a17;
+        --lichen: #f0c93a;
+        --lichen-wash: #3a3413;
+        --danger: #f08a80;
+    }
+}
+
+/* Elements */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
-    padding-top: 70px;
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: var(--size-body);
+    line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+    font-family: var(--serif);
+    font-weight: 600;
+    line-height: 1.15;
+    margin: var(--space-5) 0 var(--space-3);
+    text-wrap: balance;
+}
+
+h1 {
+    font-size: var(--size-h1);
+    letter-spacing: -0.01em;
+}
+
+h2 {
+    font-size: var(--size-h2);
+}
+
+h3 {
+    font-size: var(--size-h3);
+}
+
+h4,
+h5,
+h6 {
+    font-size: var(--size-body);
+    font-weight: 700;
+    margin: var(--space-4) 0 var(--space-2);
+}
+
+p,
+ul,
+ol,
+blockquote,
+pre,
+table {
+    margin: 0 0 var(--space-3);
+}
+
+a {
+    color: var(--spruce);
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.18em;
+}
+
+a:hover {
+    color: var(--spruce-strong);
+    text-decoration-thickness: 0.12em;
+}
+
+:focus-visible {
+    outline: 3px solid var(--lichen);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: var(--space-4) 0;
+}
+
+small {
+    font-size: var(--size-small);
+}
+
+code,
+pre {
+    font-family: var(--mono);
+    font-size: 0.9em;
+}
+
+pre {
+    overflow-x: auto;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border-bottom: 1px solid var(--rule);
+    padding: var(--space-2) var(--space-3) var(--space-2) 0;
+    text-align: left;
+    vertical-align: top;
+}
+
+/* Forms */
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+}
+
+input,
+select,
+textarea,
+button {
+    font: inherit;
+    color: inherit;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='url'],
+input[type='search'],
+input[type='number'],
+select,
+textarea {
+    width: 100%;
+    max-width: var(--measure);
+    padding: var(--space-2) 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--quiet);
+    border-radius: var(--radius);
+}
+
+textarea {
+    min-height: 10rem;
+    line-height: 1.5;
+}
+
+/* Buttons: .button is ours; .btn is what the templates still call them. Not every
+   <button>: the editor's toolbar has its own. */
+
+.button[type='submit'],
+.btn,
+button[type='submit'],
+input[type='submit'] {
+    display: inline-block;
+    padding: var(--space-2) var(--space-3);
+    background: var(--spruce);
+    color: var(--on-spruce);
+    border: 1px solid var(--spruce);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: var(--size-body);
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button[type='submit']:hover,
+.btn:hover,
+button[type='submit']:hover,
+input[type='submit']:hover {
+    background: var(--spruce-strong);
+    border-color: var(--spruce-strong);
+    color: var(--on-spruce);
+}
+
+.button--quiet,
+.btn-outline-secondary,
+.btn-outline-primary,
+.btn-secondary {
+    background: transparent;
+    color: var(--spruce);
+}
+
+.button--quiet:hover,
+.btn-outline-secondary:hover,
+.btn-outline-primary:hover,
+.btn-secondary:hover {
+    background: transparent;
+    color: var(--spruce-strong);
+}
+
+.button--danger,
+.btn-danger,
+.btn-outline-danger {
+    background: transparent;
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.button--danger:hover,
+.btn-danger:hover,
+.btn-outline-danger:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--surface);
+}
+
+/* Page frame */
+
+.wrap {
+    max-width: var(--page);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+}
+
+.site-header {
+    border-bottom: 4px solid var(--spruce);
+}
+
+.site-header__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding-block: var(--space-3);
+}
+
+.site-name {
+    font-family: var(--serif);
+    font-size: 1.375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.site-name:hover {
+    color: var(--spruce);
+}
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+}
+
+.site-nav a {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.site-nav a:hover {
+    color: var(--spruce);
+    text-decoration: underline;
+}
+
+.site-main {
+    padding-block: var(--space-4) var(--space-6);
+}
+
+.site-main > h1:first-child,
+.site-main > h2:first-child {
+    margin-top: var(--space-3);
+}
+
+/* The user menu: a <details>, so it opens without JavaScript (js/menu.js only closes it) */
+
+.menu {
+    position: relative;
+}
+
+.menu > summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+}
+
+.menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.menu > summary::after {
+    content: '';
+    display: inline-block;
+    width: 0.4em;
+    height: 0.4em;
+    margin-left: 0.5em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-0.2em) rotate(45deg);
+}
+
+.menu[open] > summary::after {
+    transform: translateY(0.05em) rotate(-135deg);
+}
+
+.menu__items {
+    position: absolute;
+    right: 0;
+    z-index: 10;
+    min-width: 15rem;
+    margin-top: var(--space-2);
+    padding: var(--space-2) 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+.menu__items a {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    font-weight: 400;
+}
+
+.menu__items a:hover {
+    background: var(--ground);
+    text-decoration: none;
+}
+
+.menu__who {
+    padding: var(--space-1) var(--space-3) var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: var(--space-2);
+    color: var(--quiet);
+    font-size: var(--size-small);
+    overflow-wrap: anywhere;
+}
+
+/* Messages from the site (saved, logged in, refused) */
+
+.notices {
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    list-style: none;
+}
+
+.notice,
+.alert {
+    margin: 0 0 var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--lichen-wash);
+    border-left: 4px solid var(--lichen);
+    border-radius: 2px;
+}
+
+.notice.error {
+    border-left-color: var(--danger);
+}
+
+/* Small helpers */
+
+.quiet,
+.text-muted {
+    color: var(--quiet);
 }
 
 /* Page title above the thread page and the thread and post forms */
 .heading {
-    padding-top: 70px;
-    margin-top: 70px;
-    margin-bottom: 30px;
+    margin: var(--space-3) 0 var(--space-4);
+}
+
+/*
+ * Until each page has been rebuilt: the templates still use these Bootstrap class
+ * names, and Bootstrap itself is gone. Enough to keep those pages tidy.
+ */
+
+.card {
+    margin-bottom: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+.card-header,
+.card-body {
+    padding: var(--space-3);
+}
+
+.card-header {
+    border-bottom: 1px solid var(--rule);
+}
+
+.form-group {
+    margin-bottom: var(--space-3);
+}
+
+.jumbotron {
+    padding-block: var(--space-3);
+}
+
+.float-right {
+    float: right;
+}
+
+.list-group {
+    padding: 0;
+    list-style: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    a,
+    .button,
+    .btn,
+    button[type='submit'] {
+        transition: background-color 0.12s, color 0.12s, border-color 0.12s;
+    }
 }

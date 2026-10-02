@@ -123,7 +123,7 @@ api/               # Django REST Framework API (mounted only with DJANGO_API_ENA
 
 tests/             # pytest test suite
 templates/         # HTML templates (extends _base.html)
-static/            # Static file sources (CSS, Font Awesome, bootstrap-social, highlight.js, EasyMDE); collected into staticfiles/ at image build, not committed
+static/            # Static file sources (our CSS and JS, fonts, Font Awesome, bootstrap-social, highlight.js, EasyMDE); collected into staticfiles/ at image build, not committed
 ```
 
 ## Data Models
@@ -344,9 +344,20 @@ A separate `audit` job runs `make audit` and fails on any vulnerability not in `
 
 A `prod-image` job builds the production image, starts it with production settings and fake env values (no Redis or secrets needed) next to a Postgres set up by the production init script, runs `check --deploy --fail-level WARNING`, runs the migrations as the app's database role and checks that role has no special rights, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that the container doesn't run as root, that `/api/` isn't routed, that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
+## Front end
+
+The pages are being rebuilt without Bootstrap (redesign in progress): hand-written CSS, no jQuery, nothing from a CDN.
+
+- **`static/css/base.css`** is the site's stylesheet: colour and type tokens as CSS custom properties (`--ground`, `--surface`, `--ink`, `--quiet`, `--rule`, `--spruce`, `--lichen`, `--danger`), a dark palette under `prefers-color-scheme: dark` (no toggle), element defaults, the header and the user menu. Use the tokens, never a literal colour, so both palettes keep working
+- **Typefaces** are files in `static/fonts/` (SIL Open Font License, licence texts next to them): Literata (`--serif`) for titles and post text, Schibsted Grotesk (`--sans`) for the interface. They are Latin subsets with a weight range of 400 to 700, made from the upstream variable fonts with fontTools; `make audit` doesn't cover them
+- **Layout**: `_base.html` has the header (`.site-header`), the user menu and `<main class="wrap site-main">`. The menu is a `<details class="menu">`, so it works without JavaScript; `static/js/menu.js` only closes it on a click elsewhere or Escape
+- **Buttons** are `.button` (plus `.button--quiet`, `.button--danger`). Bare `<button>` elements are not styled, because the editor's toolbar has its own
+- **Leftovers**: templates not rebuilt yet still carry Bootstrap class names (`btn`, `card`, `form-group`); the last section of `base.css` gives those a minimal look until each page is done. Don't add new uses
+- The tests don't run a browser. After changing styles, look at the pages in light and dark and at phone width
+
 ## Architecture Notes
 
-- **Content Security Policy**: `project/middleware.py` adds the header to every response from `SECURE_CSP` in `base.py` (enforced; `DJANGO_CSP_REPORT_ONLY=true` moves the policy to `SECURE_CSP_REPORT_ONLY`, which only reports in the browser console). Only our own origin, plus the CDN hosts in `_base.html` for scripts and styles, `data:` and `https:` images, GitHub as a form target (the login redirect), no framing, and no `'unsafe-inline'`. Anything loaded from another site (a font, a CDN, an embedded frame) must be added to `_CSP` or browsers block it; `tests/test_csp.py` fails if `_base.html` loads from a host the policy doesn't list. The settings are named like Django 6's built-in CSP support, which replaces the middleware at that upgrade. Known and accepted: Django's debug 404 page and DRF's browsable API page each lose an inline style. The tests don't run a browser: after changing the policy or adding scripts, open the pages and look for violations in the console
+- **Content Security Policy**: `project/middleware.py` adds the header to every response from `SECURE_CSP` in `base.py` (enforced; `DJANGO_CSP_REPORT_ONLY=true` moves the policy to `SECURE_CSP_REPORT_ONLY`, which only reports in the browser console). Scripts, styles and fonts from our own origin only (nothing comes from a CDN), `data:` and `https:` images, GitHub as a form target (the login redirect), no framing, and no `'unsafe-inline'`. Anything loaded from another site (a font, a CDN, an embedded frame) must be added to `_CSP` or browsers block it; `tests/test_csp.py` fails if a project template loads a script, style, image or frame from another site. The settings are named like Django 6's built-in CSP support, which replaces the middleware at that upgrade. Known and accepted: Django's debug 404 page and DRF's browsable API page each lose an inline style. The tests don't run a browser: after changing the policy or adding scripts, open the pages and look for violations in the console
 - **No inline code in templates**: no `<script>` without `src`, no `<style>` block, no `style=` or `on...=` attribute (`tests/test_no_inline_code.py` checks the project templates). Scripts and styles go into files under `static/` (`css/base.css` for every page, `css/thread.css` and `js/thread.js` for the thread page, `css/editor.css` for the editor); pass values to a script with `data-` attributes, as `_editor.html` does. Font Awesome's `js/all.js` would add its styles to the page as an inline `<style>`: `data-auto-add-css="false"` in `_base.html` stops that, and `css/fontawesome-svg.css` holds those styles (copied from `baseStyles` in `all.js`; replace both files together: `tests/test_static_files.py` fails if they differ)
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly

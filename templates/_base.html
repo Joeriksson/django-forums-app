@@ -1,14 +1,11 @@
 {% load static signup %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}Wildvasa Forums{% endblock title %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}Wildvasa{% endblock title %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block stylesheets %}
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-              integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-              crossorigin="anonymous">
         <link rel="stylesheet" href="{% static 'css/base.css' %}">
         <link rel="stylesheet" href="{% static 'css/bootstrap-social.css' %}">
         <link rel="stylesheet" href="{% static 'css/brands.css' %}">
@@ -17,103 +14,56 @@
 </head>
 
 <body>
-<header>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="/">Wildvasa Forums</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
-                    aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarResponsive">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item active mr-3">
-                        <a class="nav-link" href="{% url 'forum_list' %}">Forums
-                            <span class="sr-only">(current)</span>
-                        </a>
-                    </li>
-                    {% if user.is_staff %}
-                        <li class="nav-item active mr-3">
-                            <a class="nav-link" href="{% url 'admin:index' %}">Admin
-                                <span class="sr-only">(current)</span>
-                            </a>
-                        </li>
-                    {% endif %}
-
-                    {% if user.is_authenticated %}
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userMenu" data-toggle="dropdown"
-                               aria-haspopup="true" aria-expanded="false">
-                                {{ user.email }}
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right " aria-labelledby="userMenu">
-                                {% if not user.socialaccount_set.first %}
-                                    <a class="dropdown-item" href="{% url 'account_change_password' %}">Change
-                                        password</a>
-                                    <div class="dropdown-divider"></div>
-                                {% endif %}
-                                <a class="dropdown-item" href="{% url 'user_profile_edit' request.user.profile.id %}">Edit
-                                    profile</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'mfa_index' %}">Two-factor
-                                    authentication</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a>
-                            </div>
-                        </li>
-
-                    {% else %}
-
-                        <form class="form-inline ml-auto">
-                            <a href="{% url 'account_login' %}" class="btn bg-dark text-light btn-outline-secondary">Log
-                                in</a>
-                            {% signup_is_open as signup_open %}
-                            {% if signup_open %}
-                                <a href="{% url 'account_signup' %}"
-                                   class="btn bg-dark text-light btn-outline-secondary ml-2">Sign
-                                    up</a>
-                            {% endif %}
-                        </form>
-
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+<header class="site-header">
+    <div class="wrap site-header__row">
+        <a class="site-name" href="{% url 'home' %}">Wildvasa</a>
+        <nav class="site-nav" aria-label="Main">
+            <a href="{% url 'forum_list' %}">Forums</a>
+            {% if user.is_staff %}
+                <a href="{% url 'admin:index' %}">Admin</a>
+            {% endif %}
+            {% if user.is_authenticated %}
+                <details class="menu">
+                    <summary>{{ user.display_name }}</summary>
+                    <div class="menu__items">
+                        <div class="menu__who">Logged in as {{ user.email }}</div>
+                        <a href="{% url 'user_profile_edit' request.user.profile.id %}">Edit profile</a>
+                        {% if not user.socialaccount_set.first %}
+                            <a href="{% url 'account_change_password' %}">Change password</a>
+                        {% endif %}
+                        <a href="{% url 'mfa_index' %}">Two-factor authentication</a>
+                        <a href="{% url 'account_logout' %}">Log out</a>
+                    </div>
+                </details>
+            {% else %}
+                <a href="{% url 'account_login' %}">Log in</a>
+                {% signup_is_open as signup_open %}
+                {% if signup_open %}
+                    <a href="{% url 'account_signup' %}">Sign up</a>
+                {% endif %}
+            {% endif %}
+        </nav>
+    </div>
 </header>
 
-<div class="container">
+<main class="wrap site-main">
     {% if messages %}
-        <div class="alert alert-secondary" role="alert">
+        <ul class="notices">
             {% for message in messages %}
-                <p id="message_{{ forloop.counter }}"
-                        {% if message.tags %} class="{{ message.tags }}"
-                        {% endif %}>
+                <li id="message_{{ forloop.counter }}" class="notice{% if message.tags %} {{ message.tags }}{% endif %}">
                     {{ message }}
-                </p>
+                </li>
             {% endfor %}
-        </div>
+        </ul>
     {% endif %}
     {% block content %}
     {% endblock content %}
-</div>
+</main>
 
 {% block javascripts %}
-
-    <!-- JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-            crossorigin="anonymous"></script>
+    <script defer src="{% static 'js/menu.js' %}"></script>
     {# Font Awesome would add its styles as an inline <style>; they are in css/fontawesome-svg.css #}
     <script defer src="{% static 'js/all.js' %}" data-auto-add-css="false"></script>
 {% endblock %}
 </body>
+</html>
