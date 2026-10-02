@@ -102,6 +102,8 @@ jobs:
     # The image's own command only keeps the container alive, so nothing else starts gunicorn
     - name: Check that gunicorn can load its settings and the app
       run: docker exec prod gunicorn --check-config project.wsgi
+    - name: Check that the container does not run as root
+      run: test "$(docker exec prod id -u)" != 0
     - name: Check that development packages are not in the image
       run: >-
         docker exec prod python -c
