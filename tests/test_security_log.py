@@ -4,6 +4,7 @@ import pytest
 from allauth.mfa import signals as mfa_signals
 from allauth.mfa.models import Authenticator
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.urls import reverse
 
 User = get_user_model()
@@ -132,3 +133,16 @@ def test_two_factor_changes_are_logged(user, add_totp, security_log, signal, eve
 
     assert security_log() == [f'{event} user={user.pk} type=totp']
 
+
+def test_remove_mfa_command_is_logged(user, add_totp, security_log):
+    add_totp(user)
+
+    call_command('remove_mfa', EMAIL)
+
+    assert security_log() == [f'mfa_removed_by_command user={user.pk} count=1']
+
+
+def test_remove_mfa_command_logs_nothing_when_there_was_nothing_to_remove(user, security_log):
+    call_command('remove_mfa', EMAIL)
+
+    assert security_log() == []
