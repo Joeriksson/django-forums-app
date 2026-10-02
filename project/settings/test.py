@@ -32,3 +32,5 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 # Signup is closed by default; tests of the closed state switch it off themselves
 SIGNUP_OPEN = True
+# The API is off by default; tests of the off state switch it off themselves (test_api_switch.py)
+API_ENABLED = True
