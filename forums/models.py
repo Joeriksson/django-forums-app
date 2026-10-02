@@ -6,6 +6,7 @@ from django.urls import reverse
 from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE
 
 from forums.tasks import send_notifications_task
+from project.utils import queue_task
 
 MARKDOWN_HELP = 'You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and tables.'
 # Checked by the forms and the API, not by the database: texts are rendered on every page view
@@ -60,8 +61,9 @@ class Post(LifecycleModelMixin, models.Model):
     class Meta:
         ordering = ['added']
 
-    @hook(AFTER_CREATE)
+    @hook(AFTER_CREATE, on_commit=True)
     def notify_subscribers(self):
+        # Runs only once the post is committed, so a rollback sends nothing
         if not os.environ.get('CI'):
             full_url = settings.SITE_URL + reverse('thread_detail', args=(self.thread_id,))
 
@@ -74,7 +76,8 @@ class Post(LifecycleModelMixin, models.Model):
             if not email_addresses:
                 return
 
-            send_notifications_task.delay(
+            queue_task(
+                send_notifications_task,
                 self.thread_id,
                 self.thread.title,
                 self.user.username,
