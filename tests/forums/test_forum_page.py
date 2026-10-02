@@ -4,6 +4,13 @@ from django.urls import reverse
 
 from forums.views import ForumDetail
 
+@pytest.fixture
+def client(client, reader):
+    """Reading needs a login: the pages are requested by a member."""
+    client.force_login(reader)
+    return client
+
+
 
 @pytest.fixture
 def author(add_user):
@@ -85,8 +92,9 @@ def test_forum_page_uses_three_queries_however_many_threads(
         thread = add_thread(title=f'Thread {n}', text='Text', forum=forum, user=user)
         add_post(text='A post', thread=thread, user=user)
 
-    # The forum, the number of threads, and one page of threads with authors and post counts
-    with django_assert_num_queries(3):
+    # The forum, the number of threads, and one page of threads with authors and post counts,
+    # after six for the logged-in reader (session, user, permissions, profile, GitHub account)
+    with django_assert_num_queries(6 + 3):
         forum_page(client, forum)
 
 
