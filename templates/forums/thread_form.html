@@ -8,6 +8,7 @@
     <div class="heading">
         <h2>New thread</h2>
     </div>
+    {% include 'forums/_posting_as.html' %}
     <form method="post">
         {% csrf_token %}
         {{ form|crispy }}

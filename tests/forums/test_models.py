@@ -68,7 +68,8 @@ def test_notify_subscribers_excludes_post_author(
     thread_id, thread_title, username, full_url, email_addresses = notification_calls[0]
     assert thread_id == thread.id
     assert thread_title == 'Test Thread'
-    assert username == 'author'
+    # The name others see, not the username (derived from the email address)
+    assert username == f'Member {author.pk}'
     # Built from DJANGO_SITE_URL, like invitation links
     assert full_url == f'https://forum.example.com/forums/thread/{thread.id}'
     # Exact list: no author, no duplicates

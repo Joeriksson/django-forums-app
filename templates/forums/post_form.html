@@ -7,6 +7,7 @@
     <div class="heading">
         <h2>New post - in reply to: "{{ thread.title }}"</h2>
     </div>
+    {% include 'forums/_posting_as.html' %}
     <form method="post">
         {% csrf_token %}
         {{ form|crispy }}

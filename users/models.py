@@ -29,6 +29,27 @@ class CustomUser(LifecycleModelMixin, AbstractUser):
             ),
         ]
 
+    @property
+    def profile_name(self):
+        """The name from the user's profile, on one line; empty if they haven't set one."""
+        # The profile is created with the user (forums/signals.py), but may be missing
+        profile = getattr(self, 'profile', None)
+        if profile is None:
+            return ''
+        return ' '.join(f'{profile.first_name} {profile.last_name}'.split())
+
+    @property
+    def has_profile_name(self):
+        return bool(self.profile_name)
+
+    @property
+    def display_name(self):
+        """
+        What other people see as this user's name. Never the username: allauth
+        derives it from the email address, which is nobody else's business.
+        """
+        return self.profile_name or f'Member {self.pk}'
+
     @hook(AFTER_CREATE, on_commit=True)
     def send_welcome_mail(self):
         # Runs only once the user is committed, so a rollback sends nothing.
