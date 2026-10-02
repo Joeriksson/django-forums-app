@@ -45,6 +45,7 @@ That is all the app needs:
 
 - **HTTPS and HTTP→HTTPS redirects:** Caddy handles both automatically for the domain.
 - **`X-Forwarded-Proto`:** Caddy sends it by default. Django relies on it (`SECURE_PROXY_SSL_HEADER`) to know the request was HTTPS. Without it, `SECURE_SSL_REDIRECT` causes a redirect loop.
+- **`X-Forwarded-For`:** Caddy sends the visitor's address in it by default, and drops any value the visitor sent. The login rate limits (failed logins, signups, password resets) count per address from its last entry (`ALLAUTH_TRUSTED_PROXY_COUNT = 1` in `production.py`). This assumes exactly one proxy in front of the app: with a second one before Caddy (a CDN, say), raise the count to 2, or the limits count every visitor as that proxy.
 - **`Host` header:** Caddy passes the original host through by default. It must match `DJANGO_ALLOWED_HOSTS`.
 - **HSTS:** Django sends the `Strict-Transport-Security` header. Don't add one in Caddy as well.
 - **Static files:** served by the app through WhiteNoise, so no extra Caddy rules are needed.
