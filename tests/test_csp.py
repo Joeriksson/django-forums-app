@@ -42,14 +42,9 @@ def test_policy_directives(client):
     policy = directives(client.get(reverse('home'))[HEADER])
 
     assert policy['default-src'] == ["'self'"]
-    # Our own files, plus the CDNs _base.html loads Bootstrap, jQuery and Popper from
-    assert policy['script-src'] == [
-        "'self'",
-        'https://code.jquery.com',
-        'https://cdnjs.cloudflare.com',
-        'https://stackpath.bootstrapcdn.com',
-    ]
-    assert policy['style-src'] == ["'self'", 'https://stackpath.bootstrapcdn.com']
+    # Our own files only: nothing comes from a CDN
+    assert policy['script-src'] == ["'self'"]
+    assert policy['style-src'] == ["'self'"]
     # data: is the QR code on the two-factor setup page; https: is images in posts
     assert policy['img-src'] == ["'self'", 'data:', 'https:']
     assert policy['object-src'] == ["'none'"]
@@ -59,15 +54,20 @@ def test_policy_directives(client):
     assert policy['form-action'] == ["'self'", 'https://github.com']
 
 
-def test_every_script_host_in_the_base_template_is_allowed(settings):
+def test_templates_load_nothing_from_other_sites(settings):
+    """Scripts, styles, fonts and images in the project templates are our own files."""
     import re
     from pathlib import Path
 
-    base = (Path(settings.TEMPLATES[0]['DIRS'][0]) / '_base.html').read_text()
-    hosts = set(re.findall(r'(?:src|href)="(https://[^/"]+)/', base))
+    loads = re.compile(r'<(?:script|link|img|iframe)\b[^>]*(?:src|href)="(?:https?:)?//[^"]+"', re.IGNORECASE)
+    found = [
+        f'{template.name}: {match}'
+        for template_dir in settings.TEMPLATES[0]['DIRS']
+        for template in Path(template_dir).rglob('*.html')
+        for match in loads.findall(template.read_text())
+    ]
 
-    allowed = set(settings.SECURE_CSP['script-src']) | set(settings.SECURE_CSP['style-src'])
-    assert hosts and hosts <= allowed
+    assert found == []
 
 
 def test_build_policy():

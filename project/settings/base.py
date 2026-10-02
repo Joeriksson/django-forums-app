@@ -80,15 +80,10 @@ MIDDLEWARE = [
 # No 'unsafe-inline': templates hold no inline scripts or styles (tests/test_no_inline_code.py).
 # A new outside source, a font service or a CDN, must be added here or the browser blocks it.
 _CSP = {
+    # Scripts, styles and fonts come from this site only: nothing is loaded from a CDN
     'default-src': ["'self'"],
-    # The CDNs _base.html loads Bootstrap, jQuery and Popper from
-    'script-src': [
-        "'self'",
-        'https://code.jquery.com',
-        'https://cdnjs.cloudflare.com',
-        'https://stackpath.bootstrapcdn.com',
-    ],
-    'style-src': ["'self'", 'https://stackpath.bootstrapcdn.com'],
+    'script-src': ["'self'"],
+    'style-src': ["'self'"],
     # data: the QR code on the two-factor setup page; https: images in posts
     'img-src': ["'self'", 'data:', 'https:'],
     'object-src': ["'none'"],

@@ -46,7 +46,7 @@ def test_mfa_page_uses_site_layout(client, user):
 
     resp = client.get(reverse('mfa_index'))
 
-    assertContains(resp, 'navbar-brand')
+    assertContains(resp, 'site-header')
     assertContains(resp, reverse('mfa_activate_totp'))
 
 
@@ -73,7 +73,7 @@ def test_passkeys_are_not_offered():
 def test_user_sets_up_authenticator_app(client, user):
     password_login(client)
     page = client.get(reverse('mfa_activate_totp'))
-    assertContains(page, 'navbar-brand')
+    assertContains(page, 'site-header')
     secret = page.context['form'].secret
 
     resp = client.post(reverse('mfa_activate_totp'), {'code': totp_code(secret)})
@@ -104,7 +104,7 @@ def test_password_login_asks_for_code(client, user, totp_secret):
 
     assertRedirects(resp, reverse('mfa_authenticate'), fetch_redirect_response=False)
     assert not is_logged_in(client)
-    assertContains(client.get(reverse('mfa_authenticate')), 'navbar-brand')
+    assertContains(client.get(reverse('mfa_authenticate')), 'site-header')
 
     client.post(reverse('mfa_authenticate'), {'code': totp_code(totp_secret)})
 
