@@ -99,6 +99,9 @@ jobs:
         forums-prod
     - name: Run the deployment checks
       run: docker exec prod python manage.py check --deploy --fail-level WARNING
+    # The image's own command only keeps the container alive, so nothing else starts gunicorn
+    - name: Check that gunicorn can load its settings and the app
+      run: docker exec prod gunicorn --check-config project.wsgi
     - name: Check that static file URLs are hashed
       run: >-
         docker exec prod python manage.py shell -c
