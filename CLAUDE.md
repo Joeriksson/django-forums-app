@@ -315,7 +315,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 - **EasyMDE** — Markdown editor on the thread and post forms: `templates/forums/_editor.html` loads `static/js/easymde.min.js`, its stylesheet and our `static/js/editor.js` (toolbar, settings). The preview button posts the text to `/forums/preview/`, so it shows what the saved text will look like. Without JavaScript the plain textarea still works. Like highlight.js it is a file in `static/` that `make audit` doesn't cover; it loads nothing from other sites (its spell checker and Font Awesome download are off). To upgrade it:
   1. Replace the two `easymde.min.*` files with the ones from the new npm package (check its integrity hash) and read the release notes for renamed options and anything new that loads from another site
   2. The tests don't run JavaScript, so check in a browser, logged in, on the new thread, new post and edit thread pages: the toolbar is on one line with all icons, the preview matches the saved result, the Markdown hint under the field is hidden, an empty text shows the form error, and the edit page loads the saved text
-  3. If the toolbar wraps, see the `button.table` rule in `_editor.html` (EasyMDE's class name clashes with Bootstrap's `.table`)
+  3. If the toolbar wraps, see the `button.table` rule in `static/css/editor.css` (EasyMDE's class name clashes with Bootstrap's `.table`)
 - **django-allauth** — authentication + GitHub OAuth
 - **cryptography** — Fernet encryption of the two-factor secrets (`users/encryption.py`)
 - **djangorestframework** — REST API
@@ -341,6 +341,8 @@ A separate `audit` job runs `make audit` and fails on any vulnerability not in `
 A `prod-image` job builds the production image, starts it with production settings and fake env values (no Redis or secrets needed) next to a Postgres set up by the production init script, runs `check --deploy --fail-level WARNING`, runs the migrations as the app's database role and checks that role has no special rights, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that the container doesn't run as root, that `/api/` isn't routed, that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
 ## Architecture Notes
+
+- **No inline code in templates**: no `<script>` without `src`, no `<style>` block, no `style=` or `on...=` attribute (`tests/test_no_inline_code.py` checks the project templates). Scripts and styles go into files under `static/` (`css/base.css` for every page, `css/thread.css` and `js/thread.js` for the thread page, `css/editor.css` for the editor); pass values to a script with `data-` attributes, as `_editor.html` does. Font Awesome's `js/all.js` would add its styles to the page as an inline `<style>`: `data-auto-add-css="false"` in `_base.html` stops that, and `css/fontawesome-svg.css` holds those styles (copied from `baseStyles` in `all.js`; replace both files together: `tests/test_static_files.py` fails if they differ)
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
 - `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` — integer PKs (not BigAutoField)
