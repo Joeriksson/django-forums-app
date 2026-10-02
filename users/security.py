@@ -13,7 +13,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.urls import reverse
 
 MFA_REQUIRED_MESSAGE = (
     'Staff and moderator accounts need two-factor authentication. '
@@ -21,6 +20,8 @@ MFA_REQUIRED_MESSAGE = (
 )
 # Login, logout, address confirmation and the two-factor pages: needed to set it up
 OPEN_PATH = '/accounts/'
+# Where project/urls.py mounts the API, when it is enabled
+API_PATH = '/api/'
 
 
 def has_second_factor(user):
@@ -47,7 +48,7 @@ class StaffMFAMiddleware:
             and is_privileged(user)
             and not has_second_factor(user)
         ):
-            if request.path.startswith(reverse('api-root')):
+            if request.path.startswith(API_PATH):
                 return JsonResponse({'detail': MFA_REQUIRED_MESSAGE}, status=403)
             messages.warning(request, MFA_REQUIRED_MESSAGE)
             return redirect('mfa_index')
