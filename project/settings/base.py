@@ -281,6 +281,16 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    # Anonymous clients are counted per address, logged-in users per user.
+    # The counters are in the cache
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {'anon': '60/min', 'user': '120/min'},
+    # No proxy: the address is the connection's. DRF's default would trust any
+    # X-Forwarded-For header, so a client could reset its count by making one up
+    'NUM_PROXIES': 0,
 }
 
 # Override the database with DATABASE_URL when it is set

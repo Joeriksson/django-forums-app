@@ -201,3 +201,14 @@ def test_one_trusted_proxy_for_the_client_address(load_production):
     assert production.ALLAUTH_TRUSTED_PROXY_COUNT == 1
     # Only behind the proxy: without one, a client could forge X-Forwarded-For
     assert not hasattr(base, 'ALLAUTH_TRUSTED_PROXY_COUNT')
+
+
+def test_api_throttles_count_the_visitor_behind_the_proxy(load_production):
+    from project.settings import base
+
+    production = load_production()
+
+    assert production.REST_FRAMEWORK['NUM_PROXIES'] == 1
+    assert production.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] == base.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']
+    # Without a proxy the header is whatever the client sends: ignore it
+    assert base.REST_FRAMEWORK['NUM_PROXIES'] == 0
