@@ -97,6 +97,7 @@ jobs:
         -e DJANGO_SETTINGS_MODULE=project.settings.production
         -e ENVIRONMENT=production
         -e SECRET_KEY=ci-only-placeholder-secret-key-not-used-anywhere-else-0123456789
+        -e DJANGO_MFA_ENCRYPTION_KEY=Y2ktb25seS1wbGFjZWhvbGRlci1tZmEta2V5LTAwMDE=
         -e DJANGO_ADMINS=admin@example.com
         -e DJANGO_ALLOWED_HOSTS=forum.example.com
         -e DJANGO_SITE_URL=https://forum.example.com
