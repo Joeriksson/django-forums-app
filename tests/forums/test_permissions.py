@@ -56,10 +56,11 @@ def test_forum_add_without_permission_forbidden(client, add_user):
 
 
 @pytest.mark.django_db
-def test_moderator_can_update_other_users_thread(client, add_user, forum_with_thread):
+def test_moderator_can_update_other_users_thread(client, add_user, add_totp, forum_with_thread):
     _, thread = forum_with_thread
     moderator = add_user('moderator', 'moderator@email.com', 'testpass123')
     grant(moderator, 'change_thread')
+    add_totp(moderator)
     client.force_login(moderator)
 
     resp = client.get(reverse('thread_update', kwargs={'pk': thread.id}))
@@ -82,10 +83,11 @@ def test_user_cannot_update_other_users_thread(client, add_user, forum_with_thre
 
 
 @pytest.mark.django_db
-def test_moderator_sees_thread_buttons(client, add_user, forum_with_thread):
+def test_moderator_sees_thread_buttons(client, add_user, add_totp, forum_with_thread):
     forum, thread = forum_with_thread
     moderator = add_user('moderator', 'moderator@email.com', 'testpass123')
     grant(moderator, 'delete_thread', 'change_thread')
+    add_totp(moderator)
     client.force_login(moderator)
 
     content = client.get(reverse('forum_detail', kwargs={'pk': forum.id})).content.decode()
@@ -140,12 +142,13 @@ def test_moderators_group_has_only_moderation_permissions():
 
 @pytest.mark.django_db
 def test_moderators_group_member_can_moderate_other_users_content(
-    client, add_user, add_post, forum_with_thread
+    client, add_user, add_post, add_totp, forum_with_thread
 ):
     forum, thread = forum_with_thread
     post = add_post(text='A post by the author', thread=thread, user=thread.user)
     moderator = add_user('moderator', 'moderator@email.com', 'testpass123')
     moderator.groups.add(Group.objects.get(name='Moderators'))
+    add_totp(moderator)
     client.force_login(moderator)
 
     urls = (

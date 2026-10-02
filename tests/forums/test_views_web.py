@@ -82,8 +82,9 @@ def test_thread_detail_renders_markdown_and_strips_scripts(client, add_post, thr
 
 
 @pytest.mark.django_db
-def test_forum_create(client, author):
+def test_forum_create(client, author, add_totp):
     author.user_permissions.add(Permission.objects.get(codename='add_forum'))
+    add_totp(author)
     client.force_login(author)
 
     resp = client.post(
@@ -149,7 +150,7 @@ def test_post_create_anonymous_redirects_to_login(client, thread):
 # Delete views
 
 
-def login_as(client, who, author, add_user):
+def login_as(client, who, author, add_user, add_totp):
     """Log in as the author, another user, or a member of the Moderators group."""
     if who == 'author':
         client.force_login(author)
@@ -157,13 +158,15 @@ def login_as(client, who, author, add_user):
     user = add_user(who, f'{who}@email.com', 'testpass123')
     if who == 'moderator':
         user.groups.add(Group.objects.get(name='Moderators'))
+        # Moderators need an authenticator app to use the site
+        add_totp(user)
     client.force_login(user)
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize('who', ['author', 'moderator'])
-def test_thread_delete_allowed(client, add_user, author, thread, who):
-    login_as(client, who, author, add_user)
+def test_thread_delete_allowed(client, add_user, add_totp, author, thread, who):
+    login_as(client, who, author, add_user, add_totp)
 
     resp = client.post(
         reverse('thread_delete', kwargs={'fpk': thread.forum.id, 'pk': thread.id})
@@ -174,8 +177,8 @@ def test_thread_delete_allowed(client, add_user, author, thread, who):
 
 
 @pytest.mark.django_db
-def test_thread_delete_by_other_user_forbidden(client, add_user, author, thread):
-    login_as(client, 'other', author, add_user)
+def test_thread_delete_by_other_user_forbidden(client, add_user, add_totp, author, thread):
+    login_as(client, 'other', author, add_user, add_totp)
 
     resp = client.post(
         reverse('thread_delete', kwargs={'fpk': thread.forum.id, 'pk': thread.id})
@@ -187,8 +190,8 @@ def test_thread_delete_by_other_user_forbidden(client, add_user, author, thread)
 
 @pytest.mark.django_db
 @pytest.mark.parametrize('who', ['author', 'moderator'])
-def test_post_delete_allowed(client, add_user, author, post, who):
-    login_as(client, who, author, add_user)
+def test_post_delete_allowed(client, add_user, add_totp, author, post, who):
+    login_as(client, who, author, add_user, add_totp)
 
     resp = client.post(
         reverse('post_delete', kwargs={'tpk': post.thread.id, 'pk': post.id})
@@ -199,8 +202,8 @@ def test_post_delete_allowed(client, add_user, author, post, who):
 
 
 @pytest.mark.django_db
-def test_post_delete_by_other_user_forbidden(client, add_user, author, post):
-    login_as(client, 'other', author, add_user)
+def test_post_delete_by_other_user_forbidden(client, add_user, add_totp, author, post):
+    login_as(client, 'other', author, add_user, add_totp)
 
     resp = client.post(
         reverse('post_delete', kwargs={'tpk': post.thread.id, 'pk': post.id})

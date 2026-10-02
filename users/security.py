@@ -1,17 +1,26 @@
 """
-Staff accounts must use two-factor authentication.
+Accounts that can do more than a member must use two-factor authentication.
 
-The admin can change every account and forum, so a stolen staff password alone
-mustn't be enough. Staff who haven't set up an authenticator app are sent to do
-that before they reach a staff page. The admin's own login form is replaced by
-allauth's (see project/urls.py), which asks for the code.
+Staff can change every account and forum, and moderators can delete other
+people's threads and posts, so a stolen password alone mustn't be enough. Such
+users who haven't set up an authenticator app are sent to do that before they
+reach any other page. The admin's own login form is replaced by allauth's (see
+project/urls.py), which asks for the code.
 """
 
 from allauth.mfa.models import Authenticator
 from django.conf import settings
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
+
+MFA_REQUIRED_MESSAGE = (
+    'Staff and moderator accounts need two-factor authentication. '
+    'Set up an authenticator app to continue.'
+)
+# Login, logout, address confirmation and the two-factor pages: needed to set it up
+OPEN_PATH = '/accounts/'
 
 
 def has_second_factor(user):
@@ -19,25 +28,27 @@ def has_second_factor(user):
     return Authenticator.objects.filter(user=user, type=Authenticator.Type.TOTP).exists()
 
 
+def is_privileged(user):
+    """Staff, superusers, and anyone with a permission, directly or through a group (moderators)."""
+    # Members have no permissions at all, so any permission means extra rights
+    return user.is_staff or user.is_superuser or bool(user.get_all_permissions())
+
+
 class StaffMFAMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-
-    def staff_paths(self):
-        return (reverse('admin:index'), reverse('customuser-list'))
 
     def __call__(self, request):
         user = request.user
         if (
             settings.STAFF_REQUIRE_MFA
             and user.is_authenticated
-            and user.is_staff
-            and request.path.startswith(self.staff_paths())
+            and not request.path.startswith(OPEN_PATH)
+            and is_privileged(user)
             and not has_second_factor(user)
         ):
-            messages.warning(
-                request,
-                'Staff accounts need two-factor authentication. Set up an authenticator app to continue.',
-            )
+            if request.path.startswith(reverse('api-root')):
+                return JsonResponse({'detail': MFA_REQUIRED_MESSAGE}, status=403)
+            messages.warning(request, MFA_REQUIRED_MESSAGE)
             return redirect('mfa_index')
         return self.get_response(request)
