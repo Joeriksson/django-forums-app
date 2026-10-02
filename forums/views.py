@@ -1,5 +1,3 @@
-from itertools import chain
-
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
     UserPassesTestMixin,
@@ -246,17 +244,39 @@ class SearchResultsView(ListView):
     # template_name_suffix = '_search_results_form'
     template_name = 'forums/post_search_results_form.html'
 
-    def get_queryset(self):  # new
-        query = self.request.GET.get('q')
+    # Search scans every thread and post, so keep it from being used to load the server:
+    # no scan for very short words, and only the newest results of each kind.
+    min_query_length = 3
+    max_query_length = 200
+    max_results = 50
 
-        if not query:
-            return
+    def get_queryset(self):
+        query = self.request.GET.get('q', '').strip()[: self.max_query_length]
+        self.too_short = len(query) < self.min_query_length
+        self.limited = False
+        if self.too_short:
+            return []
 
-        post = Post.objects.filter(Q(text__icontains=query))
-        thread = Thread.objects.filter(
+        posts = Post.objects.filter(text__icontains=query).select_related('thread', 'user')
+        threads = Thread.objects.filter(
             Q(title__icontains=query) | Q(text__icontains=query)
+        ).select_related('forum', 'user')
+        return self.newest(posts) + self.newest(threads)
+
+    def newest(self, queryset):
+        # One more than the limit, to know whether something was left out
+        results = list(queryset.order_by('-added')[: self.max_results + 1])
+        if len(results) > self.max_results:
+            self.limited = True
+        return results[: self.max_results]
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            too_short=self.too_short,
+            limited=self.limited,
+            min_query_length=self.min_query_length,
+            **kwargs,
         )
-        return chain(post, thread)
 
     # ## SearchRank ##
     # def get_queryset(self):

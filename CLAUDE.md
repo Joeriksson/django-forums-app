@@ -185,7 +185,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 /forums/thread/<pk>/post   → PostCreate
 /forums/thread/<tpk>/post/<pk>/delete  → PostDelete
 /forums/thread/<tpk>/post/<pk>/upvote  → PostUpvote
-/forums/search/            → SearchResultsView
+/forums/search/            → SearchResultsView (?q= of at least 3 characters; the 50 newest posts and 50 newest threads)
 /forums/preview/           → MarkdownPreview (POST, login required: Markdown text → HTML for the editor's preview)
 
 /api/forums/               → ForumViewSet (read for anyone; write needs forums.add/change/delete_forum)
