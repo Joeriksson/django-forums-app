@@ -1,16 +1,9 @@
 import os
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import models
 from django.urls import reverse
-from django_lifecycle import (
-    LifecycleModelMixin,
-    hook,
-    AFTER_CREATE,
-    AFTER_DELETE,
-    AFTER_SAVE,
-)
+from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE
 
 from forums.tasks import send_notifications_task
 
@@ -88,14 +81,6 @@ class Post(LifecycleModelMixin, models.Model):
                 full_url,
                 email_addresses,
             )
-
-    @hook(AFTER_SAVE)
-    @hook(AFTER_DELETE)
-    @hook(AFTER_CREATE)
-    def invalidate_cache(self):
-        # A post moved to another thread must also leave the old thread's cache
-        thread_ids = {self.thread_id, self.initial_value('thread_id')}
-        cache.delete_many([f'post_objects_thread_{pk}' for pk in thread_ids if pk])
 
 
 class Gender(models.TextChoices):

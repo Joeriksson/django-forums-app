@@ -35,6 +35,7 @@
             {% if user.is_authenticated %}
                 <form method="post" action="{% url 'thread_notification' thread.id %}" class="d-inline">
                     {% csrf_token %}
+                    <input type="hidden" name="page" value="{{ posts.number }}">
                     {% if subscribed %}
                         <button type="submit" class="btn btn-outline-secondary active">Subscribed</button>
                     {% else %}
@@ -119,6 +120,7 @@
                             {% if post.user != user %}
                                 <form method="post" action="{% url 'post_upvote' thread.id post.id %}" class="d-inline">
                                     {% csrf_token %}
+                                    <input type="hidden" name="page" value="{{ posts.number }}">
                                     <button type="submit" class="btn btn-outline-secondary p-1">+</button>
                                 </form>
                             {% endif %}
@@ -133,6 +135,21 @@
             {% endfor %}
         </div>
 
+        {% if posts.has_other_pages %}
+            <nav aria-label="Pages of posts" class="d-flex justify-content-between align-items-center ml-5">
+                <div>
+                    {% if posts.has_previous %}
+                        <a href="?page={{ posts.previous_page_number }}" class="btn btn-outline-secondary">Earlier posts</a>
+                    {% endif %}
+                </div>
+                <span>Page {{ posts.number }} of {{ posts.paginator.num_pages }}</span>
+                <div>
+                    {% if posts.has_next %}
+                        <a href="?page={{ posts.next_page_number }}" class="btn btn-outline-secondary">Later posts</a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
 
     </div>
 

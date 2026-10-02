@@ -129,7 +129,8 @@ def test_post_create_sets_author_and_thread(client, add_user, thread):
 
     resp = client.post(reverse('post_add', args=(thread.id,)), {'text': 'Reply'})
 
-    assertRedirects(resp, reverse('thread_detail', args=(thread.id,)))
+    # To the page of the thread that shows the new post
+    assertRedirects(resp, f"{reverse('thread_detail', args=(thread.id,))}?page=last")
     post = Post.objects.get(text='Reply')
     assert post.user == user
     assert post.thread == thread
