@@ -87,7 +87,7 @@ class Post(LifecycleModelMixin, models.Model):
                 send_notifications_task,
                 self.thread_id,
                 self.thread.title,
-                self.user.username,
+                self.user.display_name,
                 full_url,
                 email_addresses,
             )
