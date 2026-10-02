@@ -85,6 +85,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `ADMIN_URL` | `nimda` | Path of the Django admin |
 | `DJANGO_SIGNUP_OPEN` | `false` | `true` lets anyone create an account, by email or GitHub. While it's closed, the signup page says so and the navbar hides its link; existing users can still log in. Create accounts in the admin meanwhile |
 | `DJANGO_STAFF_REQUIRE_MFA` | `true` | Staff and moderators need two-factor authentication to use the site. Leave it on; see [Two-factor authentication for staff and moderators](#8-two-factor-authentication-for-staff-and-moderators) |
+| `DJANGO_API_ENABLED` | `false` | `true` switches the REST API under `/api/` on. The website doesn't use it; leave it off unless something of yours calls the API. While it's off, every `/api/` path answers 404 |
 | `DJANGO_EMAIL_CONSOLE` | `false` | `true` prints mail to the logs instead of using SMTP. Only for trying the stack out |
 
 **Don't set** `DJANGO_SETTINGS_MODULE`, `ENVIRONMENT`, `DATABASE_URL` or `REDIS_URL`: the compose file sets them, and its values take priority.
@@ -170,7 +171,7 @@ Everyone who can do more than a member needs an authenticator app, such as any T
 
 The first superuser is the exception, since `createsuperuser` doesn't go through the admin: set its authenticator app up right after creating it.
 
-**What staff and moderators can't do:** use API tokens. A token would skip the code, so the API refuses tokens of these accounts. They use the API in the browser, logged in on the site.
+**What staff and moderators can't do:** use API tokens. A token would skip the code, so the API refuses tokens of these accounts. They use the API in the browser, logged in on the site. This only matters with `DJANGO_API_ENABLED=true`: by default there is no API.
 
 **Lost phone.** Use a recovery code instead of the app's code at login; each works once. Without recovery codes, remove the account's two-factor authentication on the server:
 

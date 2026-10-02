@@ -20,6 +20,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Open by default here, so local signup works without setting DJANGO_SIGNUP_OPEN
 SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN', True)
+# On by default here, for working on the API
+API_ENABLED = env_bool('DJANGO_API_ENABLED', True)
 # Off by default here, so the local admin works without an authenticator app
 STAFF_REQUIRE_MFA = env_bool('DJANGO_STAFF_REQUIRE_MFA', False)
 

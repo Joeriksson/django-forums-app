@@ -260,6 +260,10 @@ STAFF_REQUIRE_MFA = env_bool('DJANGO_STAFF_REQUIRE_MFA', True)
 ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'users.adapters.SocialAccountAdapter'
 SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN')
+# The REST API under /api/ exists only while DJANGO_API_ENABLED is true (project/urls.py).
+# Off by default: the website doesn't use it, so a forum that doesn't need it has no
+# second way in to keep safe.
+API_ENABLED = env_bool('DJANGO_API_ENABLED')
 # Invitation links (users.Invitation) let one address sign up while signup is closed
 INVITATION_EXPIRY_DAYS = 7
 

@@ -124,6 +124,12 @@ jobs:
       run: >-
         test "$(docker exec db psql -U postgres -tAc
         "select rolsuper or rolcreatedb or rolcreaterole from pg_roles where rolname = 'forum'")" = f
+    - name: Check that the API is off unless switched on
+      run: >-
+        docker exec prod python manage.py shell -c
+        "from django.urls import get_resolver;
+        routes = [str(p.pattern) for p in get_resolver().url_patterns];
+        assert routes and 'api/' not in routes, routes"
     - name: Check that development packages are not in the image
       run: >-
         docker exec prod python -c

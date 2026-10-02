@@ -7,6 +7,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from users import views as user_views
+from users.security import API_PATH
 
 from . import views
 
@@ -34,8 +35,11 @@ urlpatterns = [
     # local apps
     path('', include('pages.urls')),
     path('forums/', include('forums.urls')),
-    path('api/', include('api.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Without DJANGO_API_ENABLED there is no API: every path under api/ is a 404
+if settings.API_ENABLED:
+    urlpatterns += [path(API_PATH.lstrip('/'), include('api.urls'))]
 
 if settings.DEBUG:
     import debug_toolbar
