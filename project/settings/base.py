@@ -244,6 +244,10 @@ ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
 ACCOUNT_UNIQUE_EMAIL = True
+# Nobody logs in before clicking the link mailed to their address. Checked at every
+# login, so an account made without signup (createsuperuser, the admin) confirms at
+# its first one. Invitation and GitHub signups arrive verified.
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # Two-factor login: an authenticator app (TOTP) plus recovery codes. No passkeys.
 MFA_SUPPORTED_TYPES = ['totp', 'recovery_codes']
 MFA_TOTP_ISSUER = 'Wildvasa Forums'

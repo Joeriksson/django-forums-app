@@ -48,13 +48,13 @@ def test_signup_form_asks_only_for_email_and_one_password(client):
 
 
 @pytest.mark.django_db
-def test_signup_creates_user_and_logs_in(client):
+def test_signup_creates_user(client):
     resp = client.post(
         reverse('account_signup'),
         {'email': 'newuser@email.com', 'password1': 'a-long-test-pass-123'},
     )
 
-    assertRedirects(resp, reverse('home'), fetch_redirect_response=False)
+    # Not logged in yet: the address must be confirmed first (test_email_verification.py)
+    assertRedirects(resp, reverse('account_email_verification_sent'))
     user = get_user_model().objects.get(email='newuser@email.com')
     assert user.check_password('a-long-test-pass-123')
-    assert client.session['_auth_user_id'] == str(user.pk)
