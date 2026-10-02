@@ -77,6 +77,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `DEFAULT_FROM_EMAIL` | `EMAIL_HOST_USER` | Must be an address the SMTP account may send from |
 | `EMAIL_PORT` / `EMAIL_USE_TLS` | `587` / `true` | STARTTLS submission |
 | `DJANGO_SECURE_HSTS_SECONDS` | `3600` | See [HSTS](#6-raising-hsts) |
+| `WEB_CONCURRENCY` | `2` | Number of gunicorn worker processes; each handles 4 requests at a time (`gunicorn.conf.py`). Raise it on a server with more CPU cores and memory: each worker is a copy of the app in memory |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | `false` | See [HSTS](#6-raising-hsts) |
 | `ADMIN_URL` | `nimda` | Path of the Django admin |
 | `DJANGO_SIGNUP_OPEN` | `false` | `true` lets anyone create an account, by email or GitHub. While it's closed, the signup page says so and the navbar hides its link; existing users can still log in. Create accounts in the admin meanwhile |
