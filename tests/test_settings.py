@@ -101,3 +101,36 @@ def load_base():
         return importlib.import_module('project.settings.base')
     finally:
         sys.modules['project.settings.base'] = original
+
+
+def test_redis_cache_stores_json_not_pickle():
+    """Reading a pickled value runs code, so whoever can write to Redis could run code here."""
+    from project.settings import base
+
+    options = base.CACHES['default']['OPTIONS']
+    assert options['SERIALIZER'] == 'django_redis.serializers.json.JSONSerializer'
+
+
+def test_cache_serializer_handles_what_the_rate_limits_store():
+    from django_redis.serializers.json import JSONSerializer
+
+    serializer = JSONSerializer(options={})
+    # allauth's rate limits and DRF's throttles store lists of timestamps; allauth's lock stores True
+    for value in ([1790000000.25, 1790000001.5], [], True):
+        assert serializer.loads(serializer.dumps(value)) == value
+
+
+def test_cache_serializer_does_not_unpickle():
+    import pickle
+
+    from django_redis.serializers.json import JSONSerializer
+
+    with pytest.raises(ValueError):
+        JSONSerializer(options={}).loads(pickle.dumps([1.5]))
+
+
+def test_cache_keys_changed_with_the_serializer():
+    """Values pickled before the change must not be read as JSON: they are under the old version."""
+    from project.settings import base
+
+    assert base.CACHES['default']['VERSION'] == 2
