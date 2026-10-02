@@ -181,7 +181,8 @@ static/            # Static file sources (our CSS and JS, fonts, Font Awesome, b
 ## URL Structure
 
 ```
-/                          → pages (home)
+/                          → pages (home; open to visitors)
+# Everything under /forums/ needs a login
 /forums/                   → ForumsList
 /forums/<pk>/              → ForumDetail (20 threads per page, newest first; ?page=<n>)
 /forums/add/               → ForumCreate (requires forums.add_forum permission)
@@ -198,7 +199,7 @@ static/            # Static file sources (our CSS and JS, fonts, Font Awesome, b
 /forums/preview/           → MarkdownPreview (POST, login required: Markdown text → HTML for the editor's preview)
 
 # /api/ exists only while DJANGO_API_ENABLED is true (default: off; on in development and tests)
-/api/forums/               → ForumViewSet (read for anyone; write needs forums.add/change/delete_forum)
+/api/forums/               → ForumViewSet (read for members; write needs forums.add/change/delete_forum)
 /api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly); ?forum=<id> filters
 /api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly); ?thread=<id> filters
 /api/users/                → UserViewSet (read-only, staff only via IsAdminUser)
@@ -220,6 +221,8 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
 
 ## Authentication & Permissions
 
+- **Reading needs a login**: the forum is for its members. The forum list, forum, thread and search pages have `LoginRequiredMixin` and send visitors to the login page (which leads back afterwards); only the home page and the account pages are open. In the API everything needs a login (`IsAuthenticated` is the default permission in `REST_FRAMEWORK`, the API root and the schema included); visitors get 403. A new view that shows forum content needs the mixin too. Tests: `tests/forums/test_login_required.py`; other tests read as the `reader` fixture (`tests/forums/conftest.py`) or with `reader_client()` (`tests/forums/clients.py`). A logged-in page costs six queries before its own (session, user, two for permissions, profile, GitHub account)
+
 - `django-allauth` handles auth with email-only login (no username required)
 - **Email addresses must be confirmed** (`ACCOUNT_EMAIL_VERIFICATION = 'mandatory'` in `base.py`, every environment): signup mails a link and logs nobody in before it is used. allauth checks at every login, so an account made without signup (`createsuperuser`, the admin) gets the mail at its first login; in development the link is printed to the console. Invitation and GitHub signups arrive verified. Tests that log in through the login form need the `verify_email` fixture (root `conftest.py`); `force_login` and API tokens don't
 - GitHub OAuth social login is configured (`allauth.socialaccount.providers.github`)
@@ -227,9 +230,9 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
 - Two-factor secrets are encrypted in the database: `users.adapters.MFAAdapter` (`MFA_ADAPTER`) encrypts the authenticator secret and the recovery-code seed with `users/encryption.py` (Fernet, values stored as `fernet:<token>`). There is no cleartext fallback: an unencrypted value is refused, and a wrong key raises `InvalidToken`. Migration `users/0006` encrypted the rows that existed. Code that reads `Authenticator.data` directly gets ciphertext: go through allauth (`authenticator.wrap()`) or `decrypt_secret`
 - allauth's rate limits (failed logins, signups, password resets) are partly per client address. Production sets `ALLAUTH_TRUSTED_PROXY_COUNT = 1`, so the address comes from the last `X-Forwarded-For` entry (the one the reverse proxy adds) instead of the proxy's own. Production only: without a proxy the header can be forged. A second proxy in front needs a count of 2
 - allauth pages without a template of our own (the two-factor pages) get the site layout from `templates/allauth/layouts/base.html`, which extends `_base.html`
-- The API is throttled (`REST_FRAMEWORK` in `base.py`): 60 requests a minute per address for anonymous clients, 120 per user when logged in; over that it answers 429, which the security log records as `denied status=429`. `NUM_PROXIES` is `0` in `base.py` and `1` in production, like `ALLAUTH_TRUSTED_PROXY_COUNT`; a second proxy needs 2. The counters are in the cache, so the API fails while Redis is down. DRF reads the rates at import: tests change them with the `rates` fixture in `tests/forums/conftest.py`
+- The API is throttled (`REST_FRAMEWORK` in `base.py`): 120 requests a minute per user (visitors are refused with 403 before anything is counted, so the 60 a minute per address for anonymous clients is only a fallback); over that it answers 429, which the security log records as `denied status=429`. `NUM_PROXIES` is `0` in `base.py` and `1` in production, like `ALLAUTH_TRUSTED_PROXY_COUNT`; a second proxy needs 2. The counters are in the cache, so the API fails while Redis is down. DRF reads the rates at import: tests change them with the `rates` fixture in `tests/forums/conftest.py`
 - **Posting limit**: a user may create 5 threads or posts a minute and 30 an hour (`posting_burst`, `posting_hour` in `DEFAULT_THROTTLE_RATES`), counted together for the website and the API, staff and moderators included. `forums/throttling.py` has the two DRF throttles; `PostingLimitMixin` in `forums/views.py` (the form comes back with status 429 and the text kept; forms with errors don't count) and in `api/views.py` (on `create`) use them. A new view that creates threads or posts needs the mixin too
-- **Search and preview limits**: 20 searches a minute per user (per address for visitors; searches too short to run don't count) and 30 Markdown previews a minute per user (`search`, `preview` in `DEFAULT_THROTTLE_RATES`; `SearchThrottle`, `PreviewThrottle` in `forums/throttling.py`). Over the limit the search page says so with status 429 and runs no query; the editor shows that the preview could not be loaded
+- **Search and preview limits**: 20 searches a minute per user (searches too short to run don't count) and 30 Markdown previews a minute per user (`search`, `preview` in `DEFAULT_THROTTLE_RATES`; `SearchThrottle`, `PreviewThrottle` in `forums/throttling.py`). Over the limit the search page says so with status 429 and runs no query; the editor shows that the preview could not be loaded
 - The REST API is off unless `DJANGO_API_ENABLED=true`. Code outside `api/` must not `reverse()` its routes: they may not exist (`users/security.py` uses the fixed `API_PATH`). Tests of the off state reload the URL configuration with the `api_off` fixture in `tests/test_api_switch.py`
 - Session + Token authentication for the REST API. The API has no login page of its own (DRF's `api-auth/` would skip the two-factor step): log in on the site
 - **Staff and moderators must use two-factor authentication** while `STAFF_REQUIRE_MFA` is on (default; off in development). It applies to every privileged user (`users.security.is_privileged`): staff, superusers, and anyone holding a permission, directly or through a group such as Moderators. Members have no permissions:
@@ -241,7 +244,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
   - Tests: privileged users need the `add_totp` fixture (root `conftest.py`) to use the site; `get_user_client` gives them a session instead of a token
 - Permission checks: Django model permissions for forum creation and editing; `UserPassesTestMixin` for thread edit/delete and post delete (owner, or a user with `forums.change_thread` / `forums.delete_thread` / `forums.delete_post`)
 - **Moderators group**: created by migration `forums/0016_moderators_group` with exactly `change_thread`, `delete_thread` and `delete_post`, so members can edit and delete other users' threads and delete their posts, on the website and through the API. Add users to it in the Django admin, once they have an authenticator app
-- Custom API permission: `IsOwnerOrModeratorOrReadOnly` — safe methods allowed for anyone; write allowed for the owner (`obj.user == request.user`) or a user with the matching model permission (`change_<model>` for PUT/PATCH, `delete_<model>` for DELETE), same as the web views
+- Custom API permission: `IsOwnerOrModeratorOrReadOnly`, always combined with `IsAuthenticated` — safe methods allowed for any member; write allowed for the owner (`obj.user == request.user`) or a user with the matching model permission (`change_<model>` for PUT/PATCH, `delete_<model>` for DELETE), same as the web views
 
 ## Logging
 

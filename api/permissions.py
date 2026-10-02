@@ -3,7 +3,7 @@ from rest_framework import permissions
 
 class IsOwnerOrModeratorOrReadOnly(permissions.BasePermission):
     """
-    Object-level permission: anyone can read, the object's `user` can edit
+    Object-level permission: anyone let in can read, the object's `user` can edit
     and delete it, and so can users with the matching model permission
     (e.g. forums.delete_post), like the moderation checks in the web views.
     """
