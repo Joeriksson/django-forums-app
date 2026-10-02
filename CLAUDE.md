@@ -215,6 +215,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 - `django-allauth` handles auth with email-only login (no username required)
 - GitHub OAuth social login is configured (`allauth.socialaccount.providers.github`)
 - Two-factor login (`allauth.mfa`, needs the `django-allauth[mfa]` extra): optional for every user, an authenticator app (TOTP) plus recovery codes, no passkeys (`MFA_SUPPORTED_TYPES` in `base.py`). Users turn it on under *Two-factor authentication* in the user menu; after that both password and GitHub logins ask for a code. allauth refuses setup while the account has an unverified email address
+- allauth's rate limits (failed logins, signups, password resets) are partly per client address. Production sets `ALLAUTH_TRUSTED_PROXY_COUNT = 1`, so the address comes from the last `X-Forwarded-For` entry (the one the reverse proxy adds) instead of the proxy's own. Production only: without a proxy the header can be forged. A second proxy in front needs a count of 2
 - allauth pages without a template of our own (the two-factor pages) get the site layout from `templates/allauth/layouts/base.html`, which extends `_base.html`
 - Session + Token authentication for the REST API. The API has no login page of its own (DRF's `api-auth/` would skip the two-factor step): log in on the site
 - **Staff must use two-factor authentication** while `STAFF_REQUIRE_MFA` is on (default; off in development):

@@ -190,3 +190,14 @@ def test_site_url_from_env(load_production, value, expected):
 def test_site_url_is_required_and_must_be_an_https_address(load_production, value):
     with pytest.raises(ImproperlyConfigured, match='DJANGO_SITE_URL'):
         load_production(DJANGO_SITE_URL=value)
+
+
+def test_one_trusted_proxy_for_the_client_address(load_production):
+    from project.settings import base
+
+    production = load_production()
+
+    # allauth's rate limits then count the visitor, not the reverse proxy
+    assert production.ALLAUTH_TRUSTED_PROXY_COUNT == 1
+    # Only behind the proxy: without one, a client could forge X-Forwarded-For
+    assert not hasattr(base, 'ALLAUTH_TRUSTED_PROXY_COUNT')
