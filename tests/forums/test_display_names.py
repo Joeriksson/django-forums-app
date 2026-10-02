@@ -12,6 +12,13 @@ from forums.models import Forum, Notification, Post, Thread
 
 User = get_user_model()
 
+@pytest.fixture
+def client(client, reader):
+    """Reading needs a login: the pages are requested by a member."""
+    client.force_login(reader)
+    return client
+
+
 
 @pytest.fixture
 def anna(db):
@@ -120,7 +127,8 @@ def test_search_loads_names_without_a_query_per_result(client, anna, thread, dja
     for number in range(5):
         Post.objects.create(text=f'findable {number}', thread=thread, user=anna)
 
-    with django_assert_max_num_queries(4):
+    # Two for the results, six for the logged-in reader
+    with django_assert_max_num_queries(8):
         client.get(reverse('search_results') + '?q=findable')
 
 

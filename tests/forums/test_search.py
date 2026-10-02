@@ -5,6 +5,13 @@ from forums.views import SearchResultsView
 
 SEARCH_URL = reverse('search_results')
 
+@pytest.fixture
+def client(client, reader):
+    """Reading needs a login: the pages are requested by a member."""
+    client.force_login(reader)
+    return client
+
+
 
 @pytest.fixture
 def author(add_user):
@@ -86,6 +93,7 @@ def test_search_uses_two_queries_however_many_results(
         thread = add_thread(title=f'Pelican {n}', text='Birds', forum=forum, user=user)
         add_post(text=f'pelican post {n}', thread=thread, user=user)
 
-    # One for posts, one for threads: their users, threads and forums come along
-    with django_assert_num_queries(2):
+    # One for posts, one for threads: their users, threads and forums come along. Before
+    # them, six for the logged-in reader (session, user, permissions, profile, GitHub account)
+    with django_assert_num_queries(6 + 2):
         search(client, 'pelican')

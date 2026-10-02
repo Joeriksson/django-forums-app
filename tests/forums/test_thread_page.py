@@ -5,6 +5,13 @@ from pytest_django.asserts import assertRedirects
 
 from forums.views import ThreadDetail
 
+@pytest.fixture
+def client(client, reader):
+    """Reading needs a login: the pages are requested by a member."""
+    client.force_login(reader)
+    return client
+
+
 
 @pytest.fixture
 def author(add_user):
@@ -142,8 +149,10 @@ def test_thread_page_uses_three_queries_however_many_posts(
         user = add_user(f'user{n}', f'user{n}@email.com', 'testpass123')
         add_post(text=f'Post {n}', thread=thread, user=user)
 
-    # The thread with its forum and author, the number of posts, and one page of posts with authors
-    with django_assert_num_queries(3):
+    # The thread with its forum and author, the number of posts, one page of posts with
+    # authors, and the reader's subscription, after six for the logged-in reader
+    # (session, user, permissions, profile, GitHub account)
+    with django_assert_num_queries(6 + 4):
         thread_page(client, thread)
 
 
