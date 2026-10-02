@@ -31,7 +31,9 @@ Production runs `docker-compose-prod.yml` on a VPS behind a reverse proxy contai
 
 The `Dockerfile` installs only runtime dependencies by default (`ARG UV_SYNC_FLAGS=--no-dev`); `docker-compose-dev.yml` passes an empty value so dev images also get the dev group (pytest etc.). `.dockerignore` keeps `.env`, `.git` and `.venv` out of the image; compose passes `.env` in at runtime via `env_file`.
 
-gunicorn's settings are in `gunicorn.conf.py` (address, 2 workers with 4 threads each; `WEB_CONCURRENCY` changes the worker count). The compose command is just `gunicorn project.wsgi`: flags on the command line would win over the file.
+The image runs as the unprivileged user `app` (uid 1000); the code and the venv belong to root, so the app can't write under `/code` or `/opt/venv` in production: anything it must write goes to `/tmp`. In development the mounted repo belongs to the host user, normally also uid 1000, so files written by the containers (migrations) get the right owner; with another host uid, add `user:` to the services in `docker-compose-dev.yml`. Redis gets its password from a config file written at container start, not from its command line, and runs as `redis`. Production has no `celery-beat` service (nothing is scheduled); the dev one keeps its schedule file in `/tmp`.
+
+gunicorn's settings are in `gunicorn.conf.py` (address, 2 workers with 4 threads each; `WEB_CONCURRENCY` changes the worker count; its control socket is off, since it would be a file in `/code`). The compose command is just `gunicorn project.wsgi`: flags on the command line would win over the file.
 
 uv is pinned to an exact version (`COPY --from=ghcr.io/astral-sh/uv:<version>` in the `Dockerfile`). `make audit` doesn't cover it, so bump it when upgrading dependencies, and check uv's release notes for security fixes.
 
@@ -328,7 +330,7 @@ A push or PR that changes only `*.md` files or `docs/` doesn't start the workflo
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
-A `prod-image` job builds the production image, starts it with production settings and fake env values (no database, Redis or secrets needed), runs `check --deploy --fail-level WARNING`, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
+A `prod-image` job builds the production image, starts it with production settings and fake env values (no database, Redis or secrets needed), runs `check --deploy --fail-level WARNING`, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that the container doesn't run as root, that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
 ## Architecture Notes
 
