@@ -7,7 +7,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import F, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -22,7 +22,7 @@ from django.views.generic import (
 
 from .forms import SearchForm
 from .markdown import render as render_markdown
-from .models import Forum, Thread, Post, UpVote, Notification
+from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
 
 
 class ForumsList(ListView, FormView):
@@ -293,4 +293,8 @@ class MarkdownPreview(LoginRequiredMixin, View):
     http_method_names = ['post']
 
     def post(self, request):
-        return HttpResponse(render_markdown(request.POST.get('text', '')))
+        text = request.POST.get('text', '')
+        # Longer than a thread or post may be: it couldn't be saved either
+        if len(text) > MAX_TEXT_LENGTH:
+            return HttpResponseBadRequest('The text is too long.')
+        return HttpResponse(render_markdown(text))

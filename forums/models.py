@@ -15,6 +15,9 @@ from django_lifecycle import (
 from forums.tasks import send_notifications_task
 
 MARKDOWN_HELP = 'You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and tables.'
+# Checked by the forms and the API, not by the database: texts are rendered on every page view
+MAX_TEXT_LENGTH = 20_000
+MAX_SIGNATURE_LENGTH = 500
 
 
 class Forum(models.Model):
@@ -30,7 +33,7 @@ class Forum(models.Model):
 
 class Thread(LifecycleModelMixin, models.Model):
     title = models.CharField(max_length=300)
-    text = models.TextField(help_text=MARKDOWN_HELP)
+    text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
@@ -56,7 +59,7 @@ class Thread(LifecycleModelMixin, models.Model):
 
 
 class Post(LifecycleModelMixin, models.Model):
-    text = models.TextField(help_text=MARKDOWN_HELP)
+    text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
@@ -135,7 +138,7 @@ class UserProfile(models.Model):
     )
     web_site = models.URLField(blank=True)
     github_url = models.URLField(blank=True)
-    signature = models.TextField(blank=True)
+    signature = models.TextField(max_length=MAX_SIGNATURE_LENGTH, blank=True)
 
 
 class UpVote(models.Model):
