@@ -47,13 +47,14 @@ def test_saving_user_again_does_not_duplicate_profile(add_user):
 
 @pytest.mark.django_db
 def test_notify_subscribers_excludes_post_author(
-    add_forum, add_user, add_thread, notification_calls, settings, django_capture_on_commit_callbacks
+    add_forum, add_user, add_thread, notification_calls, settings, django_capture_on_commit_callbacks,
+    verify_email,
 ):
     """Post author should not receive a notification for their own post."""
     settings.SITE_URL = 'https://forum.example.com'
     forum = add_forum('Test Forum', 'Description')
-    author = add_user('author', 'author@example.com', 'pass123')
-    subscriber = add_user('subscriber', 'subscriber@example.com', 'pass123')
+    author = verify_email(add_user('author', 'author@example.com', 'pass123'))
+    subscriber = verify_email(add_user('subscriber', 'subscriber@example.com', 'pass123'))
     thread = add_thread('Test Thread', 'Thread text', forum, author)
 
     Notification.objects.create(thread=thread, user=author)

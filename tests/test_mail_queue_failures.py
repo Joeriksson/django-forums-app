@@ -46,9 +46,10 @@ def test_queue_task_lets_other_errors_through(monkeypatch):
 
 
 @pytest.fixture
-def thread_with_subscriber(db):
+def thread_with_subscriber(db, verify_email):
     author = User.objects.create_user(username='author', email='author@example.com', password='x')
     subscriber = User.objects.create_user(username='sub', email='sub@example.com', password='x')
+    verify_email(subscriber)
     forum = Forum.objects.create(title='Forum', description='Description')
     thread = Thread.objects.create(title='Thread', text='Text', forum=forum, user=author)
     Notification.objects.create(thread=thread, user=subscriber)

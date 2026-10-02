@@ -67,12 +67,19 @@ class Post(LifecycleModelMixin, models.Model):
         if not os.environ.get('CI'):
             full_url = settings.SITE_URL + reverse('thread_detail', args=(self.thread_id,))
 
-            notification_users = Notification.objects.filter(thread=self.thread).select_related('user')
-            email_addresses = [
-                notification_user.user.email
-                for notification_user in notification_users
-                if notification_user.user != self.user
-            ]
+            # Only to active accounts, and only to an address its owner has confirmed
+            email_addresses = list(
+                Notification.objects.filter(
+                    thread_id=self.thread_id,
+                    user__is_active=True,
+                    user__emailaddress__verified=True,
+                    user__emailaddress__email__iexact=models.F('user__email'),
+                )
+                .exclude(user_id=self.user_id)
+                .order_by('pk')
+                .values_list('user__email', flat=True)
+                .distinct()
+            )
             if not email_addresses:
                 return
 

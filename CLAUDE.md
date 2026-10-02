@@ -50,11 +50,11 @@ Tests use `project.settings.test` settings. Coverage and pytest configuration ar
 ### Test Structure
 
 ```
-conftest.py                      # Autouse fixtures for every test: clear the cache, record notification tasks
+conftest.py                      # Autouse fixtures for every test: clear the cache, record notification tasks; add_totp, verify_email, security_log
 tests/
 ├── test_pages.py                # Home page
 ├── test_users.py                # User model, signup
-├── test_account_pages.py, test_user_*.py, test_email_senders.py, test_*settings.py
+├── test_account_pages.py, test_email_verification.py, test_user_*.py, test_email_senders.py, test_*settings.py
 └── forums/
     ├── conftest.py              # Factory fixtures (add_user, add_forum, add_thread, add_post, get_user_client)
     ├── test_models.py           # Model unit tests
@@ -144,7 +144,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 - `user` (ForeignKey → AUTH_USER_MODEL)
 - Ordered by `added`
 - **Lifecycle hooks**:
-  - `notify_subscribers` (AFTER_CREATE, after the commit): queues `send_notifications_task` via Celery (skipped in CI). Tests need `django_capture_on_commit_callbacks(execute=True)` to see it run
+  - `notify_subscribers` (AFTER_CREATE, after the commit): queues `send_notifications_task` via Celery (skipped in CI). Only active subscribers whose address is verified (allauth's `EmailAddress`) get the mail, so test subscribers need `verify_email`. Tests need `django_capture_on_commit_callbacks(execute=True)` to see it run
 
 ### UserProfile
 - One-to-one with AUTH_USER_MODEL
@@ -214,6 +214,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. 
 ## Authentication & Permissions
 
 - `django-allauth` handles auth with email-only login (no username required)
+- **Email addresses must be confirmed** (`ACCOUNT_EMAIL_VERIFICATION = 'mandatory'` in `base.py`, every environment): signup mails a link and logs nobody in before it is used. allauth checks at every login, so an account made without signup (`createsuperuser`, the admin) gets the mail at its first login; in development the link is printed to the console. Invitation and GitHub signups arrive verified. Tests that log in through the login form need the `verify_email` fixture (root `conftest.py`); `force_login` and API tokens don't
 - GitHub OAuth social login is configured (`allauth.socialaccount.providers.github`)
 - Two-factor login (`allauth.mfa`, needs the `django-allauth[mfa]` extra): optional for every user, an authenticator app (TOTP) plus recovery codes, no passkeys (`MFA_SUPPORTED_TYPES` in `base.py`). Users turn it on under *Two-factor authentication* in the user menu; after that both password and GitHub logins ask for a code. allauth refuses setup while the account has an unverified email address
 - allauth's rate limits (failed logins, signups, password resets) are partly per client address. Production sets `ALLAUTH_TRUSTED_PROXY_COUNT = 1`, so the address comes from the last `X-Forwarded-For` entry (the one the reverse proxy adds) instead of the proxy's own. Production only: without a proxy the header can be forged. A second proxy in front needs a count of 2

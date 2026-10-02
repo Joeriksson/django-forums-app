@@ -100,9 +100,10 @@ The first `up` creates the `forum_proxy` network. Start (or restart) the Caddy s
 
 Then:
 
-1. **Set the site name.** Log in to `https://forum.example.com/<ADMIN_URL>/`, open *Sites*, and change `example.com` to `forum.example.com`. The login emails (password reset, address confirmation) use the site's name. Links in notification and invitation emails use `DJANGO_SITE_URL` instead.
-2. **Check email:** `docker compose -f docker-compose-prod.yml exec web python manage.py sendtestemail you@example.com`
-3. **Optional, GitHub login:** add a *Social application* for GitHub in the admin. Without one, the login page simply doesn't show the GitHub button.
+1. **Check email:** `docker compose -f docker-compose-prod.yml exec web python manage.py sendtestemail you@example.com`
+2. **Confirm the superuser's address.** Nobody logs in before confirming their email address, and `createsuperuser` doesn't confirm it. Log in at `https://forum.example.com/accounts/login/`: instead of logging you in, the site mails a confirmation link. Open it, confirm, and log in again. This is why email has to work first; see [Troubleshooting](#troubleshooting) if the mail doesn't arrive. Then set up two-factor authentication, see [section 8](#8-two-factor-authentication-for-staff-and-moderators).
+3. **Set the site name.** Log in to `https://forum.example.com/<ADMIN_URL>/`, open *Sites*, and change `example.com` to `forum.example.com`. The login emails (password reset, address confirmation) use the site's name. Links in notification and invitation emails use `DJANGO_SITE_URL` instead.
+4. **Optional, GitHub login:** add a *Social application* for GitHub in the admin. Without one, the login page simply doesn't show the GitHub button.
 
 ## 4. Updating
 
@@ -158,9 +159,9 @@ Inviting needs the `users.add_invitation` permission. Superusers have it.
 
 Everyone who can do more than a member needs an authenticator app, such as any TOTP app on a phone: staff, superusers, members of the Moderators group, and anyone given a permission in the admin. Without one they are sent to the setup page from every other page, so they can't moderate or reach the admin until it's done. Other users can turn two-factor authentication on if they like.
 
-**First login.** After `createsuperuser`, log in on the site (the admin uses the site's login page). You are sent to *Two-factor authentication* straight away: activate the authenticator app by scanning the QR code and entering a code. Then store the recovery codes somewhere safe, away from the phone. From then on every login, with a password or GitHub, asks for a code.
+**First login.** After `createsuperuser`, log in on the site (the admin uses the site's login page) and confirm the email address with the link the site mails you. At the next login you are sent to *Two-factor authentication* straight away: activate the authenticator app by scanning the QR code and entering a code. Then store the recovery codes somewhere safe, away from the phone. From then on every login, with a password or GitHub, asks for a code.
 
-**New staff members and moderators** set up the authenticator app first, as an ordinary member (*Two-factor authentication* in the user menu), and get their rights after that. The admin refuses to give staff status, a group or a permission to an account without one: otherwise anyone with that account's password could set up their own app and use the rights. The *Two-factor* column in the admin's user list shows who has one. An account that signed up on the site must have confirmed its email address first (the link in the signup email); two-factor setup is refused until then.
+**New staff members and moderators** set up the authenticator app first, as an ordinary member (*Two-factor authentication* in the user menu), and get their rights after that. The admin refuses to give staff status, a group or a permission to an account without one: otherwise anyone with that account's password could set up their own app and use the rights. The *Two-factor* column in the admin's user list shows who has one. Every account has confirmed its email address by then, since nobody logs in without it, so two-factor setup is never refused for that reason.
 
 The first superuser is the exception, since `createsuperuser` doesn't go through the admin: set its authenticator app up right after creating it.
 
@@ -223,6 +224,8 @@ After the first deployment with this setup, check that lines arrive: `journalctl
 | Every page returns **400 Bad Request** | The domain isn't in `DJANGO_ALLOWED_HOSTS` |
 | Forms fail with **CSRF verification failed** | Same: `CSRF_TRUSTED_ORIGINS` is built from `DJANGO_ALLOWED_HOSTS` |
 | Endless redirect loop | The proxy doesn't send `X-Forwarded-Proto: https` |
+| Login answers that a confirmation email was sent, but none arrives | The account's address isn't confirmed yet and the mail failed: check `logs web` and the SMTP settings, then log in again for a new mail. As a last resort set `DJANGO_EMAIL_CONSOLE=true`, restart, log in and take the link from `logs web`; then set it back |
+| A user created in the admin can't log in | Same: their first login mails them a confirmation link. Invited users don't need one |
 | Invitation has no *Sent* time | The email failed (it's retried 3 times): check `logs celery` and the SMTP settings, then use *Resend invitation* |
 | Links in notification emails point to the wrong address | `DJANGO_SITE_URL` in `.env` is wrong; fix it and restart |
 | Invitation links point to the wrong address | `DJANGO_SITE_URL` is wrong; fix it, restart, and use *Resend invitation* |

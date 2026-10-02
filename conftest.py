@@ -2,6 +2,7 @@ import logging
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
+from allauth.account.models import EmailAddress
 from allauth.mfa.totp.internal import auth as totp
 from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
@@ -72,6 +73,19 @@ def add_totp(db):
         return secret
 
     return _add_totp
+
+
+@pytest.fixture
+def verify_email(db):
+    """Mark a user's address as verified, as the confirmation link does: needed to log in."""
+
+    def _verify_email(user):
+        EmailAddress.objects.update_or_create(
+            user=user, email=user.email, defaults={'primary': True, 'verified': True}
+        )
+        return user
+
+    return _verify_email
 
 
 @pytest.fixture

@@ -114,7 +114,8 @@ def test_staff_with_authenticator_app_reaches_admin(client, staff, add_totp):
     assert client.get(ADMIN_INDEX).status_code == 200
 
 
-def test_staff_logs_in_to_admin_with_password_and_code(client, staff, add_totp):
+def test_staff_logs_in_to_admin_with_password_and_code(client, staff, add_totp, verify_email):
+    verify_email(staff)
     secret = add_totp(staff)
 
     resp = client.post(
@@ -324,7 +325,8 @@ def test_remove_mfa_deletes_the_users_authenticators(staff, member, add_totp):
     assert Authenticator.objects.filter(user=member).exists()
 
 
-def test_remove_mfa_lets_the_user_log_in_with_password_only(client, staff, add_totp):
+def test_remove_mfa_lets_the_user_log_in_with_password_only(client, staff, add_totp, verify_email):
+    verify_email(staff)
     add_totp(staff)
     call_command('remove_mfa', staff.email)
 
