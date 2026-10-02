@@ -20,13 +20,16 @@ PRODUCTION_ENV_VARS = [
     'DJANGO_SITE_URL',
 ]
 
+# 50 characters, as long as the shortest key production accepts
+STRONG_KEY = 'test-only-k3y-9fQ2xLw7Zr4TbV8mNc1HdJ6sPgY0aEuRiOqX'
+
 
 @pytest.fixture
 def load_production(monkeypatch):
     """
     Import project.settings.production fresh with the given env vars.
     Console email is allowed unless a test sets DJANGO_EMAIL_CONSOLE itself,
-    and DJANGO_SITE_URL has a valid value unless a test sets it.
+    and DJANGO_SITE_URL and SECRET_KEY have valid values unless a test sets them.
     """
 
     def _load(**env):
@@ -35,6 +38,7 @@ def load_production(monkeypatch):
         env = {
             'DJANGO_EMAIL_CONSOLE': 'true',
             'DJANGO_SITE_URL': 'https://forum.example.com',
+            'SECRET_KEY': STRONG_KEY,
             **env,
         }
         for name, value in env.items():
@@ -212,3 +216,38 @@ def test_api_throttles_count_the_visitor_behind_the_proxy(load_production):
     assert production.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] == base.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']
     # Without a proxy the header is whatever the client sends: ignore it
     assert base.REST_FRAMEWORK['NUM_PROXIES'] == 0
+
+
+def test_strong_secret_key_is_accepted(load_production):
+    assert len(STRONG_KEY) == 50
+
+    assert load_production().SECRET_KEY == STRONG_KEY
+
+
+@pytest.mark.parametrize(
+    'key',
+    [
+        '',
+        'change-me',
+        STRONG_KEY[:49],
+        'ab' * 30,
+        'django-insecure-' + STRONG_KEY,
+    ],
+    ids=['empty', 'placeholder', 'too-short', 'few-characters', 'generated-insecure'],
+)
+def test_weak_secret_key_is_refused(load_production, key):
+    with pytest.raises(ImproperlyConfigured, match='SECRET_KEY') as error:
+        load_production(SECRET_KEY=key)
+
+    # The message must not show the key
+    assert key == '' or key not in str(error.value)
+
+
+def test_no_cross_origin_callers_in_production(load_production):
+    assert getattr(load_production(), 'CORS_ALLOWED_ORIGINS', []) == []
+
+
+def test_development_allows_the_local_frontend():
+    from project.settings import development
+
+    assert 'http://localhost:3000' in development.CORS_ALLOWED_ORIGINS

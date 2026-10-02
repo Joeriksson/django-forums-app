@@ -4,6 +4,20 @@ from .base import *
 
 DEBUG = False
 
+# Sessions and password reset links are signed with it: refuse to start
+# with a key that can be guessed. Same rules as Django's check security.W009, which is
+# only a warning and only runs with `check --deploy`.
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if (
+    len(SECRET_KEY) < 50
+    or len(set(SECRET_KEY)) < 5
+    or SECRET_KEY.startswith('django-insecure-')
+):
+    raise ImproperlyConfigured(
+        'Set SECRET_KEY to a random string of at least 50 characters, e.g. from: '
+        'python -c "import secrets; print(secrets.token_urlsafe(50))"'
+    )
+
 
 # Comma-separated hosts the app is served on, e.g. 'forum.example.com'
 ALLOWED_HOSTS = [
