@@ -211,8 +211,9 @@ ACCOUNT_UNIQUE_EMAIL = True
 # Two-factor login: an authenticator app (TOTP) plus recovery codes. No passkeys.
 MFA_SUPPORTED_TYPES = ['totp', 'recovery_codes']
 MFA_TOTP_ISSUER = 'Wildvasa Forums'
-# Staff need an authenticator app for the admin and /api/users/, and their API tokens
-# are refused (users/security.py, api/authentication.py). On unless switched off.
+# Staff, moderators and anyone else with a permission need an authenticator app to use
+# the site, and their API tokens are refused (users/security.py, api/authentication.py).
+# On unless switched off.
 STAFF_REQUIRE_MFA = env_bool('DJANGO_STAFF_REQUIRE_MFA', True)
 # New accounts, by email or GitHub, only while DJANGO_SIGNUP_OPEN is true. Closed by
 # default, so a missing variable never opens a production forum by accident.

@@ -191,7 +191,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 /api/forums/               → ForumViewSet (read for anyone; write needs forums.add/change/delete_forum)
 /api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly); ?forum=<id> filters
 /api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly); ?thread=<id> filters
-/api/users/                → UserViewSet (read-only, staff only via IsAdminUser; staff need an authenticator app)
+/api/users/                → UserViewSet (read-only, staff only via IsAdminUser)
 /api/schema/               → OpenAPI schema (YAML; ?format=openapi-json for JSON)
 
 /accounts/invite/<key>/    → accept_invitation (valid link: opens signup for the invited address)
@@ -218,12 +218,12 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 - allauth's rate limits (failed logins, signups, password resets) are partly per client address. Production sets `ALLAUTH_TRUSTED_PROXY_COUNT = 1`, so the address comes from the last `X-Forwarded-For` entry (the one the reverse proxy adds) instead of the proxy's own. Production only: without a proxy the header can be forged. A second proxy in front needs a count of 2
 - allauth pages without a template of our own (the two-factor pages) get the site layout from `templates/allauth/layouts/base.html`, which extends `_base.html`
 - Session + Token authentication for the REST API. The API has no login page of its own (DRF's `api-auth/` would skip the two-factor step): log in on the site
-- **Staff must use two-factor authentication** while `STAFF_REQUIRE_MFA` is on (default; off in development):
+- **Staff and moderators must use two-factor authentication** while `STAFF_REQUIRE_MFA` is on (default; off in development). It applies to every privileged user (`users.security.is_privileged`): staff, superusers, and anyone holding a permission, directly or through a group such as Moderators. Members have no permissions:
   - `admin.site.login` is wrapped in allauth's `secure_admin_login` (`project/urls.py`), so the admin uses allauth's login with its code prompt
-  - `users.security.StaffMFAMiddleware` redirects staff without an authenticator app to `mfa_index`, on the admin and `/api/users/`. Recovery codes alone don't count
-  - `api.authentication.NonStaffTokenAuthentication` refuses tokens of staff accounts (403)
+  - `users.security.StaffMFAMiddleware` redirects a privileged user without an authenticator app to `mfa_index` from every page except those under `/accounts/` (login, logout, address confirmation, the two-factor pages); under `/api/` it answers 403 instead. Recovery codes alone don't count
+  - `api.authentication.NonStaffTokenAuthentication` refuses tokens of privileged accounts (403): they use the API with a session
   - `python manage.py remove_mfa <email>` deletes a user's authenticators (lost phone); the user then logs in with the password alone and sets it up again. Switching `DJANGO_STAFF_REQUIRE_MFA` off doesn't help there: login still asks for the code
-  - Tests: staff need the `add_totp` fixture (root `conftest.py`) to reach the admin; `get_user_client` gives staff a session instead of a token
+  - Tests: privileged users need the `add_totp` fixture (root `conftest.py`) to use the site; `get_user_client` gives them a session instead of a token
 - Permission checks: Django model permissions for forum creation and editing; `UserPassesTestMixin` for thread edit/delete and post delete (owner, or a user with `forums.change_thread` / `forums.delete_thread` / `forums.delete_post`)
 - **Moderators group**: created by migration `forums/0016_moderators_group` with exactly `change_thread`, `delete_thread` and `delete_post`, so members can edit and delete other users' threads and delete their posts, on the website and through the API. Add users to it in the Django admin
 - Custom API permission: `IsOwnerOrModeratorOrReadOnly` — safe methods allowed for anyone; write allowed for the owner (`obj.user == request.user`) or a user with the matching model permission (`change_<model>` for PUT/PATCH, `delete_<model>` for DELETE), same as the web views
@@ -257,7 +257,7 @@ Cache is invalidated automatically via `django-lifecycle` hooks on model save/de
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
-| `DJANGO_STAFF_REQUIRE_MFA` | Staff need an authenticator app for the admin and `/api/users/`, and their API tokens are refused (`settings.STAFF_REQUIRE_MFA`). Default `true`; `development.py` defaults to `false` |
+| `DJANGO_STAFF_REQUIRE_MFA` | Staff, moderators and anyone else with a permission need an authenticator app to use the site, and their API tokens are refused (`settings.STAFF_REQUIRE_MFA`). Default `true`; `development.py` defaults to `false` |
 | `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()` and `Post.notify_subscribers`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
 | `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
