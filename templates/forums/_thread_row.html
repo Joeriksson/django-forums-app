@@ -1,0 +1,32 @@
+{% load when %}
+{% comment %}
+One thread in a list. Pass "thread" (with post_count); "show_forum" adds the forum's name,
+"show_actions" the edit and delete links for the thread's author and for moderators.
+{% endcomment %}
+<li class="row">
+    <a class="row__title" href="{% url 'thread_detail' thread.id %}">{{ thread.title }}</a>
+    <p class="row__meta">
+        {% include 'forums/_person.html' with person=thread.user %}
+        <span>
+            {% if show_forum %}in <a href="{% url 'forum_detail' thread.forum_id %}">{{ thread.forum.title }}</a>,{% endif %}
+            {% if thread.post_count %}
+                {{ thread.post_count }} repl{{ thread.post_count|pluralize:"y,ies" }},
+                last {{ thread.last_activity|default:thread.added|when }}
+            {% else %}
+                no replies yet, started {{ thread.added|when }}
+            {% endif %}
+        </span>
+    </p>
+    {% if show_actions %}
+        {% if thread.user == user or perms.forums.change_thread or perms.forums.delete_thread %}
+            <p class="row__actions">
+                {% if thread.user == user or perms.forums.change_thread %}
+                    <a href="{% url 'thread_update' thread.id %}">Edit</a>
+                {% endif %}
+                {% if thread.user == user or perms.forums.delete_thread %}
+                    <a href="{% url 'thread_delete' thread.forum_id thread.id %}">Delete</a>
+                {% endif %}
+            </p>
+        {% endif %}
+    {% endif %}
+</li>

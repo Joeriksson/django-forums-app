@@ -1,6 +1,7 @@
 import pytest
 from django.core.cache import cache
 from django.urls import reverse
+from pytest_django.asserts import assertContains
 
 from forums.views import ForumDetail
 
@@ -76,11 +77,11 @@ def test_forum_page_with_one_page_has_no_page_links(client, forum, author, add_t
 @pytest.mark.django_db
 def test_forum_page_counts_a_new_post_at_once(client, forum, author, add_thread, add_post):
     thread = add_thread(title='A thread', text='Text', forum=forum, user=author)
-    assert 'number of\n                            posts: 0' in forum_page(client, forum).content.decode()
+    assertContains(forum_page(client, forum), 'no replies yet')
 
     add_post(text='A post', thread=thread, user=author)
 
-    assert 'number of\n                            posts: 1' in forum_page(client, forum).content.decode()
+    assertContains(forum_page(client, forum), '1 reply,')
 
 
 @pytest.mark.django_db
@@ -105,3 +106,63 @@ def test_forum_page_keeps_no_user_data_in_the_cache(client, forum, author, add_t
     forum_page(client, forum)
 
     assert cache.get(f'thread_objects_forum_{forum.pk}') is None
+
+
+# The list of forums
+
+
+@pytest.mark.django_db
+def test_forum_list_shows_each_forum_with_its_thread_count(client, forum, author, add_forum, add_thread):
+    empty = add_forum(title='Quiet corner', description='Nothing here yet')
+    for number in range(2):
+        add_thread(title=f'Thread {number}', text='Text', forum=forum, user=author)
+
+    resp = client.get(reverse('forum_list'))
+
+    assertContains(resp, 'General Forum')
+    assertContains(resp, 'This is a general forum')
+    assertContains(resp, '2 threads')
+    assertContains(resp, 'Quiet corner')
+    assertContains(resp, 'No threads yet')
+    assertContains(resp, f'href="{reverse("forum_detail", args=[empty.pk])}"')
+
+
+@pytest.mark.django_db
+def test_forum_list_counts_one_thread_in_the_singular(client, forum, author, add_thread):
+    add_thread(title='Only one', text='Text', forum=forum, user=author)
+
+    assertContains(client.get(reverse('forum_list')), '1 thread<')
+
+
+@pytest.mark.django_db
+def test_forum_list_uses_one_query_however_many_forums(
+    client, author, add_forum, add_thread, django_assert_num_queries
+):
+    for number in range(4):
+        add_thread(title='T', text='Text', forum=add_forum(title=f'Forum {number}', description='D'), user=author)
+
+    # The forums with their thread counts, after six for the logged-in reader
+    with django_assert_num_queries(6 + 1):
+        client.get(reverse('forum_list'))
+
+
+@pytest.mark.django_db
+def test_forum_list_has_a_search_form(client, forum):
+    resp = client.get(reverse('forum_list'))
+
+    assertContains(resp, f'action="{reverse("search_results")}"')
+    assertContains(resp, 'name="q"')
+
+
+@pytest.mark.django_db
+def test_forum_page_names_the_starter_and_counts_replies(client, forum, author, add_thread, add_post):
+    thread = add_thread(title='With replies', text='Text', forum=forum, user=author)
+    add_thread(title='Without', text='Text', forum=forum, user=author)
+    for _ in range(2):
+        add_post(text='A post', thread=thread, user=author)
+
+    resp = forum_page(client, forum)
+
+    assertContains(resp, f'Member {author.pk}')
+    assertContains(resp, '2 replies')
+    assertContains(resp, 'no replies yet')

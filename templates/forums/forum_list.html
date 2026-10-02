@@ -1,43 +1,40 @@
 {% extends '_base.html' %}
-{% load crispy_forms_tags %}
+
+{% block title %}Forums{% endblock title %}
 
 {% block content %}
-
-    <div class="p-3">
-        <div class="pb-3 d-flex justify-content-between">
-            <div>
-                {% if perms.forums.add_forum %}
-                    <a href="{% url 'forum_add' %}" class="btn btn-outline-secondary">New forum</a>
-                {% endif %}
-            </div>
-            <ul class="navbar-nav ml-auto">
-                <div class="font-weight-light p-1">
-
-                    <form action={% url 'search_results' %} method='get' class="form-inline ml-auto">
-                        {{ form|crispy }}
-                    </form>
-                </div>
-            </ul>
-
-        </div>
-
-
-        <div>
-            {% for forum in forum_list %}
-                <a href="{% url 'forum_detail' forum.id %}"
-                   class="list-group-item list-group-item-action list-group-flush">
-                    <div class="bg-info text-white rounded p-3 border border-dark">
-                        <h3>{{ forum.title }}</h3>
-                    </div>
-                    <div class="p-3 pb-3">
-                        <i>{{ forum.description }}</i>
-                    </div>
-                    <p class="p-3 font-weight-lighter"><small>number of
-                        threads: {{ forum.threads.count }}</small></p>
-
-                </a>
-
-            {% endfor %}
-        </div>
+    <div class="page-head">
+        <h1>Forums</h1>
+        {% if perms.forums.add_forum %}
+            <a class="button button--quiet" href="{% url 'forum_add' %}">New forum</a>
+        {% endif %}
     </div>
+
+    <form class="search" action="{% url 'search_results' %}" method="get" role="search">
+        <label for="search-q">Search threads and posts</label>
+        <div class="search__row">
+            <input id="search-q" type="search" name="q" minlength="3" maxlength="200" required>
+            <button class="button" type="submit">Search</button>
+        </div>
+    </form>
+
+    {% if forum_list %}
+        <ul class="rows">
+            {% for forum in forum_list %}
+                <li class="row">
+                    <a class="row__title" href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a>
+                    <p class="row__text">{{ forum.description }}</p>
+                    <p class="row__meta">
+                        {% if forum.thread_count %}
+                            <span>{{ forum.thread_count }} thread{{ forum.thread_count|pluralize }}</span>
+                        {% else %}
+                            <span>No threads yet</span>
+                        {% endif %}
+                    </p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty">There are no forums yet.{% if perms.forums.add_forum %} <a href="{% url 'forum_add' %}">Add the first one</a>.{% endif %}</p>
+    {% endif %}
 {% endblock %}

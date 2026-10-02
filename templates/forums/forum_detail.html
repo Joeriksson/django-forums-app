@@ -1,71 +1,41 @@
 {% extends '_base.html' %}
 
+{% block title %}{{ forum.title }}{% endblock title %}
+
 {% block content %}
-
-    <div class="p-3">
-        <div class="pb-3">
-            <a href="{% url 'forum_list' %}" class="btn btn-outline-secondary">Back to forums</a>
-            {% if perms.forums.change_forum %}
-                <a href="{% url 'forum_update' forum.id %}" class="btn btn-outline-secondary">Update forum details</a>
-            {% endif %}
-            {% if user.is_authenticated %}
-                <a href="{% url 'thread_add' forum.id %}" class="btn btn-outline-secondary float-right">New thread</a>
-            {% endif %}
-        </div>
-        <div class="bg-info text-white rounded p-3 border border-dark">
-            <h3>{{ forum.title }}</h3>
-        </div>
-        <div class="p-3 pb-3">
-            <i>{{ forum.description }}</i>
-        </div>
-
-{#        {% for thread in forum.threads.all %}#}
-        {% for thread in threads %}
-            <a href="{% url 'thread_detail' thread.id %}" class="list-group-item-action">
-                <div class="card bg-light mb-3">
-
-                    <div class="card-header"><strong>{{ thread.title }}</strong>
-
-                        <!-- Show delete button if user is thread starter -->
-                        {% if thread.user == user or perms.forums.delete_thread %}
-                            <a href="{% url 'thread_delete' forum.id thread.id %}"
-                               class="btn btn-outline-secondary float-right m-2">Delete thread</a>
-                        {% endif %}
-                        {% if thread.user == user or perms.forums.change_thread %}
-                            <a href="{% url 'thread_update' thread.id %}"
-                               class="btn btn-outline-secondary float-right m-2">Update thread</a>
-                        {% endif %}
-
-                        <p class="card-text font-weight-lighter"><small>number of
-                            posts: {{ thread.post_count }}</small></p>
-
-                    </div>
-                    <div class="card-body">
-
-                        <p class="card-text font-weight-lighter"><small>started by:
-                            {{ thread.user.display_name }}
-                            on {{ thread.added }}</small></p>
-                    </div>
-                </div>
-            </a>
-
-        {% endfor %}
-
-        {% if threads.has_other_pages %}
-            <nav aria-label="Pages of threads" class="d-flex justify-content-between align-items-center">
-                <div>
-                    {% if threads.has_previous %}
-                        <a href="?page={{ threads.previous_page_number }}" class="btn btn-outline-secondary">Newer threads</a>
-                    {% endif %}
-                </div>
-                <span>Page {{ threads.number }} of {{ threads.paginator.num_pages }}</span>
-                <div>
-                    {% if threads.has_next %}
-                        <a href="?page={{ threads.next_page_number }}" class="btn btn-outline-secondary">Older threads</a>
-                    {% endif %}
-                </div>
-            </nav>
-        {% endif %}
-
+    <p class="trail"><a href="{% url 'forum_list' %}">Forums</a></p>
+    <div class="page-head">
+        <h1>{{ forum.title }}</h1>
+        <a class="button" href="{% url 'thread_add' forum.id %}">New thread</a>
     </div>
+    <p class="lead">{{ forum.description }}</p>
+    {% if perms.forums.change_forum %}
+        <p><a href="{% url 'forum_update' forum.id %}">Edit this forum</a></p>
+    {% endif %}
+
+    {% if threads %}
+        <ul class="rows">
+            {% for thread in threads %}
+                {% include 'forums/_thread_row.html' with show_actions=True %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty">No threads here yet. <a href="{% url 'thread_add' forum.id %}">Start the first one</a>.</p>
+    {% endif %}
+
+    {% if threads.has_other_pages %}
+        <nav class="pages" aria-label="Pages of threads">
+            {% if threads.has_previous %}
+                <a href="?page={{ threads.previous_page_number }}">Newer threads</a>
+            {% else %}
+                <span></span>
+            {% endif %}
+            <span>Page {{ threads.number }} of {{ threads.paginator.num_pages }}</span>
+            {% if threads.has_next %}
+                <a href="?page={{ threads.next_page_number }}">Older threads</a>
+            {% else %}
+                <span></span>
+            {% endif %}
+        </nav>
+    {% endif %}
 {% endblock %}
