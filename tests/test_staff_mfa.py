@@ -7,17 +7,21 @@ from allauth.mfa.models import Authenticator
 from allauth.mfa.recovery_codes.internal.auth import RecoveryCodes
 from allauth.mfa.totp.internal import auth as totp
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.core.management import CommandError, call_command
 from django.urls import reverse
 from pytest_django.asserts import assertContains, assertRedirects
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
+from forums.models import Forum, Thread
+
 User = get_user_model()
 
 PASSWORD = 'testpass123'
 ADMIN_INDEX = reverse('admin:index')
 MFA_INDEX = reverse('mfa_index')
+FORUM_LIST = reverse('forum_list')
 
 
 def totp_code(secret):
@@ -44,6 +48,27 @@ def member(db):
 
 
 @pytest.fixture
+def moderator(member):
+    member.groups.add(Group.objects.get(name='Moderators'))
+    return member
+
+
+@pytest.fixture(params=['superuser', 'staff', 'moderator', 'permission'])
+def privileged(request, member):
+    """A user who can do more than a member, in each of the ways an account can get there."""
+    if request.param == 'superuser':
+        member.is_superuser = True
+    elif request.param == 'staff':
+        member.is_staff = True
+    elif request.param == 'moderator':
+        member.groups.add(Group.objects.get(name='Moderators'))
+    else:
+        member.user_permissions.add(Permission.objects.get(codename='add_forum'))
+    member.save()
+    return member
+
+
+@pytest.fixture
 def mfa_not_required(settings):
     settings.STAFF_REQUIRE_MFA = False
 
@@ -64,7 +89,7 @@ def test_staff_without_authenticator_app_is_sent_to_set_it_up(client, staff):
     resp = client.get(ADMIN_INDEX, follow=True)
 
     assertRedirects(resp, MFA_INDEX)
-    assertContains(resp, 'Staff accounts need two-factor authentication')
+    assertContains(resp, 'need two-factor authentication')
 
 
 def test_admin_subpage_is_closed_too(client, staff):
@@ -105,12 +130,56 @@ def test_staff_logs_in_to_admin_with_password_and_code(client, staff, add_totp):
     assert client.get(ADMIN_INDEX).status_code == 200
 
 
-def test_staff_without_authenticator_app_can_use_the_rest_of_the_site(client, staff):
-    client.force_login(staff)
+# The rest of the site: staff, superusers, moderators and anyone given a permission
 
-    assert client.get(reverse('home')).status_code == 200
-    assert client.get(MFA_INDEX).status_code == 200
-    assert client.get(reverse('forum_list')).status_code == 200
+
+@pytest.mark.parametrize('url_name', ['home', 'forum_list'])
+def test_privileged_user_without_authenticator_app_is_sent_to_set_it_up(
+    client, privileged, url_name
+):
+    client.force_login(privileged)
+
+    resp = client.get(reverse(url_name), follow=True)
+
+    assertRedirects(resp, MFA_INDEX)
+    assertContains(resp, 'need two-factor authentication')
+
+
+def test_moderator_without_authenticator_app_cannot_moderate(client, moderator, staff):
+    forum = Forum.objects.create(title='Forum', description='A forum')
+    thread = Thread.objects.create(title='Thread', text='Text', forum=forum, user=staff)
+    client.force_login(moderator)
+
+    resp = client.post(reverse('thread_delete', args=[forum.pk, thread.pk]))
+
+    assertRedirects(resp, MFA_INDEX)
+    assert Thread.objects.filter(pk=thread.pk).exists()
+
+
+@pytest.mark.parametrize('url_name', ['mfa_index', 'account_logout', 'account_email'])
+def test_account_pages_stay_open_to_set_it_up(client, privileged, url_name):
+    client.force_login(privileged)
+
+    assert client.get(reverse(url_name)).status_code == 200
+
+
+def test_privileged_user_with_authenticator_app_uses_the_site(client, privileged, add_totp):
+    add_totp(privileged)
+    client.force_login(privileged)
+
+    assert client.get(FORUM_LIST).status_code == 200
+
+
+def test_member_needs_no_authenticator_app(client, member):
+    client.force_login(member)
+
+    assert client.get(FORUM_LIST).status_code == 200
+
+
+def test_switch_off_lets_privileged_users_in(client, privileged, mfa_not_required):
+    client.force_login(privileged)
+
+    assert client.get(FORUM_LIST).status_code == 200
 
 
 def test_staff_with_unconfirmed_address_cannot_set_up_yet(client, staff):
@@ -175,11 +244,26 @@ def test_tests_run_with_the_requirement_on(settings):
 # API
 
 
-def test_api_users_needs_authenticator_app(staff):
+@pytest.mark.parametrize('url', ['/api/users/', '/api/forums/'])
+def test_api_needs_authenticator_app(staff, url):
     client = APIClient()
     client.force_login(staff)
 
-    assertRedirects(client.get('/api/users/'), MFA_INDEX, fetch_redirect_response=False)
+    resp = client.get(url)
+
+    # The API answers with an error, not with a redirect to a page
+    assert resp.status_code == 403
+    assert 'need two-factor authentication' in resp.json()['detail']
+
+
+def test_api_closed_to_moderator_without_authenticator_app(moderator, staff):
+    forum = Forum.objects.create(title='Forum', description='A forum')
+    thread = Thread.objects.create(title='Thread', text='Text', forum=forum, user=staff)
+    client = APIClient()
+    client.force_login(moderator)
+
+    assert client.delete(f'/api/threads/{thread.pk}/').status_code == 403
+    assert Thread.objects.filter(pk=thread.pk).exists()
 
 
 def test_api_users_open_to_staff_with_authenticator_app(staff, add_totp):
@@ -199,7 +283,16 @@ def test_staff_token_is_refused(staff, add_totp, url):
 
     # 403, not 401: DRF answers for its first authentication class (session)
     assert resp.status_code == 403
-    assert 'Staff accounts cannot use API tokens' in resp.json()['detail']
+    assert 'cannot use API tokens' in resp.json()['detail']
+
+
+def test_privileged_token_is_refused(privileged, add_totp):
+    add_totp(privileged)
+
+    resp = token_client(privileged).get('/api/forums/')
+
+    assert resp.status_code == 403
+    assert 'cannot use API tokens' in resp.json()['detail']
 
 
 def test_member_token_still_works(member):
@@ -211,6 +304,10 @@ def test_member_token_still_works(member):
 
 def test_switch_off_accepts_staff_token(staff, mfa_not_required):
     assert token_client(staff).get('/api/users/').status_code == 200
+
+
+def test_switch_off_accepts_privileged_token(privileged, mfa_not_required):
+    assert token_client(privileged).get('/api/forums/').status_code == 200
 
 
 # manage.py remove_mfa
