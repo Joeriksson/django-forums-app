@@ -3,6 +3,13 @@ from django.core.cache import cache
 from django.urls import reverse
 
 
+@pytest.fixture
+def client(client, reader):
+    """Reading needs a login: the pages are requested by a member."""
+    client.force_login(reader)
+    return client
+
+
 @pytest.mark.parametrize('run', [1, 2])
 def test_cache_starts_empty_in_every_test(run):
     # Each run leaves a key behind; the shared clear_cache fixture must remove it

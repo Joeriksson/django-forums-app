@@ -2,6 +2,8 @@ import pytest
 from django.urls import NoReverseMatch, reverse
 from rest_framework.test import APIClient
 
+from tests.forums.clients import reader_client
+
 
 def test_api_has_no_login_page_of_its_own():
     # DRF's login view would skip the two-factor step: log in on the site instead
@@ -12,14 +14,14 @@ def test_api_has_no_login_page_of_its_own():
 
 @pytest.mark.django_db
 def test_browsable_api_page_loads_without_login_link():
-    resp = APIClient().get('/api/forums/', HTTP_ACCEPT='text/html')
+    resp = reader_client().get('/api/forums/', HTTP_ACCEPT='text/html')
 
     assert resp.status_code == 200
 
 
 @pytest.mark.django_db
 def test_schema_endpoint_describes_the_api():
-    client = APIClient()
+    client = reader_client()
 
     yaml_resp = client.get('/api/schema/')
     json_resp = client.get('/api/schema/', {'format': 'openapi-json'})

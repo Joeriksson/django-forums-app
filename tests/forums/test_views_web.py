@@ -35,7 +35,8 @@ def post(add_post, thread, author):
 
 
 @pytest.mark.django_db
-def test_forum_list_page(client, forum):
+def test_forum_list_page(client, forum, reader):
+    client.force_login(reader)
     resp = client.get(reverse('forum_list'))
 
     assert resp.status_code == 200
@@ -45,7 +46,8 @@ def test_forum_list_page(client, forum):
 
 
 @pytest.mark.django_db
-def test_forum_detail_page(client, thread):
+def test_forum_detail_page(client, thread, reader):
+    client.force_login(reader)
     resp = client.get(reverse('forum_detail', args=(thread.forum.id,)))
 
     assert resp.status_code == 200
@@ -69,7 +71,8 @@ def test_thread_detail_page(client, post, author):
 
 
 @pytest.mark.django_db
-def test_thread_detail_renders_markdown_and_strips_scripts(client, add_post, thread, author):
+def test_thread_detail_renders_markdown_and_strips_scripts(client, add_post, thread, author, reader):
+    client.force_login(reader)
     add_post(text='**bold**\n\n<script>alert(1)</script>', thread=thread, user=author)
 
     resp = client.get(reverse('thread_detail', args=(thread.id,)))

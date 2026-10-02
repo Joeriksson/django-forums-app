@@ -27,13 +27,13 @@ from .throttling import PreviewThrottle, SearchThrottle, allowed, posting_allowe
 from users.audit import log_moderation
 
 
-class ForumsList(ListView, FormView):
+class ForumsList(LoginRequiredMixin, ListView, FormView):
     model = Forum
     context_object_name = 'forum_list'
     form_class = SearchForm
 
 
-class ForumDetail(DetailView):
+class ForumDetail(LoginRequiredMixin, DetailView):
     model = Forum
     context_object_name = 'forum'
     paginate_by = 20
@@ -81,7 +81,7 @@ def thread_page_url(thread_id, page=None):
     return url
 
 
-class ThreadDetail(DetailView):
+class ThreadDetail(LoginRequiredMixin, DetailView):
     model = Thread
     context_object_name = 'thread'
     paginate_by = 25
@@ -277,7 +277,7 @@ class ThreadNotification(LoginRequiredMixin, View):
         return HttpResponseRedirect(thread_page_url(thread.pk, request.POST.get('page')))
 
 
-class SearchResultsView(ListView):
+class SearchResultsView(LoginRequiredMixin, ListView):
     model = Post
     # template_name_suffix = '_search_results_form'
     template_name = 'forums/post_search_results_form.html'

@@ -314,8 +314,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # REST Framework
 REST_FRAMEWORK = {
+    # The forum is for its members: nothing in the API is open to visitors, the API root
+    # and the schema included. The viewsets add their own rules on top (api/views.py).
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',

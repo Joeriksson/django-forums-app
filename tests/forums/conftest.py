@@ -50,6 +50,14 @@ def add_user():
     return _add_user
 
 
+@pytest.fixture
+def reader(db):
+    """A plain member: reading the forum needs a login."""
+    return get_user_model().objects.create_user(
+        username='reader', email='reader@example.com', password='testpass123'
+    )
+
+
 @pytest.fixture(scope="function")
 def add_super_user():
     def _add_super_user(username, email, password):
