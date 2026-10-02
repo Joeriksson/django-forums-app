@@ -95,6 +95,7 @@ project/           # Django project settings and configuration
   celery.py        # Celery app definition
   urls.py          # Root URL configuration
   utils.py         # send_mail helper (BCC via the configured email backend)
+  middleware.py    # ContentSecurityPolicyMiddleware: the CSP header from SECURE_CSP
 
 forums/            # Core app — Forum, Thread, Post, UpVote, Notification, UserProfile models
   models.py        # All core models; a django-lifecycle hook on Post sends the notifications
@@ -284,6 +285,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
+| `DJANGO_CSP_REPORT_ONLY` | `true` makes the Content Security Policy report-only (browsers log violations instead of blocking). Default `false`: enforced everywhere, development and tests included |
 | `DJANGO_API_ENABLED` | `true` mounts the REST API under `/api/` (`settings.API_ENABLED`, read by `project/urls.py`). Off by default, so production has no API unless asked for: every `/api/` path is a 404. `development.py` defaults to on and `test.py` sets it on. The `api` app, DRF and the token table stay installed either way, and the website's posting, search and preview limits (DRF throttles) don't depend on it |
 | `DJANGO_STAFF_REQUIRE_MFA` | Staff, moderators and anyone else with a permission need an authenticator app to use the site, and their API tokens are refused (`settings.STAFF_REQUIRE_MFA`). Default `true`; `development.py` defaults to `false` |
 | `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()` and `Post.notify_subscribers`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. |
@@ -342,6 +344,7 @@ A `prod-image` job builds the production image, starts it with production settin
 
 ## Architecture Notes
 
+- **Content Security Policy**: `project/middleware.py` adds the header to every response from `SECURE_CSP` in `base.py` (enforced; `DJANGO_CSP_REPORT_ONLY=true` moves the policy to `SECURE_CSP_REPORT_ONLY`, which only reports in the browser console). Only our own origin, plus the CDN hosts in `_base.html` for scripts and styles, `data:` and `https:` images, GitHub as a form target (the login redirect), no framing, and no `'unsafe-inline'`. Anything loaded from another site (a font, a CDN, an embedded frame) must be added to `_CSP` or browsers block it; `tests/test_csp.py` fails if `_base.html` loads from a host the policy doesn't list. The settings are named like Django 6's built-in CSP support, which replaces the middleware at that upgrade. Known and accepted: Django's debug 404 page and DRF's browsable API page each lose an inline style. The tests don't run a browser: after changing the policy or adding scripts, open the pages and look for violations in the console
 - **No inline code in templates**: no `<script>` without `src`, no `<style>` block, no `style=` or `on...=` attribute (`tests/test_no_inline_code.py` checks the project templates). Scripts and styles go into files under `static/` (`css/base.css` for every page, `css/thread.css` and `js/thread.js` for the thread page, `css/editor.css` for the editor); pass values to a script with `data-` attributes, as `_editor.html` does. Font Awesome's `js/all.js` would add its styles to the page as an inline `<style>`: `data-auto-add-css="false"` in `_base.html` stops that, and `css/fontawesome-svg.css` holds those styles (copied from `baseStyles` in `all.js`; replace both files together: `tests/test_static_files.py` fails if they differ)
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly

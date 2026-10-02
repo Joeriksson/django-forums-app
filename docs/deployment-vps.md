@@ -47,6 +47,7 @@ That is all the app needs:
 
 - **HTTPS and HTTP→HTTPS redirects:** Caddy handles both automatically for the domain.
 - **`X-Forwarded-Proto`:** Caddy sends it by default. Django relies on it (`SECURE_PROXY_SSL_HEADER`) to know the request was HTTPS. Without it, `SECURE_SSL_REDIRECT` causes a redirect loop.
+- **Content Security Policy:** the app sends the `Content-Security-Policy` header itself. Don't add one in the proxy: with two policies the browser applies both, and anything either one forbids is blocked.
 - **`X-Forwarded-For`:** Caddy sends the visitor's address in it by default, and drops any value the visitor sent. The login rate limits (failed logins, signups, password resets) count per address from its last entry (`ALLAUTH_TRUSTED_PROXY_COUNT = 1` in `production.py`). This assumes exactly one proxy in front of the app: with a second one before Caddy (a CDN, say), raise the count to 2, or the limits count every visitor as that proxy.
 - **`Host` header:** Caddy passes the original host through by default. It must match `DJANGO_ALLOWED_HOSTS`.
 - **HSTS:** Django sends the `Strict-Transport-Security` header. Don't add one in Caddy as well.
@@ -87,6 +88,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `DJANGO_SIGNUP_OPEN` | `false` | `true` lets anyone create an account, by email or GitHub. While it's closed, the signup page says so and the navbar hides its link; existing users can still log in. Create accounts in the admin meanwhile |
 | `DJANGO_STAFF_REQUIRE_MFA` | `true` | Staff and moderators need two-factor authentication to use the site. Leave it on; see [Two-factor authentication for staff and moderators](#8-two-factor-authentication-for-staff-and-moderators) |
 | `DJANGO_API_ENABLED` | `false` | `true` switches the REST API under `/api/` on. The website doesn't use it; leave it off unless something of yours calls the API. While it's off, every `/api/` path answers 404 |
+| `DJANGO_CSP_REPORT_ONLY` | `false` | `true` stops the Content Security Policy from blocking anything: browsers only log, in their console, what it would have blocked. A temporary way out if the policy breaks a page |
 | `DJANGO_EMAIL_CONSOLE` | `false` | `true` prints mail to the logs instead of using SMTP. Only for trying the stack out |
 
 **Don't set** `DJANGO_SETTINGS_MODULE`, `ENVIRONMENT`, `DATABASE_URL` or `REDIS_URL`: the compose file sets them, and its values take priority.
@@ -271,6 +273,7 @@ After the first deployment with this setup, check that lines arrive: `journalctl
 | Containers exit with `ImproperlyConfigured: Set DJANGO_SITE_URL` | It's missing, or isn't an `https` address without a path |
 | **502 Bad Gateway** from Caddy | `web` isn't running, or Caddy isn't on `forum_proxy` (it was started before the network existed: restart the Caddy stack) |
 | Containers fail to start with `failed to initialize logging driver` | The host has no systemd journal: remove the `logging` lines from `docker-compose-prod.yml` |
+| Part of a page doesn't load or isn't styled, and the browser console says `Refused to load ...` or `violates the following Content Security Policy directive` | The page loads something the policy doesn't allow, usually a file from another site. Add the source to `_CSP` in `project/settings/base.py`; until that is deployed, `DJANGO_CSP_REPORT_ONLY=true` switches the blocking off |
 | `network forum_proxy ... has active endpoints` on `down` | Caddy is still attached; see [Updating](#4-updating) |
 
 Logs: `docker compose -f docker-compose-prod.yml logs -f web celery` (see [Logs and the security log](#9-logs-and-the-security-log))
