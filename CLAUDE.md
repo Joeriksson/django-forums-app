@@ -126,7 +126,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 
 ### Thread
 - `title` (CharField, max 300)
-- `text` (TextField — Markdown)
+- `text` (TextField — Markdown, max 20 000 characters)
 - `added`, `edited` (DateTimeField)
 - `forum` (ForeignKey → Forum)
 - `user` (ForeignKey → AUTH_USER_MODEL)
@@ -134,7 +134,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 - **Lifecycle hooks**: invalidates Redis cache key `thread_objects_forum_<forum_id>` on save/delete/create
 
 ### Post
-- `text` (TextField — Markdown)
+- `text` (TextField — Markdown, max 20 000 characters)
 - `upvotes` (IntegerField, default 0)
 - `added`, `edited` (DateTimeField)
 - `thread` (ForeignKey → Thread)
@@ -146,7 +146,8 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 
 ### UserProfile
 - One-to-one with AUTH_USER_MODEL
-- Fields: `first_name`, `last_name`, `bio`, `location`, `gender` (TextChoices), `web_site`, `github_url`, `signature`
+- Fields: `first_name`, `last_name`, `bio`, `location`, `gender` (TextChoices), `web_site`, `github_url`, `signature` (max 500 characters)
+- The `max_length` of the text fields and the signature (`MAX_TEXT_LENGTH`, `MAX_SIGNATURE_LENGTH` in `forums/models.py`) is checked by the forms and the API, not by the database; the editor preview refuses longer text too
 
 ### UpVote
 - `post` (ForeignKey → Post)
