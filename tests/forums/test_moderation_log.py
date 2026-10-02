@@ -1,21 +1,8 @@
-import logging
-
 import pytest
 from django.contrib.auth.models import Group
 from django.urls import reverse
 
 IP = '203.0.113.7'
-
-
-@pytest.fixture
-def security_log(caplog):
-    """The lines written to the security log during the test."""
-    caplog.set_level(logging.INFO, logger='security')
-
-    def lines():
-        return [record.getMessage() for record in caplog.records if record.name == 'security']
-
-    return lines
 
 
 @pytest.fixture

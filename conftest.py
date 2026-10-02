@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
@@ -71,3 +72,14 @@ def add_totp(db):
         return secret
 
     return _add_totp
+
+
+@pytest.fixture
+def security_log(caplog):
+    """The lines written to the security log during the test."""
+    caplog.set_level(logging.INFO, logger='security')
+
+    def lines():
+        return [record.getMessage() for record in caplog.records if record.name == 'security']
+
+    return lines
