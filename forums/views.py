@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import (
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Max, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
@@ -31,6 +31,8 @@ class ForumsList(LoginRequiredMixin, ListView, FormView):
     model = Forum
     context_object_name = 'forum_list'
     form_class = SearchForm
+    # Django skips Meta.ordering on GROUP BY queries, so order explicitly
+    queryset = Forum.objects.annotate(thread_count=Count('threads')).order_by('title', 'id')
 
 
 class ForumDetail(LoginRequiredMixin, DetailView):
@@ -44,7 +46,7 @@ class ForumDetail(LoginRequiredMixin, DetailView):
         threads = (
             Thread.objects.filter(forum=self.object)
             .select_related('user__profile')
-            .annotate(post_count=Count('posts'))
+            .annotate(post_count=Count('posts'), last_activity=Max('posts__added'))
             # Django skips Meta.ordering on GROUP BY queries, so order explicitly
             .order_by('-added', '-id')
         )

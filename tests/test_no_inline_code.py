@@ -65,3 +65,16 @@ def test_the_patterns_find_inline_code(html, what):
 )
 def test_the_patterns_accept_files(html):
     assert not any(pattern.search(html) for pattern in INLINE_CODE.values())
+
+
+def test_template_comments_do_not_span_lines():
+    """{# #} only works on one line: a longer one is printed on the page. Use {% comment %}."""
+    found = [
+        f'{name}:{number}'
+        for template_dir in settings.TEMPLATES[0]['DIRS']
+        for name in sorted(Path(template_dir).rglob('*.html'))
+        for number, line in enumerate(name.read_text().splitlines(), 1)
+        if line.count('{#') != line.count('#}')
+    ]
+
+    assert found == []

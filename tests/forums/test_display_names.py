@@ -182,3 +182,31 @@ def test_no_reminder_when_editing(client, anna, thread):
     client.force_login(anna)
 
     assertNotContains(client.get(reverse('thread_update', args=[thread.pk])), 'You are posting as')
+
+
+# The monogram next to a name
+
+
+@pytest.mark.parametrize(
+    'first, last, expected',
+    [
+        ('Anna', 'Berg', 'AB'),
+        ('anna', 'berg', 'AB'),
+        ('Anna', '', 'A'),
+        ('Anna Maria', 'von Berg', 'AB'),
+        ('Åsa', 'Öberg', 'ÅÖ'),
+    ],
+)
+def test_monogram_from_profile_name(anna, first, last, expected):
+    set_name(anna, first, last)
+
+    assert anna.monogram == expected
+
+
+def test_monogram_without_a_name_is_the_member_number(anna):
+    assert anna.monogram == str(anna.pk)
+
+
+def test_monogram_tone_is_stable_and_one_of_six(anna):
+    assert anna.monogram_tone == anna.pk % 6 + 1
+    assert 1 <= anna.monogram_tone <= 6
