@@ -93,7 +93,8 @@ def test_form_pages_load_the_editor(client, author, form_urls, page):
 
 
 @pytest.mark.django_db
-def test_thread_page_highlights_code_with_our_own_script(client, thread):
+def test_thread_page_highlights_code_with_our_own_script(client, thread, reader):
+    client.force_login(reader)
     resp = client.get(reverse('thread_detail', args=(thread.id,)))
 
     assertContains(resp, 'js/highlight.min.js')
