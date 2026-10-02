@@ -20,6 +20,8 @@ PRODUCTION_ENV_VARS = [
     'DJANGO_SITE_URL',
 ]
 
+# A Fernet key: 32 bytes, base64
+MFA_KEY = 'dGVzdC1vbmx5LW1mYS1lbmNyeXB0aW9uLWtleS0wMDE='
 # 50 characters, as long as the shortest key production accepts
 STRONG_KEY = 'test-only-k3y-9fQ2xLw7Zr4TbV8mNc1HdJ6sPgY0aEuRiOqX'
 
@@ -39,6 +41,7 @@ def load_production(monkeypatch):
             'DJANGO_EMAIL_CONSOLE': 'true',
             'DJANGO_SITE_URL': 'https://forum.example.com',
             'SECRET_KEY': STRONG_KEY,
+            'DJANGO_MFA_ENCRYPTION_KEY': MFA_KEY,
             **env,
         }
         for name, value in env.items():
@@ -251,3 +254,23 @@ def test_development_allows_the_local_frontend():
     from project.settings import development
 
     assert 'http://localhost:3000' in development.CORS_ALLOWED_ORIGINS
+
+
+def test_mfa_encryption_key_from_env(load_production):
+    assert load_production().MFA_ENCRYPTION_KEY == MFA_KEY
+
+
+@pytest.mark.parametrize('key', ['', 'not-a-key', MFA_KEY[:-5]], ids=['missing', 'not-base64-32', 'too-short'])
+def test_production_needs_a_valid_mfa_encryption_key(load_production, key):
+    with pytest.raises(ImproperlyConfigured, match='DJANGO_MFA_ENCRYPTION_KEY') as error:
+        load_production(DJANGO_MFA_ENCRYPTION_KEY=key)
+
+    assert key == '' or key not in str(error.value)
+
+
+def test_mfa_encryption_key_is_derived_from_the_secret_key_outside_production(settings):
+    """Development and tests need no key of their own."""
+    from cryptography.fernet import Fernet
+
+    assert Fernet(settings.MFA_ENCRYPTION_KEY)
+    assert settings.MFA_ENCRYPTION_KEY != settings.SECRET_KEY

@@ -63,6 +63,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | Variable | Value |
 |---|---|
 | `SECRET_KEY` | A long random string, e.g. from `python -c "import secrets; print(secrets.token_urlsafe(50))"`. At least 50 characters, or the containers refuse to start. Changing it later logs everyone out |
+| `DJANGO_MFA_ENCRYPTION_KEY` | The key that encrypts two-factor secrets in the database, from `python -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"`. The containers refuse to start without a valid one. **Keep a copy outside the server and never change it**, see [Two-factor authentication](#8-two-factor-authentication-for-staff-and-moderators) |
 | `DJANGO_ALLOWED_HOSTS` | Your domain(s), comma-separated: `forum.example.com` |
 | `DJANGO_SITE_URL` | The site's public address, with `https` and without a path: `https://forum.example.com`. Notification and invitation emails build their links from it. The app won't start without it |
 | `POSTGRES_PASSWORD` | Password of the database superuser `postgres`, used for maintenance on the server only. The app doesn't use it |
@@ -173,6 +174,8 @@ The first superuser is the exception, since `createsuperuser` doesn't go through
 
 **What staff and moderators can't do:** use API tokens. A token would skip the code, so the API refuses tokens of these accounts. They use the API in the browser, logged in on the site. This only matters with `DJANGO_API_ENABLED=true`: by default there is no API.
 
+**The encryption key.** The authenticator apps' secrets and the recovery codes are stored encrypted with `DJANGO_MFA_ENCRYPTION_KEY`, so a copy of the database alone doesn't give anyone a second factor. The other side of that: with a different key, or without it, nobody's code or recovery code is accepted, and logins of users with two-factor authentication fail with an error. Keep a copy of the key where you keep your backups' key, not only in `.env` on the server. A restored database backup needs the key it was made with. If the key is lost for good, generate a new one and run `remove_mfa` (below) for each account that had two-factor authentication.
+
 **Lost phone.** Use a recovery code instead of the app's code at login; each works once. Without recovery codes, remove the account's two-factor authentication on the server:
 
 ```bash
@@ -226,6 +229,8 @@ After the first deployment with this setup, check that lines arrive: `journalctl
 | Symptom | Likely cause |
 |---|---|
 | Containers exit with `ImproperlyConfigured: Set SECRET_KEY` | `SECRET_KEY` is missing, shorter than 50 characters or not random enough |
+| Containers exit with `ImproperlyConfigured: Set DJANGO_MFA_ENCRYPTION_KEY` | The key is missing or isn't 32 bytes in base64; generate one with the command in the [`.env` checklist](#2-env-checklist) |
+| Login fails with a 500 right after the two-factor code, `InvalidToken` in `logs web` | `DJANGO_MFA_ENCRYPTION_KEY` is not the key the secrets were encrypted with. Put the original key back |
 | Containers exit with `ImproperlyConfigured: Missing SMTP settings` | One of `EMAIL_HOST`, `EMAIL_HOST_USER` or `EMAIL_HOST_PASSWORD` is missing |
 | `docker compose` says `required variable ... is missing a value` | `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD` or `REDIS_PASSWORD` isn't set in `.env` |
 | `web` logs `password authentication failed for user "forum"` or `role "forum" does not exist` | The `postgres_data` volume was created before the role existed, or with another password: the init script only runs on an empty volume. Create the role and database by hand as `postgres` (the statements are in `docker/postgres/create-app-role.sh`), or, with no data to keep, remove the volume and start again |
