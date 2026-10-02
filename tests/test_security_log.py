@@ -17,8 +17,8 @@ IP = '203.0.113.7'
 
 
 @pytest.fixture
-def user(db):
-    return User.objects.create_user(username='member', email=EMAIL, password=PASSWORD)
+def user(db, verify_email):
+    return verify_email(User.objects.create_user(username='member', email=EMAIL, password=PASSWORD))
 
 
 def login(client, email=EMAIL, password=PASSWORD, **extra):

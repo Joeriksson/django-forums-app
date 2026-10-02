@@ -28,8 +28,8 @@ def is_logged_in(client):
 
 
 @pytest.fixture
-def user(db):
-    return User.objects.create_user(username='member', email=EMAIL, password=PASSWORD)
+def user(db, verify_email):
+    return verify_email(User.objects.create_user(username='member', email=EMAIL, password=PASSWORD))
 
 
 @pytest.fixture
