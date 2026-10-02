@@ -37,7 +37,7 @@
                         {% endif %}
 
                         <p class="card-text font-weight-lighter"><small>number of
-                            posts: {{ thread.posts.all.count }}</small></p>
+                            posts: {{ thread.post_count }}</small></p>
 
                     </div>
                     <div class="card-body">
@@ -55,6 +55,22 @@
             </a>
 
         {% endfor %}
+
+        {% if threads.has_other_pages %}
+            <nav aria-label="Pages of threads" class="d-flex justify-content-between align-items-center">
+                <div>
+                    {% if threads.has_previous %}
+                        <a href="?page={{ threads.previous_page_number }}" class="btn btn-outline-secondary">Newer threads</a>
+                    {% endif %}
+                </div>
+                <span>Page {{ threads.number }} of {{ threads.paginator.num_pages }}</span>
+                <div>
+                    {% if threads.has_next %}
+                        <a href="?page={{ threads.next_page_number }}" class="btn btn-outline-secondary">Older threads</a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
 
     </div>
 {% endblock %}
