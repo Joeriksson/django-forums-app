@@ -105,6 +105,7 @@ forums/            # Core app — Forum, Thread, Post, UpVote, Notification, Use
 
 users/             # Custom user model (email-based auth)
   models.py        # CustomUser extends AbstractUser; sends welcome email on create
+  audit.py         # Security log: log_event, signal receivers, refused-request middleware
   tasks.py         # Celery task send_welcome_email_task
 
 pages/             # Static pages (home, etc.)
@@ -227,6 +228,18 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. 
 - Permission checks: Django model permissions for forum creation and editing; `UserPassesTestMixin` for thread edit/delete and post delete (owner, or a user with `forums.change_thread` / `forums.delete_thread` / `forums.delete_post`)
 - **Moderators group**: created by migration `forums/0016_moderators_group` with exactly `change_thread`, `delete_thread` and `delete_post`, so members can edit and delete other users' threads and delete their posts, on the website and through the API. Add users to it in the Django admin, once they have an authenticator app
 - Custom API permission: `IsOwnerOrModeratorOrReadOnly` — safe methods allowed for anyone; write allowed for the owner (`obj.user == request.user`) or a user with the matching model permission (`change_<model>` for PUT/PATCH, `delete_<model>` for DELETE), same as the web views
+
+## Logging
+
+`LOGGING` in `base.py` sends everything from INFO up to stdout with a timestamp (container clock, UTC); errors are still mailed to `DJANGO_ADMINS`. In production the containers log to the host's journal (`logging: *journald` in `docker-compose-prod.yml`), so logs survive container recreation; retention is set in the server's `journald.conf` (see `docs/deployment-vps.md`).
+
+The **security log** is the `security` logger: one line per event, `event key=value ...`, with user ids and the client address (the one allauth's rate limits use). Write to it with `users.audit.log_event(event, request, **fields)`; pass text a visitor typed through `quoted()`. Never log passwords, codes, tokens, invitation keys or email addresses of accounts (only the address typed at a failed login).
+
+- `users/audit.py`: signal receivers for login, logout, failed login, signup, password and email changes, two-factor changes and wrong codes; `DeniedRequestLogMiddleware` logs every 401, 403 and 429 response; `log_moderation(request, action, obj)` logs a change to a thread or post by someone other than its author
+- Moderation is logged by `ThreadUpdate`, `ThreadDelete`, `PostDelete` (`forums/views.py`) and `ModerationLogMixin` (`api/views.py`): a new view that edits or deletes other users' content must call `log_moderation` too
+- Invitations: created and resent (`users/admin.py`), used (`users/models.py`), invalid link (`users/views.py`)
+- `remove_mfa` logs itself; other changes in the Django admin are only in the admin's history
+- Tests: the `security_log` fixture (root `conftest.py`) returns the lines written during the test
 
 ## Async Tasks (Celery)
 

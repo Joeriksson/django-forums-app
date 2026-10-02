@@ -21,17 +21,6 @@ def user(db):
     return User.objects.create_user(username='member', email=EMAIL, password=PASSWORD)
 
 
-@pytest.fixture
-def security_log(caplog):
-    """The lines written to the security log during the test."""
-    caplog.set_level(logging.INFO, logger='security')
-
-    def lines():
-        return [record.getMessage() for record in caplog.records if record.name == 'security']
-
-    return lines
-
-
 def login(client, email=EMAIL, password=PASSWORD, **extra):
     return client.post(
         reverse('account_login'), {'login': email, 'password': password}, REMOTE_ADDR=IP, **extra

@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook
 
+from .audit import log_event
 from .tasks import send_welcome_email_task
 
 
@@ -109,7 +110,9 @@ def accept_invitation_on_signup(request, user, **kwargs):
     """Mark the invitation used once its signup (email or GitHub) has created the user."""
     invitation = Invitation.from_session(request)
     if invitation is not None:
-        Invitation.objects.filter(pk=invitation.pk, accepted_at__isnull=True).update(
+        used = Invitation.objects.filter(pk=invitation.pk, accepted_at__isnull=True).update(
             accepted_at=timezone.now(), accepted_by=user
         )
+        if used:
+            log_event('invitation_used', request, user=user.pk, invitation=invitation.pk)
     request.session.pop(Invitation.SESSION_KEY, None)

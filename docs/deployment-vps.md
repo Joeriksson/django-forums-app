@@ -174,6 +174,46 @@ docker compose -f docker-compose-prod.yml exec web python manage.py remove_mfa y
 
 The account then logs in with the password alone and has to set two-factor authentication up again before using the site. Setting `DJANGO_STAFF_REQUIRE_MFA=false` does not help here: the login still asks for the code of an account that has an authenticator app.
 
+## 9. Logs and the security log
+
+The containers log to the host's systemd journal (`logging` in `docker-compose-prod.yml`), so the logs survive updates, which recreate the containers. Each container's lines are tagged with its name, e.g. `forum-web-1` if the repo was cloned into `forum`; `docker ps --format '{{.Names}}'` lists the names.
+
+```bash
+docker compose -f docker-compose-prod.yml logs -f web celery      # as before
+journalctl -t forum-web-1 --since "2 days ago"              # one container, by time
+journalctl -t forum-web-1 --since today | grep ' security ' # the security log
+```
+
+Lines from the `security` logger record who did what, and from which address:
+
+| Line starts with | Meaning |
+|---|---|
+| `login`, `logout`, `signup` | A user logged in (after the two-factor code, if any), logged out, or signed up |
+| `login_failed` | Wrong address or password, with the address that was typed |
+| `mfa_failed` | Wrong two-factor code |
+| `password_set`, `password_changed`, `password_reset`, `email_changed` | Account changes |
+| `mfa_added`, `mfa_removed`, `mfa_reset`, `mfa_removed_by_command` | Two-factor changes (`mfa_reset`: new recovery codes) |
+| `moderation` | A thread or post was edited or deleted by someone other than its author (`owner`) |
+| `denied` | A request was refused (`status=401` or `403`) or rate limited (`429`) |
+| `invitation_created`, `invitation_resent`, `invitation_used`, `invitation_refused` | Invitations; `refused` is an unknown, expired or used link |
+
+`user`, `owner` and `invitation` are ids: look them up in the admin. Changes made in the admin itself are in its own *History*, not here.
+
+**Set how long the journal is kept.** It holds the logs of the whole server, and the lines contain IP addresses, so decide on a period. Once, on the server:
+
+```ini
+# /etc/systemd/journald.conf on the server (not a file in this repo)
+[Journal]
+SystemMaxUse=1G
+MaxRetentionSec=3month
+```
+
+```bash
+sudo systemctl restart systemd-journald
+```
+
+After the first deployment with this setup, check that lines arrive: `journalctl -t forum-web-1 -n 20`.
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
@@ -188,9 +228,10 @@ The account then logs in with the password alone and has to set two-factor authe
 | Invitation links point to the wrong address | `DJANGO_SITE_URL` is wrong; fix it, restart, and use *Resend invitation* |
 | Containers exit with `ImproperlyConfigured: Set DJANGO_SITE_URL` | It's missing, or isn't an `https` address without a path |
 | **502 Bad Gateway** from Caddy | `web` isn't running, or Caddy isn't on `forum_proxy` (it was started before the network existed: restart the Caddy stack) |
+| Containers fail to start with `failed to initialize logging driver` | The host has no systemd journal: remove the `logging` lines from `docker-compose-prod.yml` |
 | `network forum_proxy ... has active endpoints` on `down` | Caddy is still attached; see [Updating](#4-updating) |
 
-Logs: `docker compose -f docker-compose-prod.yml logs -f web celery`
+Logs: `docker compose -f docker-compose-prod.yml logs -f web celery` (see [Logs and the security log](#9-logs-and-the-security-log))
 
 ## Testing the stack locally
 

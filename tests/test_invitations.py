@@ -257,3 +257,32 @@ def test_admin_invitations_need_permission(admin_client_for):
     resp = client.get(reverse('admin:users_invitation_add'))
 
     assert resp.status_code == 403
+
+
+# Security log
+
+
+def test_signup_with_an_invitation_is_logged(client, invitation, security_log):
+    client.get(accept_url(invitation))
+
+    sign_up(client, 'anna@example.com')
+
+    user = User.objects.get(email='anna@example.com')
+    assert f'invitation_used user={user.pk} invitation={invitation.pk} ip=127.0.0.1' in security_log()
+    assert invitation.key not in ' '.join(security_log())
+
+
+@pytest.mark.django_db
+def test_invalid_link_is_logged_without_the_key(client, security_log):
+    client.get(reverse('accept_invitation', args=['no-such-key']))
+
+    assert security_log() == ['invitation_refused ip=127.0.0.1']
+
+
+def test_signup_without_an_invitation_logs_no_invitation(client, db, settings, security_log):
+    settings.SIGNUP_OPEN = True
+
+    sign_up(client, 'open@example.com')
+
+    assert User.objects.filter(email='open@example.com').exists()
+    assert not [line for line in security_log() if line.startswith('invitation')]

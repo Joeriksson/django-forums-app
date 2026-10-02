@@ -190,3 +190,38 @@ def test_list_shows_whether_the_email_was_sent(staff_client):
     Invitation.objects.create(email='anna@example.com')
 
     assertContains(staff_client.get(LIST_URL), 'column-sent_at')
+
+
+# Security log
+
+
+def test_adding_and_resending_are_logged_without_address_or_key(
+    staff_client, django_capture_on_commit_callbacks, security_log
+):
+    boss = User.objects.get(email='boss@example.com')
+    invite(staff_client, 'anna@example.com', django_capture_on_commit_callbacks)
+    invitation = Invitation.objects.get(email='anna@example.com')
+    first_key = invitation.key
+
+    resend(staff_client, django_capture_on_commit_callbacks, invitation)
+
+    invitation.refresh_from_db()
+    lines = [line for line in security_log() if line.startswith('invitation')]
+    assert lines == [
+        f'invitation_created user={boss.pk} invitation={invitation.pk} ip=127.0.0.1',
+        f'invitation_resent user={boss.pk} invitation={invitation.pk} ip=127.0.0.1',
+    ]
+    log = ' '.join(security_log())
+    assert 'anna@example.com' not in log
+    assert first_key not in log
+    assert invitation.key not in log
+
+
+def test_skipped_resend_is_not_logged(
+    staff_client, django_capture_on_commit_callbacks, security_log
+):
+    used = Invitation.objects.create(email='used@example.com', accepted_at=timezone.now())
+
+    resend(staff_client, django_capture_on_commit_callbacks, used)
+
+    assert not [line for line in security_log() if line.startswith('invitation')]
