@@ -93,7 +93,7 @@ project/           # Django project settings and configuration
   utils.py         # send_mail helper (BCC via the configured email backend)
 
 forums/            # Core app — Forum, Thread, Post, UpVote, Notification, UserProfile models
-  models.py        # All core models with django-lifecycle hooks and Redis cache invalidation
+  models.py        # All core models; a django-lifecycle hook on Post sends the notifications
   views.py         # Class-based views (ListView, DetailView, CreateView, etc.)
   urls.py          # Forum URL patterns
   forms.py         # SearchForm
@@ -141,7 +141,6 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 - Ordered by `added`
 - **Lifecycle hooks**:
   - `notify_subscribers` (AFTER_CREATE): triggers `send_notifications_task` via Celery (skipped in CI)
-  - `invalidate_cache` (AFTER_SAVE/DELETE/CREATE): invalidates `post_objects_thread_<thread_id>`
 
 ### UserProfile
 - One-to-one with AUTH_USER_MODEL
@@ -179,10 +178,10 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 /forums/<pk>/update/       → ForumUpdate (requires forums.change_forum permission)
 /forums/<pk>/add/          → ThreadCreate (login required)
 /forums/<fpk>/delete/<pk>  → ThreadDelete (owner or forums.delete_thread)
-/forums/thread/<pk>        → ThreadDetail
+/forums/thread/<pk>        → ThreadDetail (25 posts per page, oldest first; ?page=<n> or ?page=last)
 /forums/thread/<pk>/update/→ ThreadUpdate (owner or forums.change_thread)
 /forums/thread/<pk>/notify → ThreadNotification (toggle subscription)
-/forums/thread/<pk>/post   → PostCreate
+/forums/thread/<pk>/post   → PostCreate (then the thread's last page)
 /forums/thread/<tpk>/post/<pk>/delete  → PostDelete
 /forums/thread/<tpk>/post/<pk>/upvote  → PostUpvote
 /forums/search/            → SearchResultsView (?q= of at least 3 characters; the 50 newest posts and 50 newest threads)
@@ -204,12 +203,9 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 
 ## Caching
 
-Redis is used for object-level caching:
-- `post_objects_thread_<thread_id>` — cached queryset of posts for a thread
+The forum and thread pages are not cached: each loads one page of threads or posts, with authors and counts, in a single query. Don't cache model instances with their users: that puts email addresses and password hashes in Redis.
 
-Cache is invalidated automatically via `django-lifecycle` hooks on model save/delete/create.
-
-The forum page is not cached: it loads one page of threads, with authors and post counts, in a single query.
+The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. Tests use an in-memory cache, cleared around every test (root `conftest.py`).
 
 ## Authentication & Permissions
 
@@ -268,7 +264,7 @@ The forum page is not cached: it loads one page of threads, with authors and pos
 ## Services
 
 - **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres` in dev and CI, `POSTGRES_PASSWORD` in production)
-- **Redis**: Caching and Celery message broker (password-protected and not published in `docker-compose-prod.yml`)
+- **Redis**: cache for the login rate limits, and Celery message broker (password-protected and not published in `docker-compose-prod.yml`)
 - **Celery**: Async task queue for email notifications
 - **Email**: SMTP in production (required, see `EMAIL_*` above); console backend in development
 - **Whitenoise**: Static file serving
@@ -283,7 +279,7 @@ The forum page is not cached: it loads one page of threads, with authors and pos
 ## Key Dependencies
 
 - **Django 5.2** — web framework
-- **django-lifecycle** — model hooks (`@hook` decorator) for cache invalidation and notifications
+- **django-lifecycle** — model hooks (`@hook` decorator) for the notification and welcome emails
 - **markdown-it-py + nh3** — render thread and post text (`forums/markdown.py`, template filter `render_markdown`). Raw HTML in the text is off, so it shows as text; nh3 then keeps only the listed tags, attributes and URL schemes (`http`, `https`, `mailto`). A new Markdown feature needs both the parser rule and the tag in `ALLOWED_TAGS`. Code blocks on the thread page are coloured by highlight.js, a single file kept in `static/js/highlight.min.js` (`make audit` doesn't cover it: replace the file to upgrade)
 - **EasyMDE** — Markdown editor on the thread and post forms: `templates/forums/_editor.html` loads `static/js/easymde.min.js`, its stylesheet and our `static/js/editor.js` (toolbar, settings). The preview button posts the text to `/forums/preview/`, so it shows what the saved text will look like. Without JavaScript the plain textarea still works. Like highlight.js it is a file in `static/` that `make audit` doesn't cover; it loads nothing from other sites (its spell checker and Font Awesome download are off). To upgrade it:
   1. Replace the two `easymde.min.*` files with the ones from the new npm package (check its integrity hash) and read the release notes for renamed options and anything new that loads from another site
