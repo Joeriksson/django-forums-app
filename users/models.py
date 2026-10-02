@@ -50,6 +50,20 @@ class CustomUser(LifecycleModelMixin, AbstractUser):
         """
         return self.profile_name or f'Member {self.pk}'
 
+    @property
+    def monogram(self):
+        """Shown in a small disc next to the name: initials, or the member number."""
+        words = self.profile_name.split()
+        if not words:
+            return str(self.pk)
+        initials = words[0][0] if len(words) == 1 else words[0][0] + words[-1][0]
+        return initials.upper()
+
+    @property
+    def monogram_tone(self):
+        """Which of the six disc colours in base.css this user gets: always the same one."""
+        return self.pk % 6 + 1
+
     @hook(AFTER_CREATE, on_commit=True)
     def send_welcome_mail(self):
         # Runs only once the user is committed, so a rollback sends nothing.
