@@ -1,4 +1,8 @@
+import logging
+
 from django.core.mail import EmailMultiAlternatives
+
+logger = logging.getLogger(__name__)
 
 
 def send_mail(subject, from_email, bcc, text_content):
@@ -9,4 +13,5 @@ def send_mail(subject, from_email, bcc, text_content):
 
     msg.send()
 
-    print('email sent ####################')
+    # The count only: addresses don't belong in the log
+    logger.info('Mail sent to %d recipients', len(bcc))

@@ -203,6 +203,40 @@ def admins_from_env():
 
 ADMINS = admins_from_env()
 
+# Everything from INFO up goes to stdout with a timestamp, where Docker collects it.
+# Django's own default prints nothing when DEBUG is False.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'timestamped': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+            'formatter': 'timestamped',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+        },
+    },
+    'root': {'handlers': ['console'], 'level': 'INFO'},
+    'loggers': {
+        # Replaces Django's default, which also has a console handler: the messages
+        # reach the root handler, so they would be printed twice
+        'django': {'handlers': ['mail_admins'], 'level': 'INFO'},
+    },
+}
+
 ACCOUNT_SESSION_REMEMBER = True
 # Log in with email; sign up with email and one password field (no username)
 ACCOUNT_LOGIN_METHODS = {'email'}
