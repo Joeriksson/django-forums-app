@@ -19,6 +19,20 @@ if (
     )
 
 
+# The key that encrypts two-factor secrets in the database must be its own secret here,
+# not one derived from SECRET_KEY: replacing SECRET_KEY must not lock everyone's
+# second factor. A Fernet key: 32 random bytes, base64.
+MFA_ENCRYPTION_KEY = os.environ.get('DJANGO_MFA_ENCRYPTION_KEY', '')
+try:
+    _mfa_key_ok = len(base64.urlsafe_b64decode(MFA_ENCRYPTION_KEY)) == 32
+except ValueError:
+    _mfa_key_ok = False
+if not _mfa_key_ok:
+    raise ImproperlyConfigured(
+        'Set DJANGO_MFA_ENCRYPTION_KEY to a key from: python -c '
+        '"import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"'
+    )
+
 # Comma-separated hosts the app is served on, e.g. 'forum.example.com'
 ALLOWED_HOSTS = [
     host.strip()

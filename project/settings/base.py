@@ -1,3 +1,5 @@
+import base64
+import hashlib
 import os
 from urllib.parse import urlsplit
 
@@ -251,6 +253,14 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # Two-factor login: an authenticator app (TOTP) plus recovery codes. No passkeys.
 MFA_SUPPORTED_TYPES = ['totp', 'recovery_codes']
 MFA_TOTP_ISSUER = 'Wildvasa Forums'
+# Authenticator secrets and recovery-code seeds are encrypted in the database with this
+# key (users/encryption.py). Production must set DJANGO_MFA_ENCRYPTION_KEY; elsewhere
+# the key is derived from SECRET_KEY, so development and tests need nothing extra.
+# Changing the key makes every stored second factor unreadable.
+MFA_ADAPTER = 'users.adapters.MFAAdapter'
+MFA_ENCRYPTION_KEY = os.environ.get('DJANGO_MFA_ENCRYPTION_KEY') or base64.urlsafe_b64encode(
+    hashlib.sha256(f'mfa-encryption:{SECRET_KEY}'.encode()).digest()
+).decode()
 # Staff, moderators and anyone else with a permission need an authenticator app to use
 # the site, and their API tokens are refused (users/security.py, api/authentication.py).
 # On unless switched off.
