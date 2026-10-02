@@ -213,7 +213,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 
 The forum and thread pages are not cached: each loads one page of threads or posts, with authors and counts, in a single query. Don't cache model instances with their users: that puts email addresses and password hashes in Redis.
 
-The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. If Redis is down, the login, signup and password reset pages fail with a 500 rather than run without rate limits: a deliberate choice. Tests use an in-memory cache, cleared around every test (root `conftest.py`).
+The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits and the DRF throttles. It stores JSON, not django-redis' default pickle (`SERIALIZER`), so write access to Redis doesn't mean code execution in the web process: cache only values JSON can hold. `VERSION` is part of every key; raise it when the format of cached values changes, so old values are left to expire unread. If Redis is down, the login, signup and password reset pages fail with a 500 rather than run without rate limits: a deliberate choice. Tests use an in-memory cache, cleared around every test (root `conftest.py`).
 
 ## Authentication & Permissions
 
