@@ -46,6 +46,14 @@
     --lichen-wash: #fbf3cf;
     --danger: #a3271f;
 
+    /* Monogram discs: six quiet tints, one per member (by id) */
+    --tone-1: #cfe3d9;
+    --tone-2: #f3e2a0;
+    --tone-3: #d9d3ec;
+    --tone-4: #f0cfc0;
+    --tone-5: #c9dff0;
+    --tone-6: #dcdcd0;
+
     /* Reading (titles, post text) and interface (everything else) */
     --serif: 'Literata', Georgia, 'Times New Roman', serif;
     --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -83,6 +91,13 @@
         --lichen: #f0c93a;
         --lichen-wash: #3a3413;
         --danger: #f08a80;
+
+        --tone-1: #2f5a4c;
+        --tone-2: #6a5a16;
+        --tone-3: #4a4370;
+        --tone-4: #6b4334;
+        --tone-5: #2f5270;
+        --tone-6: #4c4f45;
     }
 }
 
@@ -242,7 +257,7 @@ textarea {
 /* Buttons: .button is ours; .btn is what the templates still call them. Not every
    <button>: the editor's toolbar has its own. */
 
-.button[type='submit'],
+.button,
 .btn,
 button[type='submit'],
 input[type='submit'] {
@@ -260,7 +275,7 @@ input[type='submit'] {
     cursor: pointer;
 }
 
-.button[type='submit']:hover,
+.button:hover,
 .btn:hover,
 button[type='submit']:hover,
 input[type='submit']:hover {
@@ -456,6 +471,179 @@ input[type='submit']:hover {
 /* Page title above the thread page and the thread and post forms */
 .heading {
     margin: var(--space-3) 0 var(--space-4);
+}
+
+/* Page head: a title with its main action beside it */
+
+.page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-3);
+    margin: var(--space-3) 0 var(--space-3);
+}
+
+.page-head h1 {
+    margin: 0;
+}
+
+/* The way back up, above a page's title */
+.trail {
+    margin: var(--space-3) 0 0;
+    font-size: var(--size-small);
+    font-weight: 600;
+}
+
+.trail + .page-head {
+    margin-top: var(--space-1);
+}
+
+.lead {
+    max-width: var(--measure);
+    color: var(--quiet);
+    font-size: var(--size-reading);
+}
+
+.empty {
+    padding: var(--space-4) 0;
+    color: var(--quiet);
+}
+
+/* Lists of forums and threads: plain rows, a rule between them */
+
+.rows {
+    margin: var(--space-4) 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--rule);
+}
+
+.row {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.row__title {
+    font-family: var(--serif);
+    font-size: var(--size-h3);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.row__title:hover {
+    color: var(--spruce);
+    text-decoration: underline;
+}
+
+.row__text {
+    margin: var(--space-1) 0 0;
+    max-width: var(--measure);
+}
+
+.row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    margin: var(--space-2) 0 0;
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.row__actions {
+    display: flex;
+    gap: var(--space-3);
+    margin: var(--space-2) 0 0;
+    font-size: var(--size-small);
+}
+
+/* A member: a monogram disc and the name. The disc's colour comes from the member's id. */
+
+.person {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.monogram {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.3rem;
+    border-radius: 1rem;
+    background: var(--tone-6);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+}
+
+.monogram--1 { background: var(--tone-1); }
+.monogram--2 { background: var(--tone-2); }
+.monogram--3 { background: var(--tone-3); }
+.monogram--4 { background: var(--tone-4); }
+.monogram--5 { background: var(--tone-5); }
+.monogram--6 { background: var(--tone-6); }
+
+/* Search */
+
+.search {
+    margin: var(--space-4) 0;
+}
+
+.search__row {
+    display: flex;
+    gap: var(--space-2);
+    max-width: var(--measure);
+}
+
+.search__row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Newer and older pages of a list */
+
+.pages {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.pages a {
+    font-weight: 600;
+}
+
+/* The home page for a visitor: the name, and the way in */
+
+.door {
+    padding-block: clamp(2rem, 10vh, 6rem);
+}
+
+.door__name {
+    margin: 0;
+    font-size: clamp(3.25rem, 14vw, 7.5rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+}
+
+.door__text {
+    margin: var(--space-4) 0;
+    max-width: 24rem;
+    color: var(--quiet);
+    font-size: var(--size-reading);
 }
 
 /*
