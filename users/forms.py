@@ -1,8 +1,10 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from .models import Invitation
+from .security import has_second_factor
 
 
 class UniqueEmailMixin:
@@ -27,9 +29,27 @@ class CustomUserCreationForm(UniqueEmailMixin, UserCreationForm):
 
 
 class CustomUserChangeForm(UniqueEmailMixin, UserChangeForm):
+    # Any of these makes the account more than a member (users.security.is_privileged)
+    RIGHTS_FIELDS = ('is_staff', 'is_superuser', 'groups', 'user_permissions')
+
     class Meta(UserChangeForm.Meta):
         model = get_user_model()
         fields = ('email', 'username',)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Whoever logs in to an account without an authenticator app gets to set one up,
+        # so rights given before that would be open to anyone with the password.
+        if (
+            settings.STAFF_REQUIRE_MFA
+            and any(cleaned_data.get(field) for field in self.RIGHTS_FIELDS)
+            and not has_second_factor(self.instance)
+        ):
+            raise forms.ValidationError(
+                'This account has no authenticator app. It must set up two-factor '
+                'authentication before it can get staff status, a group or a permission.'
+            )
+        return cleaned_data
 
 
 class InvitationAdminForm(forms.ModelForm):
