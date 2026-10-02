@@ -126,15 +126,39 @@ Static files are collected into the image when it's built (`collectstatic` in th
 
 ## 5. Backups
 
+A database dump holds every member's email address and password hash, the invitation keys and any API tokens. Encrypt it as it is made, so it never exists as a readable file, and keep it somewhere other than the server.
+
+The commands below use [`age`](https://age-encryption.org), a small file encryption tool, with a key pair: the server only has the public key, so backups can be made there (also from a scheduled job) but not read there.
+
+**Once, on your own computer** (not on the server):
+
 ```bash
-docker compose -f docker-compose-prod.yml exec -T db pg_dump -U forum forum > backup-$(date +%F).sql
+# On your own computer, not on the server
+age-keygen -o forum-backup-key.txt     # prints the public key: age1...
 ```
 
-Restore into an empty database with `psql`:
+`age` is in the usual package managers (`apt install age`, `brew install age`). `forum-backup-key.txt` is the private key: it never goes to the server or into this repository. Keep a second copy of it somewhere safe (a password manager, say). Without it the backups can't be read by anyone, you included. The public key, the line starting with `age1`, is not secret.
+
+**Back up**, on the server (install `age` there too), with your public key in place of `age1...`:
 
 ```bash
-docker compose -f docker-compose-prod.yml exec -T db psql -U forum forum < backup-YYYY-MM-DD.sql
+docker compose -f docker-compose-prod.yml exec -T db pg_dump -U forum forum \
+  | age -r age1... > backup-$(date +%F).sql.age
 ```
+
+Then copy the file off the server; a backup that only exists on the server is lost with it.
+
+**Restore** into an empty database. Decrypt on your own computer, where the private key is, and send the result straight to the server, so the readable dump is never stored:
+
+```bash
+# On your own computer
+age -d -i forum-backup-key.txt backup-YYYY-MM-DD.sql.age \
+  | ssh user@server 'cd forum && docker compose -f docker-compose-prod.yml exec -T db psql -U forum forum'
+```
+
+**What else to keep with the backups:** a copy of the server's `.env`, stored as carefully as the private key. A restored database needs the same `DJANGO_MFA_ENCRYPTION_KEY`, or no stored second factor works (see [section 8](#8-two-factor-authentication-for-staff-and-moderators)); the same `SECRET_KEY` keeps sessions and pending password reset links valid.
+
+Try a restore once before you depend on the backups, for example into the stack [started locally](#testing-the-stack-locally).
 
 The forum's data is in the database `forum`, owned by the role `forum`, which is all the app can touch: it is not a superuser and can't create roles or databases. `docker/postgres/create-app-role.sh` creates both when the `postgres_data` volume is first created. The superuser `postgres` is for maintenance: `docker compose -f docker-compose-prod.yml exec db psql -U postgres`.
 
@@ -173,6 +197,8 @@ Everyone who can do more than a member needs an authenticator app, such as any T
 The first superuser is the exception, since `createsuperuser` doesn't go through the admin: set its authenticator app up right after creating it.
 
 **What staff and moderators can't do:** use API tokens. A token would skip the code, so the API refuses tokens of these accounts. They use the API in the browser, logged in on the site. This only matters with `DJANGO_API_ENABLED=true`: by default there is no API.
+
+**API tokens are passwords.** A token gives its user's access to the API for as long as it exists: it never expires, and it is stored readable in the database. Create one (in the admin, under *Auth Token → Tokens*) only for something that needs it, and delete it there when it is no longer used or may have been seen by someone else. While the API is off, tokens can't be used at all.
 
 **The encryption key.** The authenticator apps' secrets and the recovery codes are stored encrypted with `DJANGO_MFA_ENCRYPTION_KEY`, so a copy of the database alone doesn't give anyone a second factor. The other side of that: with a different key, or without it, nobody's code or recovery code is accepted, and logins of users with two-factor authentication fail with an error. Keep a copy of the key where you keep your backups' key, not only in `.env` on the server. A restored database backup needs the key it was made with. If the key is lost for good, generate a new one and run `remove_mfa` (below) for each account that had two-factor authentication.
 

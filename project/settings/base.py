@@ -345,8 +345,15 @@ CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': redis_url_with_db(redis_host, 0),
+        # Part of every key. 2 since the values are JSON: older, pickled values are
+        # under version 1 and are left to expire unread.
+        'VERSION': 2,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            # Not the default, pickle: reading a pickled value can run code, so whoever
+            # could write to Redis could run code in the web process. The cache only
+            # holds rate-limit counters (lists of timestamps), which JSON can store.
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
         }
     }
 }
