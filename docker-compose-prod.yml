@@ -8,6 +8,13 @@ x-app-environment: &app-environment
   DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/postgres
   REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/0
 
+# Logs go to the host's journal instead of Docker's per-container files, which are
+# deleted when a container is recreated (every update). Retention: journald.conf on the host.
+x-logging: &journald
+  driver: journald
+  options:
+    tag: "{{.Name}}"
+
 services:
   web:
     build: .
@@ -25,6 +32,7 @@ services:
     depends_on:
       - db
       - redis
+    logging: *journald
     restart: unless-stopped
   db:
     image: postgres:16
@@ -32,10 +40,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    logging: *journald
     restart: unless-stopped
   redis:
     image: redis:alpine
     command: redis-server --requirepass ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    logging: *journald
     restart: unless-stopped
   celery:
     build: .
@@ -46,6 +56,7 @@ services:
     depends_on:
       - db
       - redis
+    logging: *journald
     restart: unless-stopped
   celery-beat:
     build: .
@@ -55,6 +66,7 @@ services:
     environment: *app-environment
     depends_on:
       - redis
+    logging: *journald
     restart: unless-stopped
 networks:
   # Shared with the reverse proxy. Only web is on it, so the proxy can't reach db or redis.
