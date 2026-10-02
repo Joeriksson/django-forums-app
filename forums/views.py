@@ -297,10 +297,10 @@ class SearchResultsView(ListView):
         if self.too_short or self.throttled:
             return []
 
-        posts = Post.objects.filter(text__icontains=query).select_related('thread', 'user')
+        posts = Post.objects.filter(text__icontains=query).select_related('thread', 'user__profile')
         threads = Thread.objects.filter(
             Q(title__icontains=query) | Q(text__icontains=query)
-        ).select_related('forum', 'user')
+        ).select_related('forum', 'user__profile')
         return self.newest(posts) + self.newest(threads)
 
     def newest(self, queryset):
