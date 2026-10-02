@@ -159,7 +159,9 @@ Everyone who can do more than a member needs an authenticator app, such as any T
 
 **First login.** After `createsuperuser`, log in on the site (the admin uses the site's login page). You are sent to *Two-factor authentication* straight away: activate the authenticator app by scanning the QR code and entering a code. Then store the recovery codes somewhere safe, away from the phone. From then on every login, with a password or GitHub, asks for a code.
 
-**New staff members and moderators** do the same at their first login after they got their rights. An account that signed up on the site must have confirmed its email address first (the link in the signup email); two-factor setup is refused until then.
+**New staff members and moderators** set up the authenticator app first, as an ordinary member (*Two-factor authentication* in the user menu), and get their rights after that. The admin refuses to give staff status, a group or a permission to an account without one: otherwise anyone with that account's password could set up their own app and use the rights. The *Two-factor* column in the admin's user list shows who has one. An account that signed up on the site must have confirmed its email address first (the link in the signup email); two-factor setup is refused until then.
+
+The first superuser is the exception, since `createsuperuser` doesn't go through the admin: set its authenticator app up right after creating it.
 
 **What staff and moderators can't do:** use API tokens. A token would skip the code, so the API refuses tokens of these accounts. They use the API in the browser, logged in on the site.
 

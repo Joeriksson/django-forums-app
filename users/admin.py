@@ -1,5 +1,6 @@
 from functools import partial
 
+from allauth.mfa.models import Authenticator
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
@@ -26,7 +27,7 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     model = CustomUser
     inlines = [UserProfileInline]
-    list_display = ['email', 'username', 'is_staff', 'is_active', 'date_joined']
+    list_display = ['email', 'username', 'is_staff', 'two_factor', 'is_active', 'date_joined']
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -48,6 +49,16 @@ class CustomUserAdmin(UserAdmin):
         if obj is None:
             return []
         return super().get_inline_instances(request, obj)
+
+    def get_queryset(self, request):
+        # One query for the whole list, instead of one per row
+        totp = Authenticator.objects.filter(user=models.OuterRef('pk'), type=Authenticator.Type.TOTP)
+        return super().get_queryset(request).annotate(has_totp=models.Exists(totp))
+
+    @admin.display(description='Two-factor', boolean=True, ordering='has_totp')
+    def two_factor(self, obj):
+        # An authenticator app; staff and moderators need one (users/security.py)
+        return obj.has_totp
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

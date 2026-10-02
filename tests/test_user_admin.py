@@ -1,8 +1,10 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.urls import reverse
 
 from forums.models import UserProfile
+from users.security import is_privileged
 
 ADD_URL = reverse('admin:users_customuser_add')
 
@@ -143,3 +145,87 @@ def test_profile_admin_saves_url_without_scheme_as_https(admin_client):
     assert resp.status_code == 302
     profile.refresh_from_db()
     assert profile.github_url == 'https://github.com/admin'
+
+
+# Extra rights only for accounts that already have an authenticator app
+
+
+@pytest.fixture
+def other(db):
+    return get_user_model().objects.create_user(
+        username='other', email='other@example.com', password='testpass123'
+    )
+
+
+def change_user(admin_client, user, **changes):
+    url = reverse('admin:users_customuser_change', args=[user.id])
+    data = admin_client.get(url).context['adminform'].form.initial
+    data = {k: v for k, v in data.items() if v is not None and k != 'password'}
+    data.update(date_joined_0='2026-01-01', date_joined_1='00:00:00')
+    data.update({
+        'profile-TOTAL_FORMS': '1', 'profile-INITIAL_FORMS': '1',
+        'profile-0-id': user.profile.id, 'profile-0-user': user.id,
+        'profile-0-gender': user.profile.gender,
+    })
+    data.update(changes)
+    return admin_client.post(url, data)
+
+
+def grants():
+    """Each way the admin can give an account more rights than a member has."""
+    return {
+        'staff': {'is_staff': 'on'},
+        'superuser': {'is_superuser': 'on'},
+        'group': {'groups': [Group.objects.get(name='Moderators').pk]},
+        'permission': {'user_permissions': [Permission.objects.get(codename='add_forum').pk]},
+    }
+
+
+@pytest.mark.parametrize('grant', ['staff', 'superuser', 'group', 'permission'])
+def test_rights_are_refused_without_authenticator_app(admin_client, other, grant):
+    resp = change_user(admin_client, other, **grants()[grant])
+
+    assert resp.status_code == 200
+    assert 'authenticator app' in resp.context['adminform'].form.non_field_errors()[0]
+    other.refresh_from_db()
+    assert not is_privileged(other)
+
+
+@pytest.mark.parametrize('grant', ['staff', 'superuser', 'group', 'permission'])
+def test_rights_are_given_to_account_with_authenticator_app(admin_client, add_totp, other, grant):
+    add_totp(other)
+
+    resp = change_user(admin_client, other, **grants()[grant])
+
+    assert resp.status_code == 302
+    assert is_privileged(get_user_model().objects.get(pk=other.pk))
+
+
+def test_member_without_authenticator_app_can_still_be_changed(admin_client, other):
+    resp = change_user(admin_client, other, email='new@example.com')
+
+    assert resp.status_code == 302
+    other.refresh_from_db()
+    assert other.email == 'new@example.com'
+
+
+def test_rights_are_given_without_authenticator_app_when_not_required(
+    admin_client, other, settings
+):
+    settings.STAFF_REQUIRE_MFA = False
+
+    resp = change_user(admin_client, other, is_staff='on')
+
+    assert resp.status_code == 302
+    other.refresh_from_db()
+    assert other.is_staff
+
+
+def test_user_list_shows_who_has_an_authenticator_app(admin_client, other):
+    resp = admin_client.get(reverse('admin:users_customuser_changelist'))
+
+    assert 'Two-factor' in resp.content.decode()
+    assert {user.username: user.has_totp for user in resp.context['cl'].result_list} == {
+        'admin': True,
+        'other': False,
+    }
