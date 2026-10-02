@@ -1,7 +1,7 @@
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
-from rest_framework.test import APIClient
+from tests.forums.clients import reader_client
 
 
 @pytest.fixture
@@ -21,8 +21,9 @@ def content(add_user, add_forum, add_thread, add_post):
 
 
 def list_query_count(url):
+    client = reader_client()
     with CaptureQueriesContext(connection) as queries:
-        resp = APIClient().get(url)
+        resp = client.get(url)
     assert resp.status_code == 200
     return len(queries)
 
@@ -34,7 +35,7 @@ def list_query_count(url):
 def test_forum_list_has_thread_count_not_threads(content):
     _, forum, other_forum, *_ = content
 
-    resp = APIClient().get('/api/forums/')
+    resp = reader_client().get('/api/forums/')
 
     assert resp.status_code == 200
     counts = {row['id']: row['thread_count'] for row in resp.data['results']}
@@ -46,7 +47,7 @@ def test_forum_list_has_thread_count_not_threads(content):
 def test_forum_detail_has_thread_count_not_threads(content):
     _, forum, *_ = content
 
-    resp = APIClient().get(f'/api/forums/{forum.id}/')
+    resp = reader_client().get(f'/api/forums/{forum.id}/')
 
     assert resp.status_code == 200
     assert resp.data['thread_count'] == 2
@@ -72,7 +73,7 @@ def test_created_forum_has_thread_count(add_super_user, get_user_client):
 def test_thread_list_has_post_count_not_posts(content):
     *_, thread, other_thread, _ = content
 
-    resp = APIClient().get('/api/threads/')
+    resp = reader_client().get('/api/threads/')
 
     assert resp.status_code == 200
     counts = {row['id']: row['post_count'] for row in resp.data['results']}
@@ -84,7 +85,7 @@ def test_thread_list_has_post_count_not_posts(content):
 def test_thread_detail_has_post_count_not_posts(content):
     *_, thread, _, _ = content
 
-    resp = APIClient().get(f'/api/threads/{thread.id}/')
+    resp = reader_client().get(f'/api/threads/{thread.id}/')
 
     assert resp.status_code == 200
     assert resp.data['post_count'] == 2
@@ -125,7 +126,7 @@ def test_threads_can_be_filtered_by_forum(content, add_thread):
     author, forum, other_forum, thread, other_thread, _ = content
     add_thread(title='Elsewhere', text='Text', forum=other_forum, user=author)
 
-    resp = APIClient().get(f'/api/threads/?forum={forum.id}')
+    resp = reader_client().get(f'/api/threads/?forum={forum.id}')
 
     assert resp.status_code == 200
     assert {row['id'] for row in resp.data['results']} == {thread.id, other_thread.id}
@@ -136,7 +137,7 @@ def test_posts_can_be_filtered_by_thread(content, add_post):
     author, *_, thread, other_thread, _ = content
     add_post(text='Elsewhere', thread=other_thread, user=author)
 
-    resp = APIClient().get(f'/api/posts/?thread={thread.id}')
+    resp = reader_client().get(f'/api/posts/?thread={thread.id}')
 
     assert resp.status_code == 200
     assert len(resp.data['results']) == 2
@@ -147,7 +148,7 @@ def test_posts_can_be_filtered_by_thread(content, add_post):
 @pytest.mark.parametrize('endpoint', ['/api/threads/?forum=', '/api/posts/?thread='])
 @pytest.mark.parametrize('value', ['abc', '-1', '\u00b2', '99999999999'])
 def test_invalid_filter_id_is_rejected(content, endpoint, value):
-    resp = APIClient().get(endpoint + value)
+    resp = reader_client().get(endpoint + value)
 
     assert resp.status_code == 400
 
@@ -155,7 +156,7 @@ def test_invalid_filter_id_is_rejected(content, endpoint, value):
 @pytest.mark.django_db
 @pytest.mark.parametrize('url', ['/api/threads/?forum=99999', '/api/posts/?thread=99999'])
 def test_unknown_filter_id_returns_empty_page(content, url):
-    resp = APIClient().get(url)
+    resp = reader_client().get(url)
 
     assert resp.status_code == 200
     assert resp.data['count'] == 0
