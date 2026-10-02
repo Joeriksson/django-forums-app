@@ -1,11 +1,11 @@
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
-from pytest_django.asserts import assertContains
 from rest_framework.throttling import SimpleRateThrottle
 
 SEARCH_URL = reverse('search_results')
 PREVIEW_URL = reverse('markdown_preview')
-IP = '203.0.113.7'
 
 
 @pytest.fixture
@@ -30,29 +30,15 @@ def test_default_rates():
 
 
 @pytest.mark.django_db
-def test_anonymous_search_is_limited_per_address(client, rates, security_log):
-    rates(search='2/min')
-
-    assert [search(client, REMOTE_ADDR=IP).status_code for _ in range(2)] == [200, 200]
-    resp = search(client, REMOTE_ADDR=IP)
-
-    assert resp.status_code == 429
-    assertContains(resp, 'Too many searches', status_code=429)
-    assert list(resp.context['object_list']) == []
-    assert security_log() == [f"denied status=429 method=GET path='{SEARCH_URL}' ip={IP}"]
-    # Another address has its own count
-    assert search(client, REMOTE_ADDR='203.0.113.8').status_code == 200
-
-
-@pytest.mark.django_db
-def test_refused_search_does_not_query_threads_and_posts(
-    client, rates, django_assert_num_queries
-):
+def test_refused_search_does_not_query_threads_and_posts(client, rates, anna):
     rates(search='1/min')
+    client.force_login(anna)
     search(client)
 
-    with django_assert_num_queries(0):
+    with CaptureQueriesContext(connection) as queries:
         assert search(client).status_code == 429
+
+    assert not [q['sql'] for q in queries if 'forums_post' in q['sql'] or 'forums_thread' in q['sql']]
 
 
 @pytest.mark.django_db
@@ -68,8 +54,9 @@ def test_logged_in_search_is_limited_per_user(client, rates, anna, add_user):
 
 
 @pytest.mark.django_db
-def test_too_short_searches_do_not_count(client, rates):
+def test_too_short_searches_do_not_count(client, rates, anna):
     rates(search='1/min')
+    client.force_login(anna)
 
     assert [search(client, query='ab').status_code for _ in range(3)] == [200, 200, 200]
     assert search(client).status_code == 200

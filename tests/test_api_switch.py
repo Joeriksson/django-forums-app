@@ -25,6 +25,12 @@ def reload_urls():
 
 
 @pytest.fixture
+def member(db):
+    """Reading, on the site or through the API, needs a login."""
+    return User.objects.create_user(username='member', email='member@example.com', password='x')
+
+
+@pytest.fixture
 def api_off(settings):
     settings.API_ENABLED = False
     reload_urls()
@@ -38,7 +44,8 @@ def test_api_is_on_in_the_tests(settings):
 
 
 @pytest.mark.django_db
-def test_api_answers_while_enabled(client):
+def test_api_answers_while_enabled(client, member):
+    client.force_login(member)
     assert client.get('/api/forums/').status_code == 200
 
 
@@ -59,7 +66,8 @@ def test_no_api_for_staff_while_disabled(client, api_off, add_totp, url):
 
 
 @pytest.mark.django_db
-def test_site_works_while_disabled(client, api_off):
+def test_site_works_while_disabled(client, api_off, member):
+    client.force_login(member)
     assert client.get(reverse('home')).status_code == 200
     assert client.get(reverse('forum_list')).status_code == 200
 
@@ -76,7 +84,8 @@ def test_staff_without_authenticator_app_is_still_sent_to_setup_while_disabled(c
 
 
 @pytest.mark.django_db
-def test_api_is_back_after_the_switch_is_on_again(client, api_off, settings):
+def test_api_is_back_after_the_switch_is_on_again(client, api_off, settings, member):
+    client.force_login(member)
     settings.API_ENABLED = True
     reload_urls()
 
