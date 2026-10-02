@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'project.middleware.ContentSecurityPolicyMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.middleware.cache.UpdateCacheMiddleware',
@@ -74,6 +75,35 @@ MIDDLEWARE = [
     'users.audit.DeniedRequestLogMiddleware',
     'users.security.StaffMFAMiddleware',
 ]
+
+# Content Security Policy (project/middleware.py): where pages may load things from.
+# No 'unsafe-inline': templates hold no inline scripts or styles (tests/test_no_inline_code.py).
+# A new outside source, a font service or a CDN, must be added here or the browser blocks it.
+_CSP = {
+    'default-src': ["'self'"],
+    # The CDNs _base.html loads Bootstrap, jQuery and Popper from
+    'script-src': [
+        "'self'",
+        'https://code.jquery.com',
+        'https://cdnjs.cloudflare.com',
+        'https://stackpath.bootstrapcdn.com',
+    ],
+    'style-src': ["'self'", 'https://stackpath.bootstrapcdn.com'],
+    # data: the QR code on the two-factor setup page; https: images in posts
+    'img-src': ["'self'", 'data:', 'https:'],
+    'object-src': ["'none'"],
+    'base-uri': ["'self'"],
+    # The GitHub login form posts to this site, which redirects to GitHub: browsers
+    # apply form-action to that redirect too
+    'form-action': ["'self'", 'https://github.com'],
+    'frame-ancestors': ["'none'"],
+}
+# Enforced, unless DJANGO_CSP_REPORT_ONLY=true: the browser then only reports what it
+# would have blocked, in its console. For finding out what a policy change breaks.
+if env_bool('DJANGO_CSP_REPORT_ONLY'):
+    SECURE_CSP, SECURE_CSP_REPORT_ONLY = {}, _CSP
+else:
+    SECURE_CSP, SECURE_CSP_REPORT_ONLY = _CSP, {}
 
 ROOT_URLCONF = 'project.urls'
 
