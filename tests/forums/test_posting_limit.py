@@ -8,17 +8,6 @@ from forums.models import Post, Thread
 
 
 @pytest.fixture
-def rates(monkeypatch):
-    """Lower a throttle rate for the test: DRF reads the rates when it is imported."""
-
-    def _rates(**rates):
-        for scope, rate in rates.items():
-            monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, scope, rate)
-
-    return _rates
-
-
-@pytest.fixture
 def anna(add_user):
     return add_user('anna', 'anna@example.com', 'testpass123')
 
