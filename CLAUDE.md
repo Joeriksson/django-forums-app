@@ -112,7 +112,7 @@ users/             # Custom user model (email-based auth)
   tasks.py         # Celery task send_welcome_email_task
 
 pages/             # Static pages (home, etc.)
-api/               # Django REST Framework API
+api/               # Django REST Framework API (mounted only with DJANGO_API_ENABLED)
   views.py         # ModelViewSet for Forum, Thread, Post, User
   serializers.py   # No nested lists: Forum has thread_count, Thread has post_count
   urls.py          # DRF router + schema endpoint
@@ -193,6 +193,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 /forums/search/            → SearchResultsView (?q= of at least 3 characters; the 50 newest posts and 50 newest threads; 20 a minute)
 /forums/preview/           → MarkdownPreview (POST, login required: Markdown text → HTML for the editor's preview)
 
+# /api/ exists only while DJANGO_API_ENABLED is true (default: off; on in development and tests)
 /api/forums/               → ForumViewSet (read for anyone; write needs forums.add/change/delete_forum)
 /api/threads/              → ThreadViewSet (IsOwnerOrModeratorOrReadOnly); ?forum=<id> filters
 /api/posts/                → PostViewSet (IsOwnerOrModeratorOrReadOnly); ?thread=<id> filters
@@ -224,6 +225,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. 
 - The API is throttled (`REST_FRAMEWORK` in `base.py`): 60 requests a minute per address for anonymous clients, 120 per user when logged in; over that it answers 429, which the security log records as `denied status=429`. `NUM_PROXIES` is `0` in `base.py` and `1` in production, like `ALLAUTH_TRUSTED_PROXY_COUNT`; a second proxy needs 2. The counters are in the cache, so the API fails while Redis is down. DRF reads the rates at import: tests change them with the `rates` fixture in `tests/forums/conftest.py`
 - **Posting limit**: a user may create 5 threads or posts a minute and 30 an hour (`posting_burst`, `posting_hour` in `DEFAULT_THROTTLE_RATES`), counted together for the website and the API, staff and moderators included. `forums/throttling.py` has the two DRF throttles; `PostingLimitMixin` in `forums/views.py` (the form comes back with status 429 and the text kept; forms with errors don't count) and in `api/views.py` (on `create`) use them. A new view that creates threads or posts needs the mixin too
 - **Search and preview limits**: 20 searches a minute per user (per address for visitors; searches too short to run don't count) and 30 Markdown previews a minute per user (`search`, `preview` in `DEFAULT_THROTTLE_RATES`; `SearchThrottle`, `PreviewThrottle` in `forums/throttling.py`). Over the limit the search page says so with status 429 and runs no query; the editor shows that the preview could not be loaded
+- The REST API is off unless `DJANGO_API_ENABLED=true`. Code outside `api/` must not `reverse()` its routes: they may not exist (`users/security.py` uses the fixed `API_PATH`). Tests of the off state reload the URL configuration with the `api_off` fixture in `tests/test_api_switch.py`
 - Session + Token authentication for the REST API. The API has no login page of its own (DRF's `api-auth/` would skip the two-factor step): log in on the site
 - **Staff and moderators must use two-factor authentication** while `STAFF_REQUIRE_MFA` is on (default; off in development). It applies to every privileged user (`users.security.is_privileged`): staff, superusers, and anyone holding a permission, directly or through a group such as Moderators. Members have no permissions:
   - `admin.site.login` is wrapped in allauth's `secure_admin_login` (`project/urls.py`), so the admin uses allauth's login with its code prompt
@@ -279,6 +281,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
+| `DJANGO_API_ENABLED` | `true` mounts the REST API under `/api/` (`settings.API_ENABLED`, read by `project/urls.py`). Off by default, so production has no API unless asked for: every `/api/` path is a 404. `development.py` defaults to on and `test.py` sets it on. The `api` app, DRF and the token table stay installed either way, and the website's posting, search and preview limits (DRF throttles) don't depend on it |
 | `DJANGO_STAFF_REQUIRE_MFA` | Staff, moderators and anyone else with a permission need an authenticator app to use the site, and their API tokens are refused (`settings.STAFF_REQUIRE_MFA`). Default `true`; `development.py` defaults to `false` |
 | `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()` and `Post.notify_subscribers`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
@@ -331,7 +334,7 @@ A push or PR that changes only `*.md` files or `docs/` doesn't start the workflo
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
-A `prod-image` job builds the production image, starts it with production settings and fake env values (no Redis or secrets needed) next to a Postgres set up by the production init script, runs `check --deploy --fail-level WARNING`, runs the migrations as the app's database role and checks that role has no special rights, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that the container doesn't run as root, that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
+A `prod-image` job builds the production image, starts it with production settings and fake env values (no Redis or secrets needed) next to a Postgres set up by the production init script, runs `check --deploy --fail-level WARNING`, runs the migrations as the app's database role and checks that role has no special rights, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that the container doesn't run as root, that `/api/` isn't routed, that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
 ## Architecture Notes
 
