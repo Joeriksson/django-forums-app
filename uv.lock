@@ -489,7 +489,6 @@ dependencies = [
     { name = "django-allauth", extra = ["mfa"] },
     { name = "django-cors-headers" },
     { name = "django-crispy-forms" },
-    { name = "django-debug-toolbar" },
     { name = "django-lifecycle" },
     { name = "django-redis" },
     { name = "djangorestframework" },
@@ -508,6 +507,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "django-debug-toolbar" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -523,7 +523,6 @@ requires-dist = [
     { name = "django-allauth", extras = ["mfa"], specifier = ">=65.14.1" },
     { name = "django-cors-headers", specifier = ">=4.0" },
     { name = "django-crispy-forms", specifier = ">=2.1" },
-    { name = "django-debug-toolbar", specifier = ">=4.2" },
     { name = "django-lifecycle", specifier = ">=1.0" },
     { name = "django-redis", specifier = ">=5.4" },
     { name = "djangorestframework", specifier = ">=3.14" },
@@ -542,6 +541,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "django-debug-toolbar", specifier = ">=4.2" },
     { name = "pytest", specifier = ">=7.4" },
     { name = "pytest-cov", specifier = ">=5.0" },
     { name = "pytest-django", specifier = ">=4.8" },

@@ -262,7 +262,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 
 | Variable | Description |
 |---|---|
-| `SECRET_KEY` | Django secret key |
+| `SECRET_KEY` | Django secret key. Production refuses to start (`ImproperlyConfigured`) with fewer than 50 characters, fewer than 5 different ones, or a `django-insecure-` key |
 | `ENVIRONMENT` | `development`, `production`, `CI`, or `test` |
 | `DJANGO_SETTINGS_MODULE` | `project.settings.development` for local/Docker dev (otherwise `manage.py` uses `base`, Celery uses `production`) |
 | `EMAIL_HOST` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | Production SMTP server and login. All three are required: production refuses to start (`ImproperlyConfigured`) if any is missing, unless `DJANGO_EMAIL_CONSOLE=true` |
@@ -313,6 +313,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 - **django-redis** — Redis cache backend
 - **celery** — async task queue
 - **whitenoise** — static file serving. `base.py` uses `CompressedManifestStaticFilesStorage`: `collectstatic` (in the `Dockerfile`) adds a content hash to each file name and gzips it, so browsers cache static files forever and still get new ones after a deploy. With `DEBUG=False`, a `{% static %}` path that doesn't exist makes the page fail with a 500 (`tests/test_static_files.py` checks the project templates). Development and test settings use Django's plain `StaticFilesStorage`, since there is no manifest there
+- **django-debug-toolbar** — in the dev dependency group, loaded only by `development.py`; the production image doesn't install it
 - **uv** — package/project manager (replaces pip/pipenv)
 - **pytest + pytest-django + pytest-xdist** — parallel test runner
 
@@ -327,14 +328,14 @@ A push or PR that changes only `*.md` files or `docs/` doesn't start the workflo
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
-A `prod-image` job builds the production image, starts it with production settings and fake env values (no database, Redis or secrets needed), runs `check --deploy --fail-level WARNING`, runs `gunicorn --check-config` (nothing else in CI starts gunicorn) and checks that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
+A `prod-image` job builds the production image, starts it with production settings and fake env values (no database, Redis or secrets needed), runs `check --deploy --fail-level WARNING`, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
 ## Architecture Notes
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
 - `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` — integer PKs (not BigAutoField)
 - `SITE_ID = 1` — required by `django.contrib.sites`, which allauth uses for the site name in its emails. Our own email links use `SITE_URL`, not the *Sites* domain
-- CORS allowed from `localhost:3000` / `127.0.0.1:3000` (for potential frontend clients)
+- CORS: `development.py` allows `localhost:3000` / `127.0.0.1:3000` (for a local frontend client); production allows no other origin
 - Admin URL is configurable via `ADMIN_URL` env var (defaults to `nimda`) as a security measure
 
 ## General Rules

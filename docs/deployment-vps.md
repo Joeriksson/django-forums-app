@@ -60,7 +60,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 
 | Variable | Value |
 |---|---|
-| `SECRET_KEY` | A long random string, e.g. from `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
+| `SECRET_KEY` | A long random string, e.g. from `python -c "import secrets; print(secrets.token_urlsafe(50))"`. At least 50 characters, or the containers refuse to start. Changing it later logs everyone out |
 | `DJANGO_ALLOWED_HOSTS` | Your domain(s), comma-separated: `forum.example.com` |
 | `DJANGO_SITE_URL` | The site's public address, with `https` and without a path: `https://forum.example.com`. Notification and invitation emails build their links from it. The app won't start without it |
 | `POSTGRES_PASSWORD` | Database password. Use URL-safe characters (letters, digits, `-`, `_`), because it is put into `DATABASE_URL` as is |
@@ -219,6 +219,7 @@ After the first deployment with this setup, check that lines arrive: `journalctl
 
 | Symptom | Likely cause |
 |---|---|
+| Containers exit with `ImproperlyConfigured: Set SECRET_KEY` | `SECRET_KEY` is missing, shorter than 50 characters or not random enough |
 | Containers exit with `ImproperlyConfigured: Missing SMTP settings` | One of `EMAIL_HOST`, `EMAIL_HOST_USER` or `EMAIL_HOST_PASSWORD` is missing |
 | `docker compose` says `required variable ... is missing a value` | `POSTGRES_PASSWORD` or `REDIS_PASSWORD` isn't set in `.env` |
 | Every page returns **400 Bad Request** | The domain isn't in `DJANGO_ALLOWED_HOSTS` |
