@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from forums.models import Forum, Thread, Post
+from users.security import is_privileged
 
 
 @pytest.fixture(scope="function")
@@ -66,8 +67,8 @@ def get_user_client(add_totp):
     def _get_user_client(user):
         client = APIClient()
 
-        # Staff tokens are refused: staff use a session, with an authenticator app
-        if user.is_staff:
+        # Staff and moderator tokens are refused: they use a session, with an authenticator app
+        if is_privileged(user):
             add_totp(user)
             client.force_login(user)
             return client
