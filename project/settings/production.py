@@ -67,3 +67,5 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # X-Forwarded-For entry, the one that proxy added. Without this its rate limits (failed
 # logins, signups, password resets) would count every visitor as the proxy.
 ALLAUTH_TRUSTED_PROXY_COUNT = 1
+# The same for the API's throttles
+REST_FRAMEWORK = {**REST_FRAMEWORK, 'NUM_PROXIES': 1}
