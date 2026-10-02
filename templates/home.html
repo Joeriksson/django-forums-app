@@ -1,35 +1,34 @@
 {% extends '_base.html' %}
+{% load signup %}
 
-{% block title %}Home{% endblock title %}
+{% block title %}Wildvasa{% endblock title %}
 
 {% block content %}
-    <div class="jumbotron my-3">
-        <div class="container">
-            <h1 class="display-4">Homepage</h1>
-            {#            {% if user.is_authenticated %}#}
-            {#                Hi {{ user.username }}!#}
-            {#                <p><a href="{% url 'account_logout' %}">Logout</a></p>#}
-            {#            {% else %}#}
-            {#                <p>You are not logged in</p>#}
-            {#                <p><a href="{% url 'account_login' %}">Login</a>#}
-            {#                    or#}
-            {#                    <a href="{% url 'account_signup' %}">Sign#}
-            {#                        up</a>#}
-            {#                </p>#}
-            {##}
-            {#            {% endif %}#}
-
-            <hr class="my-4">
-            <p>
-            <h3>Welcome to Wildvasa Forums!</h3></p>
-            <p class="lead">This is a web app built on Django. I built it in my journey to learn python and web
-                development.</p>
-            <p>Source code: <a href="https://github.com/Joeriksson/django-forums-app">https://github.com/Joeriksson/django-forums-app</a></p>
-            <p></p>
-            <a class="btn btn-info btn-lg" href="/forums" role="button">Go to Forums</a>
+    {% if user.is_authenticated %}
+        <div class="page-head">
+            <h1>Latest conversations</h1>
+            <a class="button button--quiet" href="{% url 'forum_list' %}">All forums</a>
         </div>
-    </div>
-
-
-
+        {% if threads %}
+            <ul class="rows">
+                {% for thread in threads %}
+                    {% include 'forums/_thread_row.html' with show_forum=True %}
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty">No conversations yet. Pick a <a href="{% url 'forum_list' %}">forum</a> and start one.</p>
+        {% endif %}
+    {% else %}
+        <div class="door">
+            <h1 class="door__name">Wildvasa</h1>
+            <p class="door__text">A private forum. Log in to read and write.</p>
+            <p>
+                <a class="button" href="{% url 'account_login' %}">Log in</a>
+                {% signup_is_open as signup_open %}
+                {% if signup_open %}
+                    <a class="button button--quiet" href="{% url 'account_signup' %}">Sign up</a>
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
 {% endblock content %}
