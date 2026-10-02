@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.db import models, transaction
 
+from .audit import log_event
 from .forms import CustomUserCreationForm, CustomUserChangeForm, InvitationAdminForm
 from .models import Invitation
 from .tasks import send_invitation_email_task
@@ -86,6 +87,8 @@ class InvitationAdmin(admin.ModelAdmin):
             obj.invited_by = request.user
         super().save_model(request, obj, form, change)
         if not change:
+            # The id only: the address is in the database, and the key must never be logged
+            log_event('invitation_created', request, user=request.user.pk, invitation=obj.pk)
             self.send_email(obj)
 
     def send_email(self, invitation):
@@ -103,6 +106,7 @@ class InvitationAdmin(admin.ModelAdmin):
                 skipped += 1
                 continue
             invitation.renew()
+            log_event('invitation_resent', request, user=request.user.pk, invitation=invitation.pk)
             self.send_email(invitation)
             sent += 1
         if sent:
