@@ -1,11 +1,7 @@
 from django.db.models import Count
 from rest_framework import serializers, viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import (
-    DjangoModelPermissionsOrAnonReadOnly,
-    IsAdminUser,
-    IsAuthenticatedOrReadOnly,
-)
+from rest_framework.permissions import DjangoModelPermissions, IsAdminUser, IsAuthenticated
 
 from forums.models import Forum, Thread, Post
 from forums.throttling import POSTING_THROTTLES
@@ -60,8 +56,8 @@ class PostingLimitMixin:
 
 
 class ForumViewSet(viewsets.ModelViewSet):
-    # Anyone can read; writing needs forums.add/change/delete_forum
-    permission_classes = (DjangoModelPermissionsOrAnonReadOnly,)
+    # Members can read; writing needs forums.add/change/delete_forum
+    permission_classes = (DjangoModelPermissions,)
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = Forum.objects.annotate(thread_count=Count('threads')).order_by('title')
     serializer_class = ForumSerializer
@@ -73,7 +69,8 @@ class ForumViewSet(viewsets.ModelViewSet):
 
 
 class ThreadViewSet(PostingLimitMixin, ModerationLogMixin, viewsets.ModelViewSet):
-    permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
+    # Members only; changing or deleting needs the owner or a moderator
+    permission_classes = (IsAuthenticated & IsOwnerOrModeratorOrReadOnly,)
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = Thread.objects.annotate(post_count=Count('posts')).order_by('-added')
     serializer_class = ThreadSerializer
@@ -88,7 +85,8 @@ class ThreadViewSet(PostingLimitMixin, ModerationLogMixin, viewsets.ModelViewSet
 
 
 class PostViewSet(PostingLimitMixin, ModerationLogMixin, viewsets.ModelViewSet):
-    permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
+    # Members only; changing or deleting needs the owner or a moderator
+    permission_classes = (IsAuthenticated & IsOwnerOrModeratorOrReadOnly,)
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 
