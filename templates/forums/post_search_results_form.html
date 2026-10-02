@@ -49,7 +49,9 @@
                 {% endif %}
             {% endwith %}
         {% empty %}
-            {% if too_short %}
+            {% if throttled %}
+                Too many searches. Wait a minute and try again.
+            {% elif too_short %}
                 Type at least {{ min_query_length }} characters to search.
             {% else %}
                 Search for <i>"{{ request.GET.q }}"</i> didn't return any results!

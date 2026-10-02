@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from rest_framework.throttling import SimpleRateThrottle
 from forums.models import Forum, Thread, Post
 from users.security import is_privileged
 
@@ -81,3 +82,14 @@ def get_user_client(add_totp):
         return client
 
     return _get_user_client
+
+
+@pytest.fixture
+def rates(monkeypatch):
+    """Lower a throttle rate for the test: DRF reads the rates when it is imported."""
+
+    def _rates(**rates):
+        for scope, rate in rates.items():
+            monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, scope, rate)
+
+    return _rates

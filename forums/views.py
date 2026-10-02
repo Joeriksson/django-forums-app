@@ -23,7 +23,7 @@ from django.views.generic import (
 from .forms import SearchForm
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
-from .throttling import posting_allowed
+from .throttling import PreviewThrottle, SearchThrottle, allowed, posting_allowed
 from users.audit import log_moderation
 
 
@@ -292,7 +292,9 @@ class SearchResultsView(ListView):
         query = self.request.GET.get('q', '').strip()[: self.max_query_length]
         self.too_short = len(query) < self.min_query_length
         self.limited = False
-        if self.too_short:
+        # Counted only when a search would run
+        self.throttled = not self.too_short and not allowed(self.request, SearchThrottle)
+        if self.too_short or self.throttled:
             return []
 
         posts = Post.objects.filter(text__icontains=query).select_related('thread', 'user')
@@ -311,10 +313,16 @@ class SearchResultsView(ListView):
     def get_context_data(self, **kwargs):
         return super().get_context_data(
             too_short=self.too_short,
+            throttled=self.throttled,
             limited=self.limited,
             min_query_length=self.min_query_length,
             **kwargs,
         )
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.throttled:
+            response_kwargs['status'] = 429
+        return super().render_to_response(context, **response_kwargs)
 
     # ## SearchRank ##
     # def get_queryset(self):
@@ -331,6 +339,9 @@ class MarkdownPreview(LoginRequiredMixin, View):
     http_method_names = ['post']
 
     def post(self, request):
+        if not allowed(request, PreviewThrottle):
+            # The editor shows "The preview could not be loaded."
+            return HttpResponse('Too many previews. Wait a moment and try again.', status=429)
         text = request.POST.get('text', '')
         # Longer than a thread or post may be: it couldn't be saved either
         if len(text) > MAX_TEXT_LENGTH:

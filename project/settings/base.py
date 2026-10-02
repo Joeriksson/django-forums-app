@@ -293,6 +293,9 @@ REST_FRAMEWORK = {
         # New threads and posts per user, on the site and in the API together (forums/throttling.py)
         'posting_burst': '5/min',
         'posting_hour': '30/hour',
+        # Web views: search per user or address, the editor's preview per user
+        'search': '20/min',
+        'preview': '30/min',
     },
     # No proxy: the address is the connection's. DRF's default would trust any
     # X-Forwarded-For header, so a client could reset its count by making one up

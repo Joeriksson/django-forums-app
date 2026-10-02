@@ -5,17 +5,6 @@ from rest_framework.throttling import SimpleRateThrottle
 URL = '/api/forums/'
 
 
-@pytest.fixture
-def rates(monkeypatch):
-    """Lower a throttle rate for the test: DRF reads the rates when it is imported."""
-
-    def _rates(**rates):
-        for scope, rate in rates.items():
-            monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, scope, rate)
-
-    return _rates
-
-
 def statuses(client, count, **extra):
     return [client.get(URL, **extra).status_code for _ in range(count)]
 
