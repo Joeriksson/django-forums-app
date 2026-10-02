@@ -31,7 +31,7 @@ class Forum(models.Model):
         ordering = ['title']
 
 
-class Thread(LifecycleModelMixin, models.Model):
+class Thread(models.Model):
     title = models.CharField(max_length=300)
     text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     added = models.DateTimeField(auto_now_add=True)
@@ -48,14 +48,6 @@ class Thread(LifecycleModelMixin, models.Model):
 
     class Meta:
         ordering = ['-added']
-
-    @hook(AFTER_SAVE)
-    @hook(AFTER_DELETE)
-    @hook(AFTER_CREATE)
-    def invalidate_cache(self):
-        # A thread moved to another forum must also leave the old forum's cache
-        forum_ids = {self.forum_id, self.initial_value('forum_id')}
-        cache.delete_many([f'thread_objects_forum_{pk}' for pk in forum_ids if pk])
 
 
 class Post(LifecycleModelMixin, models.Model):

@@ -6,7 +6,8 @@ from django.contrib.auth.mixins import (
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.db.models import F, Q
+from django.core.paginator import Paginator
+from django.db.models import Count, F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -34,24 +35,22 @@ class ForumsList(ListView, FormView):
 class ForumDetail(DetailView):
     model = Forum
     context_object_name = 'forum'
+    paginate_by = 20
 
     def get_context_data(self, **kwargs):
-        # Call the base implementation
-        context = super(ForumDetail, self).get_context_data(**kwargs)
-
-        thread_objects = cache.get(f'thread_objects_forum_{self.kwargs["pk"]}')
-
-        if thread_objects is None:
-            thread_objects = (
-                Thread.objects.filter(forum=self.kwargs['pk'])
-                .prefetch_related('user')
-                .prefetch_related('user__profile')
-                .prefetch_related('posts')
-            )
-            cache.set(f'thread_objects_forum_{self.kwargs["pk"]}', thread_objects)
-
-        context['threads'] = thread_objects
-
+        context = super().get_context_data(**kwargs)
+        # One page of threads, with each author, profile and post count in the same query
+        threads = (
+            Thread.objects.filter(forum=self.object)
+            .select_related('user__profile')
+            .annotate(post_count=Count('posts'))
+            # Django skips Meta.ordering on GROUP BY queries, so order explicitly
+            .order_by('-added', '-id')
+        )
+        # get_page() shows the first or last page for a page number that doesn't exist
+        context['threads'] = Paginator(threads, self.paginate_by).get_page(
+            self.request.GET.get('page')
+        )
         return context
 
 

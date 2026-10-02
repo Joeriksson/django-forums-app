@@ -131,7 +131,6 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 - `forum` (ForeignKey → Forum)
 - `user` (ForeignKey → AUTH_USER_MODEL)
 - Ordered by `-added`
-- **Lifecycle hooks**: invalidates Redis cache key `thread_objects_forum_<forum_id>` on save/delete/create
 
 ### Post
 - `text` (TextField — Markdown, max 20 000 characters)
@@ -175,7 +174,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 ```
 /                          → pages (home)
 /forums/                   → ForumsList
-/forums/<pk>/              → ForumDetail
+/forums/<pk>/              → ForumDetail (20 threads per page, newest first; ?page=<n>)
 /forums/add/               → ForumCreate (requires forums.add_forum permission)
 /forums/<pk>/update/       → ForumUpdate (requires forums.change_forum permission)
 /forums/<pk>/add/          → ThreadCreate (login required)
@@ -206,10 +205,11 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 ## Caching
 
 Redis is used for object-level caching:
-- `thread_objects_forum_<forum_id>` — cached queryset of threads for a forum
 - `post_objects_thread_<thread_id>` — cached queryset of posts for a thread
 
 Cache is invalidated automatically via `django-lifecycle` hooks on model save/delete/create.
+
+The forum page is not cached: it loads one page of threads, with authors and post counts, in a single query.
 
 ## Authentication & Permissions
 

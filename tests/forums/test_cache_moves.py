@@ -11,7 +11,7 @@ def test_cache_starts_empty_in_every_test(run):
 
 
 @pytest.mark.django_db
-def test_moving_thread_clears_old_forum_cache(
+def test_moved_thread_shows_on_its_new_forum_page(
     client, add_forum, add_thread, add_user
 ):
     user = add_user('mover', 'mover@example.com', 'pass1234')
@@ -19,7 +19,7 @@ def test_moving_thread_clears_old_forum_cache(
     new_forum = add_forum('New forum', 'New')
     thread = add_thread('Moving thread', 'Text', old_forum, user)
 
-    # Fill both forums' thread caches
+    # Load both forum pages first: an earlier version cached their threads
     resp = client.get(reverse('forum_detail', args=(old_forum.id,)))
     assert thread in resp.context['threads']
     resp = client.get(reverse('forum_detail', args=(new_forum.id,)))
