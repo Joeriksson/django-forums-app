@@ -274,7 +274,8 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | `DJANGO_ADMINS` | Optional: comma-separated email addresses that Django's default logging mails the traceback of every 500 when `DEBUG=False`. Empty means no error mails. Addresses only: Django never uses the name, and Django 6 drops the `(name, address)` pairs `base.py` still builds for 5.2 |
 | `REDIS_URL` | Redis URL (default: `redis://redis:6379/0`). The database number is replaced: cache uses `/0`, Celery uses `/1`. Set automatically by `docker-compose-prod.yml` |
 | `REDIS_LOCALHOST` | Set to `true` when using local Redis |
-| `POSTGRES_PASSWORD` | `docker-compose-prod.yml` only (required): Postgres password; also used to build `DATABASE_URL`. Use URL-safe characters |
+| `POSTGRES_PASSWORD` | `docker-compose-prod.yml` only (required): password of the Postgres superuser, for maintenance; the app doesn't use it |
+| `POSTGRES_APP_PASSWORD` | `docker-compose-prod.yml` only (required): password of the app's database role `forum`; used to build `DATABASE_URL`. Use URL-safe characters |
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
@@ -287,7 +288,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 
 ## Services
 
-- **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres` in dev and CI, `POSTGRES_PASSWORD` in production)
+- **PostgreSQL**: Database (host: `db` in Docker, `localhost` for CI; credentials: `postgres/postgres` in dev and CI). In production the app connects as the role `forum`, which owns the database `forum` and has no other rights; `docker/postgres/create-app-role.sh` creates both when the volume is first created. A migration that needs a superuser (`CREATE EXTENSION`) won't run there: CI's `prod-image` job runs the migrations as that role
 - **Redis**: cache for the login rate limits, and Celery message broker (password-protected and not published in `docker-compose-prod.yml`)
 - **Celery**: Async task queue for email notifications
 - **Email**: SMTP in production (required, see `EMAIL_*` above); console backend in development
@@ -330,7 +331,7 @@ A push or PR that changes only `*.md` files or `docs/` doesn't start the workflo
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
-A `prod-image` job builds the production image, starts it with production settings and fake env values (no database, Redis or secrets needed), runs `check --deploy --fail-level WARNING`, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that the container doesn't run as root, that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
+A `prod-image` job builds the production image, starts it with production settings and fake env values (no Redis or secrets needed) next to a Postgres set up by the production init script, runs `check --deploy --fail-level WARNING`, runs the migrations as the app's database role and checks that role has no special rights, runs `gunicorn --check-config` (nothing else in CI starts gunicorn), checks that the container doesn't run as root, that no dev package (debug toolbar, pytest) is in the image and that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
 
 ## Architecture Notes
 

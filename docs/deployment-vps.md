@@ -65,7 +65,8 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `SECRET_KEY` | A long random string, e.g. from `python -c "import secrets; print(secrets.token_urlsafe(50))"`. At least 50 characters, or the containers refuse to start. Changing it later logs everyone out |
 | `DJANGO_ALLOWED_HOSTS` | Your domain(s), comma-separated: `forum.example.com` |
 | `DJANGO_SITE_URL` | The site's public address, with `https` and without a path: `https://forum.example.com`. Notification and invitation emails build their links from it. The app won't start without it |
-| `POSTGRES_PASSWORD` | Database password. Use URL-safe characters (letters, digits, `-`, `_`), because it is put into `DATABASE_URL` as is |
+| `POSTGRES_PASSWORD` | Password of the database superuser `postgres`, used for maintenance on the server only. The app doesn't use it |
+| `POSTGRES_APP_PASSWORD` | Password of the app's own database role, `forum`; use a different one. URL-safe characters (letters, digits, `-`, `_`), because it is put into `DATABASE_URL` as is |
 | `REDIS_PASSWORD` | Redis password. Also URL-safe, for the same reason |
 | `EMAIL_HOST` | Your SMTP server |
 | `EMAIL_HOST_USER` | SMTP login (usually the sending address) |
@@ -111,11 +112,11 @@ Then:
 
 ```bash
 git pull
-docker compose -f docker-compose-prod.yml up -d --build
+docker compose -f docker-compose-prod.yml up -d --build --remove-orphans
 docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 ```
 
-Use `up`, not `down` followed by `up`. `down` tries to remove `forum_proxy`, which fails with "network has active endpoints" while Caddy is attached. If you do need `down`, stop Caddy first.
+`--remove-orphans` removes the container of a service that is no longer in the compose file. Use `up`, not `down` followed by `up`. `down` tries to remove `forum_proxy`, which fails with "network has active endpoints" while Caddy is attached. If you do need `down`, stop Caddy first.
 
 Migrations don't run automatically. **Back up the database before migrating** (see below); some migrations change data. For example, `forums.0015` deletes duplicate upvotes and subscriptions, and that can't be undone.
 
@@ -124,16 +125,18 @@ Static files are collected into the image when it's built (`collectstatic` in th
 ## 5. Backups
 
 ```bash
-docker compose -f docker-compose-prod.yml exec -T db pg_dump -U postgres postgres > backup-$(date +%F).sql
+docker compose -f docker-compose-prod.yml exec -T db pg_dump -U forum forum > backup-$(date +%F).sql
 ```
 
 Restore into an empty database with `psql`:
 
 ```bash
-docker compose -f docker-compose-prod.yml exec -T db psql -U postgres postgres < backup-YYYY-MM-DD.sql
+docker compose -f docker-compose-prod.yml exec -T db psql -U forum forum < backup-YYYY-MM-DD.sql
 ```
 
-`POSTGRES_PASSWORD` is only applied when the `postgres_data` volume is first created. Changing it later requires changing the password inside Postgres as well.
+The forum's data is in the database `forum`, owned by the role `forum`, which is all the app can touch: it is not a superuser and can't create roles or databases. `docker/postgres/create-app-role.sh` creates both when the `postgres_data` volume is first created. The superuser `postgres` is for maintenance: `docker compose -f docker-compose-prod.yml exec db psql -U postgres`.
+
+Both passwords are only applied when the volume is first created. Changing one later requires changing it inside Postgres as well (`ALTER ROLE forum PASSWORD '...'` as `postgres`).
 
 ## 6. Raising HSTS
 
@@ -223,7 +226,8 @@ After the first deployment with this setup, check that lines arrive: `journalctl
 |---|---|
 | Containers exit with `ImproperlyConfigured: Set SECRET_KEY` | `SECRET_KEY` is missing, shorter than 50 characters or not random enough |
 | Containers exit with `ImproperlyConfigured: Missing SMTP settings` | One of `EMAIL_HOST`, `EMAIL_HOST_USER` or `EMAIL_HOST_PASSWORD` is missing |
-| `docker compose` says `required variable ... is missing a value` | `POSTGRES_PASSWORD` or `REDIS_PASSWORD` isn't set in `.env` |
+| `docker compose` says `required variable ... is missing a value` | `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD` or `REDIS_PASSWORD` isn't set in `.env` |
+| `web` logs `password authentication failed for user "forum"` or `role "forum" does not exist` | The `postgres_data` volume was created before the role existed, or with another password: the init script only runs on an empty volume. Create the role and database by hand as `postgres` (the statements are in `docker/postgres/create-app-role.sh`), or, with no data to keep, remove the volume and start again |
 | Every page returns **400 Bad Request** | The domain isn't in `DJANGO_ALLOWED_HOSTS` |
 | Forms fail with **CSRF verification failed** | Same: `CSRF_TRUSTED_ORIGINS` is built from `DJANGO_ALLOWED_HOSTS` |
 | Endless redirect loop | The proxy doesn't send `X-Forwarded-Proto: https` |
