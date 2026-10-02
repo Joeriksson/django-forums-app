@@ -8,6 +8,7 @@ from rest_framework.permissions import (
 )
 
 from forums.models import Forum, Thread, Post
+from users.audit import log_moderation
 from users.models import CustomUser
 from .permissions import IsOwnerOrModeratorOrReadOnly
 from .serializers import (
@@ -32,6 +33,21 @@ def filter_by_id(queryset, request, param):
     return queryset.filter(**{f'{param}_id': pk})
 
 
+class ModerationLogMixin:
+    """Record edits and deletions of other users' threads and posts in the security log."""
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        log_moderation(self.request, 'change', serializer.instance)
+
+    def perform_destroy(self, instance):
+        # The id is gone from the object once it is deleted
+        pk = instance.pk
+        super().perform_destroy(instance)
+        instance.pk = pk
+        log_moderation(self.request, 'delete', instance)
+
+
 class ForumViewSet(viewsets.ModelViewSet):
     # Anyone can read; writing needs forums.add/change/delete_forum
     permission_classes = (DjangoModelPermissionsOrAnonReadOnly,)
@@ -45,7 +61,7 @@ class ForumViewSet(viewsets.ModelViewSet):
         forum.thread_count = 0
 
 
-class ThreadViewSet(viewsets.ModelViewSet):
+class ThreadViewSet(ModerationLogMixin, viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = Thread.objects.annotate(post_count=Count('posts')).order_by('-added')
@@ -60,7 +76,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
         thread.post_count = 0
 
 
-class PostViewSet(viewsets.ModelViewSet):
+class PostViewSet(ModerationLogMixin, viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
     queryset = Post.objects.all()
     serializer_class = PostSerializer
