@@ -4,13 +4,12 @@ from django.contrib.auth.mixins import (
     PermissionRequiredMixin,
 )
 from django.contrib.messages.views import SuccessMessageMixin
-from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     ListView,
     DetailView,
@@ -71,26 +70,35 @@ class ForumUpdate(PermissionRequiredMixin, UpdateView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['pk']})
 
 
+def thread_page_url(thread_id, page=None):
+    """A thread's page; `page` is a page number or 'last', anything else gives the first page."""
+    url = reverse('thread_detail', kwargs={'pk': thread_id})
+    page = str(page or '')
+    if page == 'last' or page.isdecimal():
+        return f'{url}?page={page}'
+    return url
+
+
 class ThreadDetail(DetailView):
     model = Thread
     context_object_name = 'thread'
+    paginate_by = 25
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('forum', 'user__profile')
 
     def get_context_data(self, **kwargs):
-        # Call the base implementation
-        context = super(ThreadDetail, self).get_context_data(**kwargs)
-
-        post_objects = cache.get(f'post_objects_thread_{self.kwargs["pk"]}')
-
-        if post_objects is None:
-            post_objects = (
-                Post.objects.filter(thread=self.kwargs['pk'])
-                .select_related('thread')
-                .select_related('user')
-                .prefetch_related('user__profile')
-            )
-            cache.set(f'post_objects_thread_{self.kwargs["pk"]}', post_objects)
-
-        context['posts'] = post_objects
+        context = super().get_context_data(**kwargs)
+        # One page of posts, oldest first, with each author and profile in the same query
+        posts = (
+            Post.objects.filter(thread=self.object)
+            .select_related('user__profile')
+            .order_by('added', 'id')
+        )
+        paginator = Paginator(posts, self.paginate_by)
+        page = self.request.GET.get('page')
+        # get_page() shows the first or last page for a page number that doesn't exist
+        context['posts'] = paginator.get_page(paginator.num_pages if page == 'last' else page)
 
         # Check if current user upvoted
         if self.request.user.is_authenticated:
@@ -184,7 +192,8 @@ class PostCreate(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return super(PostCreate, self).form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
+        # The new post is the last one of the thread
+        return thread_page_url(self.kwargs['pk'], 'last')
 
 
 class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -215,12 +224,9 @@ class PostUpvote(LoginRequiredMixin, View):
             raise PermissionDenied
         _, created = UpVote.objects.get_or_create(post=post, user=request.user)
         if created:
-            # update() skips lifecycle hooks, so clear the post cache by hand
             Post.objects.filter(id=post.id).update(upvotes=F('upvotes') + 1)
-            post.invalidate_cache()
-        return HttpResponseRedirect(
-            reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']})
-        )
+        # Back to the page of the thread the vote came from
+        return HttpResponseRedirect(thread_page_url(self.kwargs['tpk'], request.POST.get('page')))
 
 
 class ThreadNotification(LoginRequiredMixin, View):
@@ -233,9 +239,7 @@ class ThreadNotification(LoginRequiredMixin, View):
         ).delete()
         if not deleted:
             Notification.objects.create(thread=thread, user=request.user)
-        return HttpResponseRedirect(
-            reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
-        )
+        return HttpResponseRedirect(thread_page_url(thread.pk, request.POST.get('page')))
 
 
 class SearchResultsView(ListView):
