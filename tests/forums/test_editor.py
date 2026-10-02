@@ -1,6 +1,9 @@
+from pathlib import Path
+
 import pytest
 from django.apps import apps
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.db import models
 from django.urls import reverse
 from pytest_django.asserts import assertContains, assertNotContains
@@ -94,7 +97,10 @@ def test_thread_page_highlights_code_with_our_own_script(client, thread):
     resp = client.get(reverse('thread_detail', args=(thread.id,)))
 
     assertContains(resp, 'js/highlight.min.js')
-    assertContains(resp, 'hljs.highlightElement')
+    # The call is in a file of ours, not inline in the page
+    assertContains(resp, 'js/thread.js')
+    assertNotContains(resp, 'hljs.highlightElement')
+    assert 'hljs.highlightElement' in Path(finders.find('js/thread.js')).read_text()
     for leftover in ('semantic', 'plugins/'):
         assertNotContains(resp, leftover)
 
