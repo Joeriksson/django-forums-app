@@ -5,3 +5,10 @@ h1 {
 body {
     padding-top: 70px;
 }
+
+/* Page title above the thread page and the thread and post forms */
+.heading {
+    padding-top: 70px;
+    margin-top: 70px;
+    margin-bottom: 30px;
+}
