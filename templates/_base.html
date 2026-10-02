@@ -12,6 +12,7 @@
         <link rel="stylesheet" href="{% static 'css/base.css' %}">
         <link rel="stylesheet" href="{% static 'css/bootstrap-social.css' %}">
         <link rel="stylesheet" href="{% static 'css/brands.css' %}">
+        <link rel="stylesheet" href="{% static 'css/fontawesome-svg.css' %}">
     {% endblock stylesheets %}
 </head>
 
@@ -112,6 +113,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
             integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
             crossorigin="anonymous"></script>
-    <script defer src="{% static 'js/all.js' %}"></script>
+    {# Font Awesome would add its styles as an inline <style>; they are in css/fontawesome-svg.css #}
+    <script defer src="{% static 'js/all.js' %}" data-auto-add-css="false"></script>
 {% endblock %}
 </body>

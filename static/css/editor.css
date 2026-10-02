@@ -1,0 +1,7 @@
+/* The Markdown editor (EasyMDE), see templates/forums/_editor.html */
+
+/* The table button has the class "table", which Bootstrap styles as a full-width table */
+.editor-toolbar button.table {
+    width: auto;
+    margin-bottom: 0;
+}

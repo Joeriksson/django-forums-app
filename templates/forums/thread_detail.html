@@ -5,23 +5,11 @@
 {% block stylesheets %}
     {{ block.super }}
     <link href="{% static 'css/darcula.css' %}" type="text/css" media="all" rel="stylesheet"/>
-    <style>
-        .main-container {
-            margin-top: 7em
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/thread.css' %}">
 {% endblock stylesheets %}
 
 
 {% block content %}
-
-        <style>
-            .heading {
-                padding-top: 70px;
-                margin-top: 70px;
-                margin-bottom: 30px;
-            }
-        </style>
 
     <div class="p-3 heading">
         <div class="pb-3">
@@ -156,37 +144,6 @@
 {% endblock %}
 {% block javascripts %}
     {{ block.super }}
-    <style>
-        blockquote {
-            padding: 10px 20px;
-            font-weight: 300;
-            font-size: 1.0em
-            background-color: hsla(0, 0%, 50%, .05);
-            border-top-right-radius: 5px;
-            border-bottom-right-radius: 5px;
-            border-left: 8px solid hsla(0, 0%, 50%, .075);
-            border-left-width: 10px;
-            margin-bottom: 20px;
-        }
-
-        :not(pre) > code {
-            font-size: .8em;
-            white-space: nowrap;
-            color: #c25;
-            padding: 1px 3px;
-            background-color: #f7f7f9;
-            border: 1px solid #e1e1e8;
-            border-radius: 3px
-        }
-
-        body {
-            font-size: 1.1em;
-        }
-    </style>
     <script src="{% static 'js/highlight.min.js' %}"></script>
-    <script>
-        document.querySelectorAll('pre code').forEach(function (block) {
-            hljs.highlightElement(block);
-        });
-    </script>
+    <script src="{% static 'js/thread.js' %}"></script>
 {% endblock javascripts %}
