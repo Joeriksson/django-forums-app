@@ -11,7 +11,8 @@ x-app-environment: &app-environment
 services:
   web:
     build: .
-    command: gunicorn project.wsgi -b 0.0.0.0:8000
+    # Address, workers and threads: gunicorn.conf.py
+    command: gunicorn project.wsgi
     env_file:
       - .env
     environment: *app-environment
