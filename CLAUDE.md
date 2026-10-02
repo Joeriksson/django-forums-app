@@ -100,6 +100,7 @@ forums/            # Core app — Forum, Thread, Post, UpVote, Notification, Use
   urls.py          # Forum URL patterns
   forms.py         # SearchForm
   tasks.py         # Celery tasks (send_notifications_task)
+  throttling.py    # Posting limit: DRF throttles shared by the web views and the API
   signals.py       # Django signals (if any)
   templatetags/    # Custom template tags (class_name)
 
@@ -218,6 +219,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits. 
 - allauth's rate limits (failed logins, signups, password resets) are partly per client address. Production sets `ALLAUTH_TRUSTED_PROXY_COUNT = 1`, so the address comes from the last `X-Forwarded-For` entry (the one the reverse proxy adds) instead of the proxy's own. Production only: without a proxy the header can be forged. A second proxy in front needs a count of 2
 - allauth pages without a template of our own (the two-factor pages) get the site layout from `templates/allauth/layouts/base.html`, which extends `_base.html`
 - The API is throttled (`REST_FRAMEWORK` in `base.py`): 60 requests a minute per address for anonymous clients, 120 per user when logged in; over that it answers 429, which the security log records as `denied status=429`. `NUM_PROXIES` is `0` in `base.py` and `1` in production, like `ALLAUTH_TRUSTED_PROXY_COUNT`; a second proxy needs 2. The counters are in the cache, so the API fails while Redis is down. DRF reads the rates at import: tests change them with the `rates` fixture in `tests/forums/test_api_throttling.py`
+- **Posting limit**: a user may create 5 threads or posts a minute and 30 an hour (`posting_burst`, `posting_hour` in `DEFAULT_THROTTLE_RATES`), counted together for the website and the API, staff and moderators included. `forums/throttling.py` has the two DRF throttles; `PostingLimitMixin` in `forums/views.py` (the form comes back with status 429 and the text kept; forms with errors don't count) and in `api/views.py` (on `create`) use them. A new view that creates threads or posts needs the mixin too
 - Session + Token authentication for the REST API. The API has no login page of its own (DRF's `api-auth/` would skip the two-factor step): log in on the site
 - **Staff and moderators must use two-factor authentication** while `STAFF_REQUIRE_MFA` is on (default; off in development). It applies to every privileged user (`users.security.is_privileged`): staff, superusers, and anyone holding a permission, directly or through a group such as Moderators. Members have no permissions:
   - `admin.site.login` is wrapped in allauth's `secure_admin_login` (`project/urls.py`), so the admin uses allauth's login with its code prompt

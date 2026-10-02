@@ -8,6 +8,7 @@ from rest_framework.permissions import (
 )
 
 from forums.models import Forum, Thread, Post
+from forums.throttling import POSTING_THROTTLES
 from users.audit import log_moderation
 from users.models import CustomUser
 from .permissions import IsOwnerOrModeratorOrReadOnly
@@ -48,6 +49,16 @@ class ModerationLogMixin:
         log_moderation(self.request, 'delete', instance)
 
 
+class PostingLimitMixin:
+    """Creating counts against the user's posting limit, shared with the website."""
+
+    def get_throttles(self):
+        throttles = super().get_throttles()
+        if self.action == 'create':
+            throttles += [throttle() for throttle in POSTING_THROTTLES]
+        return throttles
+
+
 class ForumViewSet(viewsets.ModelViewSet):
     # Anyone can read; writing needs forums.add/change/delete_forum
     permission_classes = (DjangoModelPermissionsOrAnonReadOnly,)
@@ -61,7 +72,7 @@ class ForumViewSet(viewsets.ModelViewSet):
         forum.thread_count = 0
 
 
-class ThreadViewSet(ModerationLogMixin, viewsets.ModelViewSet):
+class ThreadViewSet(PostingLimitMixin, ModerationLogMixin, viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = Thread.objects.annotate(post_count=Count('posts')).order_by('-added')
@@ -76,7 +87,7 @@ class ThreadViewSet(ModerationLogMixin, viewsets.ModelViewSet):
         thread.post_count = 0
 
 
-class PostViewSet(ModerationLogMixin, viewsets.ModelViewSet):
+class PostViewSet(PostingLimitMixin, ModerationLogMixin, viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrModeratorOrReadOnly & IsAuthenticatedOrReadOnly,)
     queryset = Post.objects.all()
     serializer_class = PostSerializer

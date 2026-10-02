@@ -23,6 +23,7 @@ from django.views.generic import (
 from .forms import SearchForm
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
+from .throttling import posting_allowed
 from users.audit import log_moderation
 
 
@@ -133,7 +134,19 @@ class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class ThreadCreate(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class PostingLimitMixin:
+    """Refuse a new thread or post over the user's posting limit, shared with the API."""
+
+    def form_valid(self, form):
+        # Checked here, so a form with errors doesn't count
+        if not posting_allowed(self.request):
+            form.add_error(None, 'You are posting too fast. Wait a while and try again.')
+            # The form comes back with the text, to send again later
+            return self.render_to_response(self.get_context_data(form=form), status=429)
+        return super().form_valid(form)
+
+
+class ThreadCreate(LoginRequiredMixin, PostingLimitMixin, SuccessMessageMixin, CreateView):
     model = Thread
     context_object_name = 'thread'
     fields = ['title', 'text']
@@ -185,7 +198,7 @@ class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['fpk']})
 
 
-class PostCreate(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class PostCreate(LoginRequiredMixin, PostingLimitMixin, SuccessMessageMixin, CreateView):
     model = Post
     fields = ['text']
     success_message = "Post was created successfully!"

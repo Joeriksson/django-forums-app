@@ -287,7 +287,13 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
-    'DEFAULT_THROTTLE_RATES': {'anon': '60/min', 'user': '120/min'},
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/min',
+        'user': '120/min',
+        # New threads and posts per user, on the site and in the API together (forums/throttling.py)
+        'posting_burst': '5/min',
+        'posting_hour': '30/hour',
+    },
     # No proxy: the address is the connection's. DRF's default would trust any
     # X-Forwarded-For header, so a client could reset its count by making one up
     'NUM_PROXIES': 0,
