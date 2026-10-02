@@ -23,6 +23,13 @@ SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN', True)
 # Off by default here, so the local admin works without an authenticator app
 STAFF_REQUIRE_MFA = env_bool('DJANGO_STAFF_REQUIRE_MFA', False)
 
+# A frontend on the local machine may call the API. Nowhere else: production allows
+# no other origin.
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:3000',
+    'http://localhost:3000',
+]
+
 DEBUG_TOOLBAR_CONFIG = {
     'JQUERY_URL': '',
 }
