@@ -41,12 +41,7 @@
             <div class="card-header"><strong></strong>
                 <p class="card-text font-weight-lighter">
                     <i>
-                        {% if thread.user.profile.first_name or thread.user.profile.last_name %}
-                            On {{ thread.added }} - {{ thread.user.profile.first_name }}
-                            {{ thread.user.profile.last_name }} wrote:</i>
-                        {% else %}
-                            On {{ thread.added }} - {{ thread.user }} wrote:</i>
-                        {% endif %}
+                        On {{ thread.added }} - {{ thread.user.display_name }} wrote:</i>
 
                 </p>
 
@@ -72,12 +67,7 @@
             {% for post in posts %}
                 <div class="card bg-light ml-5 mb-3">
                     <div class="card-header">
-                        {% if post.user.profile.first_name or post.user.profile.last_name %}
-                            On {{ post.added }} - {{ post.user.profile.first_name }}
-                            {{ post.user.profile.last_name }} wrote:
-                        {% else %}
-                            On {{ post.added }} - {{ post.user }} wrote:
-                        {% endif %}
+                        On {{ post.added }} - {{ post.user.display_name }} wrote:
                         <!-- Show delete button if user is thread starter -->
                         {% if user.is_authenticated %}
                             {% if post.user == user or perms.forums.delete_post %}
