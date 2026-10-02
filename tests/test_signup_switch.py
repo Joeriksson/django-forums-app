@@ -51,10 +51,11 @@ def test_open_signup_creates_user(client, signup_open):
 
 
 @pytest.mark.django_db
-def test_login_works_while_signup_closed(client, signup_closed):
+def test_login_works_while_signup_closed(client, signup_closed, verify_email):
     user = User.objects.create_user(
         username='member', email='member@example.com', password='a-long-test-pass-123'
     )
+    verify_email(user)
 
     resp = client.post(
         reverse('account_login'),
@@ -83,8 +84,11 @@ def test_open_signup_creates_github_user(client, github_login, signup_open):
 
 
 @pytest.mark.django_db
-def test_existing_github_user_logs_in_while_signup_closed(client, github_login, signup_closed):
+def test_existing_github_user_logs_in_while_signup_closed(
+    client, github_login, signup_closed, verify_email
+):
     user = User.objects.create_user(username='octocat', email='octocat@example.com')
+    verify_email(user)
     SocialAccount.objects.create(user=user, provider='github', uid='12345')
 
     resp = github_login('octocat@example.com')
