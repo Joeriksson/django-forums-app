@@ -1,11 +1,13 @@
 # Production stack for a VPS. A reverse proxy container (e.g. Caddy)
 # terminates HTTPS, joins the forum_proxy network and forwards to forum-web:8000.
-# No ports are published. POSTGRES_PASSWORD and REDIS_PASSWORD must be set in .env.
+# No ports are published. POSTGRES_PASSWORD, POSTGRES_APP_PASSWORD and REDIS_PASSWORD
+# must be set in .env.
 
 x-app-environment: &app-environment
   DJANGO_SETTINGS_MODULE: project.settings.production
   ENVIRONMENT: production
-  DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/postgres
+  # The app's own role and database (docker/postgres/create-app-role.sh), not the superuser
+  DATABASE_URL: postgres://forum:${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in .env}@db:5432/forum
   REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379/0
 
 # Logs go to the host's journal instead of Docker's per-container files, which are
@@ -37,9 +39,13 @@ services:
   db:
     image: postgres:16
     environment:
+      # The superuser, for backups and maintenance only
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      # Creates the app's role and database when the volume is first created
+      - ./docker/postgres:/docker-entrypoint-initdb.d:ro
     logging: *journald
     restart: unless-stopped
   redis:

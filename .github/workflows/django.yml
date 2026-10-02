@@ -83,10 +83,17 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build the production image
       run: docker build -t forums-prod .
-    # Fake values only: the checks need no database, Redis or real secrets
+    # Postgres set up as in production: docker-compose-prod.yml mounts the same script
+    - name: Start Postgres with the production init script
+      run: |
+        docker network create prod
+        docker run -d --name db --network prod \
+          -e POSTGRES_PASSWORD=ci-superuser -e POSTGRES_APP_PASSWORD=ci-app \
+          -v "$PWD/docker/postgres:/docker-entrypoint-initdb.d:ro" postgres:16
+    # Fake values only: the checks need no Redis or real secrets
     - name: Start the image with production settings
       run: >-
-        docker run -d --name prod
+        docker run -d --name prod --network prod
         -e DJANGO_SETTINGS_MODULE=project.settings.production
         -e ENVIRONMENT=production
         -e SECRET_KEY=ci-only-placeholder-secret-key-not-used-anywhere-else-0123456789
@@ -94,7 +101,7 @@ jobs:
         -e DJANGO_ALLOWED_HOSTS=forum.example.com
         -e DJANGO_SITE_URL=https://forum.example.com
         -e DJANGO_EMAIL_CONSOLE=true
-        -e DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+        -e DATABASE_URL=postgres://forum:ci-app@db:5432/forum
         -e REDIS_URL=redis://redis:6379/0
         forums-prod
     - name: Run the deployment checks
@@ -104,6 +111,19 @@ jobs:
       run: docker exec prod gunicorn --check-config project.wsgi
     - name: Check that the container does not run as root
       run: test "$(docker exec prod id -u)" != 0
+    # A migration that needs more than the app's role (an extension, say) fails here
+    - name: Check that the migrations run as the app's database role
+      run: |
+        # Over TCP: while the init script runs, Postgres only listens on its socket
+        for i in $(seq 30); do
+          docker exec db pg_isready -q -h 127.0.0.1 && break
+          sleep 1
+        done
+        docker exec prod python manage.py migrate --no-input
+    - name: Check that the app's database role has no special rights
+      run: >-
+        test "$(docker exec db psql -U postgres -tAc
+        "select rolsuper or rolcreatedb or rolcreaterole from pg_roles where rolname = 'forum'")" = f
     - name: Check that development packages are not in the image
       run: >-
         docker exec prod python -c
