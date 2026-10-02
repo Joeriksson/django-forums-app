@@ -9,7 +9,7 @@ def my_scheduled_task():
     print('A scheduled task just ran')
 
 
-@shared_task
+@shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def send_notifications_task(
     thread_id, thread_title, user_name, full_url, email_addresses
 ):

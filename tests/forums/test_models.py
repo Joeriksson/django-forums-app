@@ -47,7 +47,7 @@ def test_saving_user_again_does_not_duplicate_profile(add_user):
 
 @pytest.mark.django_db
 def test_notify_subscribers_excludes_post_author(
-    add_forum, add_user, add_thread, notification_calls, settings
+    add_forum, add_user, add_thread, notification_calls, settings, django_capture_on_commit_callbacks
 ):
     """Post author should not receive a notification for their own post."""
     settings.SITE_URL = 'https://forum.example.com'
@@ -59,7 +59,9 @@ def test_notify_subscribers_excludes_post_author(
     Notification.objects.create(thread=thread, user=author)
     Notification.objects.create(thread=thread, user=subscriber)
 
-    Post.objects.create(text='A reply', thread=thread, user=author)
+    # The hook runs once the post is committed
+    with django_capture_on_commit_callbacks(execute=True):
+        Post.objects.create(text='A reply', thread=thread, user=author)
 
     assert len(notification_calls) == 1
     thread_id, thread_title, username, full_url, email_addresses = notification_calls[0]
@@ -75,7 +77,8 @@ def test_notify_subscribers_excludes_post_author(
 @pytest.mark.django_db
 @pytest.mark.parametrize('author_subscribed', [True, False], ids=['author-only', 'nobody'])
 def test_no_notification_task_without_recipients(
-    add_forum, add_user, add_thread, notification_calls, author_subscribed
+    add_forum, add_user, add_thread, notification_calls, author_subscribed,
+    django_capture_on_commit_callbacks,
 ):
     """No task is queued when nobody besides the author would get the email."""
     forum = add_forum('Test Forum', 'Description')
@@ -85,14 +88,16 @@ def test_no_notification_task_without_recipients(
     if author_subscribed:
         Notification.objects.create(thread=thread, user=author)
 
-    Post.objects.create(text='A reply', thread=thread, user=author)
+    # The hook runs once the post is committed
+    with django_capture_on_commit_callbacks(execute=True):
+        Post.objects.create(text='A reply', thread=thread, user=author)
 
     assert notification_calls == []
 
 
 @pytest.mark.django_db
 def test_no_notification_task_in_ci(
-    add_forum, add_user, add_thread, notification_calls, monkeypatch
+    add_forum, add_user, add_thread, notification_calls, monkeypatch, django_capture_on_commit_callbacks
 ):
     """No task is queued in CI, even when another user is subscribed."""
     forum = add_forum('Test Forum', 'Description')
@@ -104,7 +109,9 @@ def test_no_notification_task_in_ci(
 
     monkeypatch.setenv('CI', 'true')
 
-    Post.objects.create(text='A reply', thread=thread, user=author)
+    # The hook runs once the post is committed
+    with django_capture_on_commit_callbacks(execute=True):
+        Post.objects.create(text='A reply', thread=thread, user=author)
 
     assert notification_calls == []
 

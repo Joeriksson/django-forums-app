@@ -11,6 +11,7 @@ from .forms import CustomUserCreationForm, CustomUserChangeForm, InvitationAdmin
 from .models import Invitation
 from .tasks import send_invitation_email_task
 from forums.models import UserProfile
+from project.utils import queue_task
 
 CustomUser = get_user_model()
 
@@ -93,7 +94,7 @@ class InvitationAdmin(admin.ModelAdmin):
 
     def send_email(self, invitation):
         # Only once the save has committed, so a rollback sends nothing
-        transaction.on_commit(partial(send_invitation_email_task.delay, invitation.pk))
+        transaction.on_commit(partial(queue_task, send_invitation_email_task, invitation.pk))
 
     @admin.action(
         description='Resend invitation (new link, old one stops working)', permissions=['add']

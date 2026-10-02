@@ -23,7 +23,6 @@ def test_cache_and_celery_use_separate_redis_databases():
 
     assert base.CACHES['default']['LOCATION'].endswith('/0')
     assert base.CELERY_BROKER_URL.endswith('/1')
-    assert base.CELERY_RESULT_BACKEND.endswith('/1')
 
 
 def test_redis_url_with_db_keeps_password():

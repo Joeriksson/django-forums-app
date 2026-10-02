@@ -303,7 +303,7 @@ def redis_url_with_db(url, db):
     return urlsplit(url)._replace(path=f'/{db}').geturl()
 
 
-# Cache on database 0, Celery broker and results on database 1
+# Cache on database 0, Celery broker on database 1
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -315,10 +315,15 @@ CACHES = {
 }
 
 CELERY_BROKER_URL = redis_url_with_db(redis_host, 1)
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+# The tasks only send mail and nothing reads their results, so there is no result backend:
+# with one, queuing a task waits about 20 seconds when Redis is down
+CELERY_TASK_IGNORE_RESULT = True
+# Give up queuing after a few seconds when Redis is unreachable, instead of minutes.
+# The request carries on without the mail (project.utils.queue_task)
+CELERY_BROKER_TRANSPORT_OPTIONS = {'socket_connect_timeout': 2}
+CELERY_TASK_PUBLISH_RETRY_POLICY = {'max_retries': 1}
 if not os.environ.get('ENVIRONMENT') == 'production':
     # Run tasks in-process outside production, so errors surface in the web log
     CELERY_TASK_ALWAYS_EAGER = True
