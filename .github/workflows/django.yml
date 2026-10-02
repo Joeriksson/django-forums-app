@@ -102,6 +102,12 @@ jobs:
     # The image's own command only keeps the container alive, so nothing else starts gunicorn
     - name: Check that gunicorn can load its settings and the app
       run: docker exec prod gunicorn --check-config project.wsgi
+    - name: Check that development packages are not in the image
+      run: >-
+        docker exec prod python -c
+        "import importlib.util as u;
+        found = [m for m in ('debug_toolbar', 'pytest') if u.find_spec(m)];
+        assert not found, found"
     - name: Check that static file URLs are hashed
       run: >-
         docker exec prod python manage.py shell -c

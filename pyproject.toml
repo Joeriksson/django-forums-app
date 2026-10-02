@@ -10,7 +10,6 @@ dependencies = [
     "django-allauth[mfa]>=65.14.1",
     "django-cors-headers>=4.0",
     "django-crispy-forms>=2.1",
-    "django-debug-toolbar>=4.2",
     "django-lifecycle>=1.0",
     "django-redis>=5.4",
     "djangorestframework>=3.14",
@@ -29,6 +28,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "django-debug-toolbar>=4.2",
     "pytest>=7.4",
     "pytest-cov>=5.0",
     "pytest-django>=4.8",
