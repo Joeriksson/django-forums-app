@@ -6,6 +6,8 @@ from allauth.mfa.models import Authenticator
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.urls import reverse
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
 User = get_user_model()
 
@@ -144,5 +146,57 @@ def test_remove_mfa_command_is_logged(user, add_totp, security_log):
 
 def test_remove_mfa_command_logs_nothing_when_there_was_nothing_to_remove(user, security_log):
     call_command('remove_mfa', EMAIL)
+
+    assert security_log() == []
+
+
+# Refused requests
+
+
+def test_a_refused_request_is_logged_with_the_user(client, user, security_log):
+    client.force_login(user)
+
+    resp = client.get(reverse('forum_add'), REMOTE_ADDR=IP)
+
+    assert resp.status_code == 403
+    # The first line is the login
+    assert security_log()[1:] == [
+        f"denied status=403 user={user.pk} method=GET path='/forums/add/' ip={IP}"
+    ]
+
+
+def test_a_refused_api_request_is_logged_with_the_token_user(user, security_log):
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f'Token {Token.objects.create(user=user).key}')
+
+    resp = client.post('/api/forums/', {'title': 'x', 'description': 'x'}, REMOTE_ADDR=IP)
+
+    assert resp.status_code == 403
+    assert security_log() == [f"denied status=403 user={user.pk} method=POST path='/api/forums/' ip={IP}"]
+
+
+def test_a_refused_anonymous_request_is_logged_without_a_user(client, db, security_log):
+    resp = client.post('/api/forums/', {'title': 'x', 'description': 'x'}, REMOTE_ADDR=IP)
+
+    assert resp.status_code in (401, 403)
+    assert security_log() == [
+        f"denied status={resp.status_code} method=POST path='/api/forums/' ip={IP}"
+    ]
+
+
+def test_a_rate_limited_request_is_logged(client, user, security_log, settings):
+    settings.ACCOUNT_RATE_LIMITS = {'reset_password': '1/m/ip'}
+    url = reverse('account_reset_password')
+    client.post(url, {'email': EMAIL}, REMOTE_ADDR=IP)
+
+    resp = client.post(url, {'email': EMAIL}, REMOTE_ADDR=IP)
+
+    assert resp.status_code == 429
+    assert security_log()[-1] == f"denied status=429 method=POST path='{url}' ip={IP}"
+
+
+def test_ordinary_requests_are_not_logged(client, db, security_log):
+    client.get(reverse('home'))
+    client.get('/no-such-page/')
 
     assert security_log() == []

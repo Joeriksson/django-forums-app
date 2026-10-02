@@ -23,6 +23,7 @@ from django.views.generic import (
 from .forms import SearchForm
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
+from users.audit import log_moderation
 
 
 class ForumsList(ListView, FormView):
@@ -123,6 +124,11 @@ class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         obj = self.get_object()
         return obj.user == self.request.user
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        log_moderation(self.request, 'change', self.object)
+        return response
+
     def get_success_url(self):
         return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['pk']})
 
@@ -167,6 +173,14 @@ class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         obj = self.get_object()
         return obj.user == self.request.user
 
+    def form_valid(self, form):
+        # The id is gone from the object once it is deleted
+        pk = self.object.pk
+        response = super().form_valid(form)
+        self.object.pk = pk
+        log_moderation(self.request, 'delete', self.object)
+        return response
+
     def get_success_url(self):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['fpk']})
 
@@ -210,6 +224,14 @@ class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         obj = self.get_object()
         return obj.user == self.request.user
+
+    def form_valid(self, form):
+        # The id is gone from the object once it is deleted
+        pk = self.object.pk
+        response = super().form_valid(form)
+        self.object.pk = pk
+        log_moderation(self.request, 'delete', self.object)
+        return response
 
     def get_success_url(self):
         return reverse_lazy('thread_detail', kwargs={'pk': self.kwargs['tpk']})

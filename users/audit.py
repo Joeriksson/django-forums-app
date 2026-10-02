@@ -42,6 +42,47 @@ def log_event(event, request=None, level=logging.INFO, **fields):
     logger.log(level, '%s %s', event, details)
 
 
+def log_moderation(request, action, obj):
+    """Record a change to a thread or post made by someone other than its author."""
+    if obj.user_id != request.user.pk:
+        log_event(
+            'moderation',
+            request,
+            action=action,
+            user=request.user.pk,
+            object=obj._meta.model_name,
+            id=obj.pk,
+            owner=obj.user_id,
+        )
+
+
+# Refused (also: not logged in) and rate limited
+DENIED_STATUS_CODES = {401, 403, 429}
+
+
+class DeniedRequestLogMiddleware:
+    """Log every refused request with the user: Django's own log line doesn't name them."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if response.status_code in DENIED_STATUS_CODES:
+            # After the view, so a user that the API found by token is known too
+            user = getattr(request, 'user', None)
+            log_event(
+                'denied',
+                request,
+                level=logging.WARNING,
+                status=response.status_code,
+                user=user.pk if user is not None and user.is_authenticated else None,
+                method=request.method,
+                path=quoted(request.path),
+            )
+        return response
+
+
 @receiver(auth_signals.user_logged_in, dispatch_uid='audit_login')
 def log_login(request, user, **kwargs):
     log_event('login', request, user=user.pk)
