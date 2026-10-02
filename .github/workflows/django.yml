@@ -1,10 +1,18 @@
 name: Django CI
 
+# Changes to documentation alone don't start the workflow: no job reads those files.
+# A change that touches any other file as well runs everything.
 on:
   push:
     branches: [ "master" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
     branches: [ "master" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 permissions:
   contents: read

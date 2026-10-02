@@ -302,6 +302,8 @@ GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `mas
 2. Installs deps with `uv sync`
 3. Runs `pytest` (parallel via `pytest-xdist`)
 
+A push or PR that changes only `*.md` files or `docs/` doesn't start the workflow (`paths-ignore`); one other changed file runs everything. This relies on master having no required status checks: a skipped workflow never reports, so a required check would block docs-only PRs.
+
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 
 A `prod-image` job builds the production image, starts it with production settings and fake env values (no database, Redis or secrets needed), runs `check --deploy --fail-level WARNING` and checks that `{% static %}` URLs are hashed. Any deploy warning fails it; the HSTS opt-ins `security.W005` / `security.W021` are silenced in `production.py`. The workflow token is read-only (`permissions: contents: read`), and the repo is public: never add real secrets or build args with secrets to CI.
