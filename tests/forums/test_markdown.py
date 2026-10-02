@@ -95,3 +95,79 @@ def test_render_markdown_filter_returns_safe_html():
 
 def test_render_returns_safe_string():
     assert isinstance(render('**bold**'), SafeString)
+
+
+# Images: only over https
+
+
+def test_https_image_is_shown():
+    html = render('![a cat](https://example.com/cat.png "Title")')
+
+    assert '<img src="https://example.com/cat.png"' in html
+    assert 'alt="a cat"' in html
+
+
+@pytest.mark.parametrize(
+    'url',
+    [
+        'http://example.com/cat.png',
+        'HTTP://example.com/cat.png',
+        '//example.com/cat.png',
+        '/static/cat.png',
+        'cat.png',
+    ],
+)
+def test_other_images_are_not_loaded(url):
+    """No <img>: the browser must not fetch anything that isn't https."""
+    html = render(f'![a cat]({url})')
+
+    assert '<img' not in html
+    # The description stays readable
+    assert 'a cat' in html
+
+
+def test_http_image_becomes_a_link():
+    html = render('![a cat](http://example.com/cat.png)')
+
+    assert '<a href="http://example.com/cat.png"' in html
+    assert '>a cat</a>' in html
+    assert 'nofollow' in html
+
+
+def test_http_image_without_description_shows_its_address():
+    html = render('![](http://example.com/cat.png)')
+
+    assert '>http://example.com/cat.png</a>' in html
+
+
+def test_image_description_is_escaped_in_the_link():
+    html = render('![<b>x</b> & "y"](http://example.com/cat.png)')
+
+    assert '<b>' not in html
+    assert '&lt;b&gt;x&lt;/b&gt; &amp; "y"' in html or '&lt;b&gt;x&lt;/b&gt; &amp; &quot;y&quot;' in html
+
+
+def test_https_image_inside_a_link_still_works():
+    html = render('[![a cat](https://example.com/cat.png)](https://example.com/page)')
+
+    assert '<a href="https://example.com/page"' in html
+    assert '<img src="https://example.com/cat.png"' in html
+
+
+@pytest.mark.parametrize(
+    'html',
+    [
+        '<img src="http://example.com/cat.png" alt="a cat">',
+        '<img src="//example.com/cat.png">',
+        '<img src="/local.png">',
+        '<img src=" https://example.com/cat.png">',
+    ],
+)
+def test_sanitize_drops_the_source_of_images_that_are_not_https(html):
+    """Second line: even if the parser produced such an <img>, it loads nothing."""
+    assert 'src=' not in sanitize(html)
+
+
+def test_sanitize_keeps_https_images_and_http_links():
+    assert 'src="https://example.com/cat.png"' in sanitize('<img src="https://example.com/cat.png">')
+    assert 'href="http://example.com/"' in sanitize('<a href="http://example.com/">x</a>')
