@@ -181,7 +181,7 @@ static/            # Static file sources (our CSS and JS, fonts, Font Awesome, b
 ## URL Structure
 
 ```
-/                          → pages (home; open to visitors)
+/                          → pages (home: for a visitor the name and a login link, for a member the 15 threads with the latest activity)
 # Everything under /forums/ needs a login
 /forums/                   → ForumsList
 /forums/<pk>/              → ForumDetail (20 threads per page, newest first; ?page=<n>)
@@ -354,6 +354,9 @@ The pages are being rebuilt without Bootstrap (redesign in progress): hand-writt
 - **`static/css/base.css`** is the site's stylesheet: colour and type tokens as CSS custom properties (`--ground`, `--surface`, `--ink`, `--quiet`, `--rule`, `--spruce`, `--lichen`, `--danger`), a dark palette under `prefers-color-scheme: dark` (no toggle), element defaults, the header and the user menu. Use the tokens, never a literal colour, so both palettes keep working
 - **Typefaces** are files in `static/fonts/` (SIL Open Font License, licence texts next to them): Literata (`--serif`) for titles and post text, Schibsted Grotesk (`--sans`) for the interface. They are Latin subsets with a weight range of 400 to 700, made from the upstream variable fonts with fontTools; `make audit` doesn't cover them
 - **Layout**: `_base.html` has the header (`.site-header`), the user menu and `<main class="wrap site-main">`. The menu is a `<details class="menu">`, so it works without JavaScript; `static/js/menu.js` only closes it on a click elsewhere or Escape
+- **Lists** of forums and threads are `<ul class="rows">` with `.row` items, no cards. A thread row is `templates/forums/_thread_row.html` (needs `post_count` on the thread; `show_forum` and `show_actions` are optional). A member is shown with `templates/forums/_person.html`: a monogram disc (`user.monogram`: initials or the member number; `user.monogram_tone`: one of six colours, by id) and the display name
+- **Dates** in lists use the `when` filter (`forums/templatetags/when.py`): "5 minutes ago", "yesterday", "4 days ago", then a date
+- **Template comments**: `{# #}` works on one line only, and a longer one is printed on the page; use `{% comment %}` (`tests/test_no_inline_code.py` checks)
 - **Buttons** are `.button` (plus `.button--quiet`, `.button--danger`). Bare `<button>` elements are not styled, because the editor's toolbar has its own
 - **Leftovers**: templates not rebuilt yet still carry Bootstrap class names (`btn`, `card`, `form-group`); the last section of `base.css` gives those a minimal look until each page is done. Don't add new uses
 - The tests don't run a browser. After changing styles, look at the pages in light and dark and at phone width
