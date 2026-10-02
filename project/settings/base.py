@@ -68,6 +68,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    # Before the middleware and views that refuse requests, so it sees their responses
+    'users.audit.DeniedRequestLogMiddleware',
     'users.security.StaffMFAMiddleware',
 ]
 
