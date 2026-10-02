@@ -62,6 +62,7 @@ tests/
     ├── test_models.py           # Model unit tests
     ├── test_serializers.py      # DRF serializer tests
     ├── test_views_web.py        # Web pages, create and delete views
+    ├── test_display_names.py    # Names shown to others: profile name or "Member <id>", never the username
     ├── test_views_profile.py, test_views_upvote_subscribe.py, test_permissions.py
     ├── test_views_forums.py, test_views_threads.py, test_views_posts.py  # API CRUD
     └── test_api_*.py            # API ownership, moderation, nesting, users, URLs
@@ -168,6 +169,7 @@ static/            # Static file sources (CSS, Font Awesome, bootstrap-social, h
 ### CustomUser (`users.CustomUser`)
 - Extends `AbstractUser`
 - Uses **email** for authentication (not username); the database requires it to be non-empty and unique ignoring case (migration `users/0003`)
+- **Names shown to others** come from `user.display_name`: the profile's first and last name if set, otherwise `Member <id>`. Never print `{{ user }}` or `username` on a page or in a mail that someone else sees: allauth derives the username from the email address (`anna.berg@example.com` → `anna.berg`). It stays in the database and is visible to staff in the admin and the users API. `has_profile_name` tells whether a name is set; the new thread and new post forms remind members without one (`templates/forums/_posting_as.html`). Profile names are not unique. Queries that list authors need `select_related('user__profile')`
 - `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`
 
 ### Invitation (`users.Invitation`)
