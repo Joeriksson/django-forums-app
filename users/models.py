@@ -12,6 +12,8 @@ from django.utils import timezone
 
 from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook
 
+from project.utils import queue_task
+
 from .audit import log_event
 from .tasks import send_welcome_email_task
 
@@ -30,7 +32,7 @@ class CustomUser(LifecycleModelMixin, AbstractUser):
     @hook(AFTER_CREATE, on_commit=True)
     def send_welcome_mail(self):
         # Runs only once the user is committed, so a rollback sends nothing.
-        send_welcome_email_task.delay(self.email)
+        queue_task(send_welcome_email_task, self.email)
 
 
 def new_invitation_key():
