@@ -44,7 +44,19 @@ services:
     restart: unless-stopped
   redis:
     image: redis:alpine
-    command: redis-server --requirepass ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    # The password goes into a config file inside the container, not onto the command
+    # line, where `ps` on the host would show it. Without the image's entrypoint nothing
+    # switches to the redis user, hence `user`.
+    user: redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    command:
+      - sh
+      - -c
+      - |
+        umask 077
+        printf 'requirepass %s\n' "$$REDIS_PASSWORD" > /tmp/redis.conf
+        exec redis-server /tmp/redis.conf
     logging: *journald
     restart: unless-stopped
   celery:
@@ -55,16 +67,6 @@ services:
     environment: *app-environment
     depends_on:
       - db
-      - redis
-    logging: *journald
-    restart: unless-stopped
-  celery-beat:
-    build: .
-    command: celery -A project beat -l INFO
-    env_file:
-      - .env
-    environment: *app-environment
-    depends_on:
       - redis
     logging: *journald
     restart: unless-stopped

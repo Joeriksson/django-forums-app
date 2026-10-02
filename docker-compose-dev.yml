@@ -43,7 +43,8 @@ services:
   celery-beat:
     env_file: .env
     build: *build
-    command: celery -A project beat -l INFO
+    # The schedule file goes to /tmp, not into the mounted repo
+    command: celery -A project beat -l INFO -s /tmp/celerybeat-schedule
     volumes:
       - .:/code
     depends_on:

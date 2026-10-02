@@ -10,10 +10,12 @@ Internet ──HTTPS──> Caddy (container, ports 80/443)
                     web (gunicorn, alias forum-web)
                       │ default network
                       ├──> db (Postgres)
-                      └──> redis <── celery, celery-beat
+                      └──> redis <── celery
 ```
 
 The stack publishes no ports. The proxy is the only container with public ports, and it reaches `web` over the shared `forum_proxy` network by the name `forum-web`. Only `web` is on that network, so the proxy can't reach Postgres or Redis. The other services talk to each other on the stack's own default network.
+
+No container runs its service as root: `web` and `celery` run as an unprivileged user that can't change the code or the installed packages, and Redis and Postgres run as their own users. There is no `celery-beat` container, since nothing is scheduled; add one back to `docker-compose-prod.yml` with the first scheduled task, with its schedule file outside `/code` (`-s /tmp/celerybeat-schedule`).
 
 ## 1. Reverse proxy (Caddy)
 
@@ -243,11 +245,11 @@ The stack can be started locally to check that it comes up, but not browsed: the
 
 ```bash
 docker compose -f docker-compose-prod.yml up -d --build
-docker compose -f docker-compose-prod.yml ps                  # all five services running
+docker compose -f docker-compose-prod.yml ps                  # all four services running
 docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 docker compose -f docker-compose-prod.yml exec web python manage.py check --deploy
 docker compose -f docker-compose-prod.yml exec web python manage.py sendtestemail you@example.com  # mail shows in the logs
-docker compose -f docker-compose-prod.yml logs celery celery-beat
+docker compose -f docker-compose-prod.yml logs celery
 ```
 
 To fetch a page from inside the container, send the headers the proxy would add:

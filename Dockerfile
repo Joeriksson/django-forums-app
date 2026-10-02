@@ -27,5 +27,11 @@ COPY . /code/
 # SECRET_KEY at import time; the throwaway value exists only for this step.
 RUN SECRET_KEY=collectstatic python manage.py collectstatic --noinput --settings=project.settings.base
 
+# Run as an unprivileged user. The code and the venv stay owned by root, so the app
+# can't change them. In development the mounted repo usually belongs to uid 1000 on the
+# host, so files the containers write there (migrations) get the right owner.
+RUN useradd --uid 1000 --create-home app
+USER app
+
 # Command for container to not shut down
 CMD tail -f /dev/null
