@@ -13,7 +13,6 @@ from .views import (
     PostCreate,
     PostDelete,
     PostUpvote,
-    SearchResultsView,
     MarkdownPreview,
 )
 
@@ -44,6 +43,7 @@ urlpatterns = [
         PostUpvote.as_view(),
         name='post_upvote',
     ),
-    path('search/', SearchResultsView.as_view(), name='search_results'),
+    # The search page moved to /search/; old links keep their words and filters
+    path('search/', RedirectView.as_view(pattern_name='search_results', query_string=True)),
     path('preview/', MarkdownPreview.as_view(), name='markdown_preview'),
 ]

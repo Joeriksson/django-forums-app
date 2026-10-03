@@ -17,22 +17,22 @@ from django.views.generic import (
     CreateView,
     UpdateView,
     DeleteView,
+    TemplateView,
     View,
-    FormView,
 )
 
 from .activity import add_last_repliers, add_top_threads, with_activity, with_counts
 from .forms import SearchForm
+from .search import load, matches
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
 from .throttling import PreviewThrottle, SearchThrottle, allowed, posting_allowed
 from users.audit import log_moderation
 
 
-class ForumsList(LoginRequiredMixin, ListView, FormView):
+class ForumsList(LoginRequiredMixin, ListView):
     model = Forum
     context_object_name = 'forum_list'
-    form_class = SearchForm
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = with_counts(Forum.objects.all()).order_by('title', 'id')
 
@@ -305,52 +305,31 @@ class ThreadNotification(LoginRequiredMixin, View):
         return HttpResponseRedirect(thread_page_url(thread.pk, request.POST.get('page')))
 
 
-class SearchResultsView(LoginRequiredMixin, ListView):
-    model = Post
-    # template_name_suffix = '_search_results_form'
-    template_name = 'forums/post_search_results_form.html'
+class SearchView(LoginRequiredMixin, TemplateView):
+    """
+    Words and filters in, every match out, 20 to a page (forums/search.py). The page
+    without a search shows only the form. A search counts against the search limit.
+    """
 
-    # Search scans every thread and post, so keep it from being used to load the server:
-    # no scan for very short words, and only the newest results of each kind.
-    min_query_length = 3
-    max_query_length = 200
-    max_results = 50
+    template_name = 'forums/search.html'
+    paginate_by = 20
 
-    def get_queryset(self):
-        query = self.request.GET.get('q', '').strip()[: self.max_query_length]
-        self.too_short = len(query) < self.min_query_length
-        self.limited = False
-        # Counted only when a search would run
-        self.throttled = not self.too_short and not allowed(self.request, SearchThrottle)
-        if self.too_short or self.throttled:
-            return []
-
-        posts = Post.objects.filter(text__icontains=query).select_related('thread', 'user__profile')
-        threads = Thread.objects.filter(
-            Q(title__icontains=query) | Q(text__icontains=query)
-        ).select_related('forum', 'user__profile')
-        return self.newest(posts) + self.newest(threads)
-
-    def newest(self, queryset):
-        # One more than the limit, to know whether something was left out
-        results = list(queryset.order_by('-added')[: self.max_results + 1])
-        if len(results) > self.max_results:
-            self.limited = True
-        return results[: self.max_results]
-
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(
-            too_short=self.too_short,
-            throttled=self.throttled,
-            limited=self.limited,
-            min_query_length=self.min_query_length,
-            **kwargs,
-        )
-
-    def render_to_response(self, context, **response_kwargs):
-        if self.throttled:
-            response_kwargs['status'] = 429
-        return super().render_to_response(context, **response_kwargs)
+    def get(self, request, *args, **kwargs):
+        # Submitted once any of the form's fields is in the address
+        submitted = any(name in request.GET for name in SearchForm.base_fields)
+        form = SearchForm(request.GET if submitted else None)
+        results = page = None
+        throttled = False
+        if submitted and form.is_valid():
+            # Counted only when a search would run
+            throttled = not allowed(request, SearchThrottle)
+            if not throttled:
+                page = Paginator(matches(form.cleaned_data), self.paginate_by).get_page(
+                    request.GET.get('page')
+                )
+                results = load(page.object_list, ThreadDetail.paginate_by)
+        context = self.get_context_data(form=form, results=results, page=page, throttled=throttled)
+        return self.render_to_response(context, status=429 if throttled else 200)
 
     # ## SearchRank ##
     # def get_queryset(self):
