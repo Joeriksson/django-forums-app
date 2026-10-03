@@ -34,6 +34,16 @@ def add_last_repliers(threads):
     return threads
 
 
+def latest_threads(count):
+    """
+    The count threads with the newest activity across all forums, each with its forum,
+    author and last replier. A thread without replies counts from when it was started.
+    Two queries.
+    """
+    threads = with_activity(Thread.objects.select_related('forum', 'user__profile'))
+    return add_last_repliers(threads.order_by('-last_activity', '-id')[:count])
+
+
 def with_counts(forums):
     """Add thread_count and reply_count to a queryset of forums."""
     return forums.annotate(

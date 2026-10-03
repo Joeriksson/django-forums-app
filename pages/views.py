@@ -1,8 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 
-from forums.activity import add_last_repliers, with_activity
-from forums.models import Thread
+from forums.activity import latest_threads
 from forums.views import ForumsList
 
 
@@ -25,9 +24,5 @@ class LatestView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # A thread without replies counts from when it was started (last_activity)
-        threads = with_activity(Thread.objects.select_related('forum', 'user__profile'))
-        context['threads'] = add_last_repliers(
-            threads.order_by('-last_activity', '-id')[: self.thread_count]
-        )
+        context['threads'] = latest_threads(self.thread_count)
         return context

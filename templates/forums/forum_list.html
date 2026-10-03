@@ -13,6 +13,22 @@
 
     {% include 'forums/_search.html' %}
 
+    {% if recent_threads %}
+        <section class="recent" aria-labelledby="recent-title">
+            <div class="recent__head">
+                <h2 class="recent__title" id="recent-title">Recent activity</h2>
+                <a href="{% url 'latest' %}">All latest →</a>
+            </div>
+            <ul class="forum-row__threads recent__threads">
+                {% for thread in recent_threads %}
+                    {% with who=thread.last_replier|default:thread.user %}
+                        <li><a href="{% url 'thread_detail' thread.id %}?page=last">{{ thread.title }}</a><span class="forum-row__who">in {{ thread.forum.title }} · {{ who.display_name }}, {{ thread.last_activity|when }}</span></li>
+                    {% endwith %}
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
     {% if forum_list %}
         <div class="panel">
             <div class="panel__head forum-row" aria-hidden="true">
