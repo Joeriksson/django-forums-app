@@ -4,7 +4,7 @@
 {% block title %}Delete thread{% endblock title %}
 
 {% block content %}
-    <p class="trail"><a href="{% url 'forum_detail' thread.forum_id %}">{{ thread.forum.title }}</a></p>
+    {% include 'forums/_trail.html' with forum=thread.forum thread=thread only %}
     <div class="page-head">
         <h1>Delete this thread?</h1>
     </div>
