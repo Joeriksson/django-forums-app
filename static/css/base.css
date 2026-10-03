@@ -788,6 +788,36 @@ textarea {
     font-size: var(--size-small);
 }
 
+/* Recent activity above the forum list: a few lines like a forum's Latest box */
+
+.recent {
+    margin: var(--space-4) 0;
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--lichen);
+    border-radius: var(--radius);
+}
+
+.recent__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-bottom: var(--space-1);
+    font-size: var(--size-small);
+}
+
+.recent__title {
+    margin: 0;
+    color: var(--quiet);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
 /* A small label, e.g. Announcement */
 .tag {
     padding: 0 var(--space-2);

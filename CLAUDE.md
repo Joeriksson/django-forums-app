@@ -194,7 +194,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ## URL Structure
 
 ```
-/                          → HomePageView (for a visitor the name and a login link; for a member the forum list, ForumsList)
+/                          → HomePageView (for a visitor the name and a login link; for a member the forum list, ForumsList, under a Recent activity box with the 3 threads with the newest activity: `latest_threads()` in forums/activity.py, also used by /latest/)
 /latest/                   → LatestView (the 15 threads with the latest activity; login required)
 /search/                   → SearchView (words and filters as GET parameters, 20 results a page; login required; 20 searches a minute)
 # Everything under /forums/ needs a login

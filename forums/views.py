@@ -21,7 +21,7 @@ from django.views.generic import (
     View,
 )
 
-from .activity import add_last_repliers, add_top_threads, with_activity, with_counts
+from .activity import add_last_repliers, add_top_threads, latest_threads, with_activity, with_counts
 from .forms import SearchForm
 from .search import load, matches, search_query
 from .markdown import render as render_markdown
@@ -35,10 +35,13 @@ class ForumsList(LoginRequiredMixin, ListView):
     context_object_name = 'forum_list'
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = with_counts(Forum.objects.all()).order_by('title', 'id')
+    recent_count = 3
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['forum_list'] = add_top_threads(context['forum_list'])
+        # Above the forums: the newest activity anywhere (all of it under Latest)
+        context['recent_threads'] = latest_threads(self.recent_count)
         return context
 
 
