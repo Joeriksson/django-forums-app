@@ -81,7 +81,7 @@ def test_search_within_the_limit_has_no_note(client, author, forum, add_thread):
 def test_search_without_results_says_so(client):
     resp = search(client, 'pelican')
 
-    assert "didn't return any results" in resp.content.decode()
+    assert "Nothing found for" in resp.content.decode()
 
 
 @pytest.mark.django_db
@@ -97,3 +97,31 @@ def test_search_uses_two_queries_however_many_results(
     # them, six for the logged-in reader (session, user, permissions, profile, GitHub account)
     with django_assert_num_queries(6 + 2):
         search(client, 'pelican')
+
+
+@pytest.mark.django_db
+def test_search_page_has_a_search_box_with_the_query(client):
+    content = search(client, 'pelican').content.decode()
+
+    assert 'name="q"' in content
+    assert 'value="pelican"' in content
+
+
+@pytest.mark.django_db
+def test_search_box_escapes_the_query(client):
+    content = search(client, '"><b>x').content.decode()
+
+    assert 'value="&quot;&gt;&lt;b&gt;x"' in content
+
+
+@pytest.mark.django_db
+def test_search_excerpt_is_plain_text_and_escaped(client, author, forum, add_thread):
+    add_thread(
+        title='Pelicans', text='**Bold** pelican <script>alert(1)</script>', forum=forum, user=author
+    )
+
+    content = search(client, 'pelican').content.decode()
+
+    assert 'Bold pelican &lt;script&gt;alert(1)&lt;/script&gt;' in content
+    assert '<script>alert' not in content
+    assert '**Bold**' not in content
