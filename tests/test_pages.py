@@ -69,6 +69,27 @@ def test_home_offers_signup_only_while_it_is_open(client, db, settings):
     assertContains(client.get(reverse('home')), reverse('account_signup'))
 
 
+INVITATION_NOTE = 'Membership is by invitation.'
+
+
+def test_home_says_membership_is_by_invitation_while_signup_is_closed(client, db, settings):
+    settings.SIGNUP_OPEN = False
+
+    assertContains(client.get(reverse('home')), INVITATION_NOTE)
+
+
+def test_home_has_no_invitation_note_while_signup_is_open(client, db, settings):
+    settings.SIGNUP_OPEN = True
+
+    assertNotContains(client.get(reverse('home')), INVITATION_NOTE)
+
+
+def test_home_picture_is_hidden_from_screen_readers(client, db):
+    resp = client.get(reverse('home'))
+
+    assertContains(resp, '<svg class="door__picture" aria-hidden="true" focusable="false"', count=1)
+
+
 # Members: the forum list at home
 
 
