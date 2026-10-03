@@ -1,7 +1,11 @@
 {% extends '_base.html' %}
 
-{% block title %}403 Forbidden{% endblock %}
+{% block title %}Not allowed{% endblock title %}
 
 {% block content %}
-<h1>403 Forbidden (Permission denied)</h1>
+<div class="page-head">
+    <h1>Not allowed</h1>
+</div>
+<p class="lead">Your account doesn't have the rights to open this page.</p>
+<p><a class="button" href="{% url 'home' %}">Back to the start</a></p>
 {% endblock content %}
