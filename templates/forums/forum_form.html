@@ -3,7 +3,7 @@
 {% block title %}New forum{% endblock title %}
 
 {% block content %}
-    <p class="trail"><a href="{% url 'forum_list' %}">Forums</a></p>
+    {% include 'forums/_trail.html' only %}
     <div class="page-head">
         <h1>New forum</h1>
     </div>

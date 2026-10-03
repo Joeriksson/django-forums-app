@@ -3,7 +3,7 @@
 {% block title %}Edit {{ forum.title }}{% endblock title %}
 
 {% block content %}
-    <p class="trail"><a href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a></p>
+    {% include 'forums/_trail.html' with forum=forum only %}
     <div class="page-head">
         <h1>Edit forum</h1>
     </div>
