@@ -331,19 +331,6 @@ wheels = [
 ]
 
 [[package]]
-name = "crispy-bootstrap4"
-version = "2025.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-    { name = "django-crispy-forms" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/99/f7/5dea1c2ad806fb28b42da08f1dc19ac172e909a63bcef0734bfdf811fedf/crispy_bootstrap4-2025.6.tar.gz", hash = "sha256:69066c33fc9c8841cbd8741a7ec99ad9234f12877b4549490031a47c2c1abd79", size = 35938, upload-time = "2025-06-08T08:04:54.872Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/28/f9/a43aeecf5bf7c9b05eccf9f35d1878291a1f2c5ffc501bd96b8759fb6b10/crispy_bootstrap4-2025.6-py3-none-any.whl", hash = "sha256:64bf732b27690c7147bfaa154b4b690217bee81c71731daf5da73de00ee01943", size = 23281, upload-time = "2025-06-08T08:04:53.622Z" },
-]
-
-[[package]]
 name = "cryptography"
 version = "50.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -453,18 +440,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-crispy-forms"
-version = "2.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/a1/6a638d13717e4d4f8df169dade0fa51bdc65d9825df39d98ce709a776b49/django_crispy_forms-2.5.tar.gz", hash = "sha256:066e72a8f152a1334f1c811cc37740868efe3265e5a218f79079ef89f848c3d8", size = 1097999, upload-time = "2025-11-06T20:44:01.921Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/58/ac3a11950baaf75c1f3242e3af9dfe45201f6ee10c113dd37a9c000876d2/django_crispy_forms-2.5-py3-none-any.whl", hash = "sha256:adc99d5901baca09479c53bf536b3909e80a9f2bb299438a223de4c106ebf1f9", size = 31464, upload-time = "2025-11-06T20:44:00.795Z" },
-]
-
-[[package]]
 name = "django-debug-toolbar"
 version = "6.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -483,13 +458,11 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "celery" },
-    { name = "crispy-bootstrap4" },
     { name = "cryptography" },
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-allauth", extra = ["mfa"] },
     { name = "django-cors-headers" },
-    { name = "django-crispy-forms" },
     { name = "django-lifecycle" },
     { name = "django-redis" },
     { name = "djangorestframework" },
@@ -518,13 +491,11 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "celery", specifier = ">=5.5" },
-    { name = "crispy-bootstrap4", specifier = ">=2022.1" },
     { name = "cryptography", specifier = ">=44" },
     { name = "dj-database-url", specifier = ">=2.1,<3" },
     { name = "django", specifier = ">=5.2,<6.0" },
     { name = "django-allauth", extras = ["mfa"], specifier = ">=65.14.1" },
     { name = "django-cors-headers", specifier = ">=4.0" },
-    { name = "django-crispy-forms", specifier = ">=2.1" },
     { name = "django-lifecycle", specifier = ">=1.0" },
     { name = "django-redis", specifier = ">=5.4" },
     { name = "djangorestframework", specifier = ">=3.14" },

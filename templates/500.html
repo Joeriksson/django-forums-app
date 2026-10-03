@@ -1,8 +1,11 @@
 {% extends '_base.html' %}
 
-{% block title %}500 Server Error{% endblock %}
+{% block title %}Something went wrong{% endblock title %}
 
 {% block content %}
-<h1>500 Server Error</h1>
-<p>Looks like something went wrong!</p>
+<div class="page-head">
+    <h1>Something went wrong</h1>
+</div>
+<p class="lead">The site ran into an error. Try again in a moment.</p>
+<p><a class="button" href="{% url 'home' %}">Back to the start</a></p>
 {% endblock content %}

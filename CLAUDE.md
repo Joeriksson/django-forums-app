@@ -123,7 +123,7 @@ api/               # Django REST Framework API (mounted only with DJANGO_API_ENA
 
 tests/             # pytest test suite
 templates/         # HTML templates (extends _base.html)
-static/            # Static file sources (our CSS and JS, fonts, Font Awesome, bootstrap-social, highlight.js, EasyMDE); collected into staticfiles/ at image build, not committed
+static/            # Static file sources (our CSS and JS, fonts, icons, the favicon, highlight.js, EasyMDE); collected into staticfiles/ at image build, not committed
 ```
 
 ## Data Models
@@ -322,7 +322,6 @@ The **security log** is the `security` logger: one line per event, `event key=va
 - **EasyMDE** — Markdown editor on the thread and post forms: `templates/forums/_editor.html` loads `static/js/easymde.min.js`, its stylesheet and our `static/js/editor.js` (toolbar, settings). The preview button posts the text to `/forums/preview/`, so it shows what the saved text will look like. Without JavaScript the plain textarea still works. Like highlight.js it is a file in `static/` that `make audit` doesn't cover; it loads nothing from other sites (its spell checker and Font Awesome download are off). Its toolbar buttons are defined in `editor.js` with the class `icon` instead of Font Awesome's; `editor.css` draws each from `static/icons/` (Lucide SVG files, ISC licence in `static/icons/LICENSE`; `make audit` doesn't cover them), named after the button. A new button needs its icon file and a line in `editor.css`. To upgrade it:
   1. Replace the two `easymde.min.*` files with the ones from the new npm package (check its integrity hash) and read the release notes for renamed options and anything new that loads from another site
   2. The tests don't run JavaScript, so check in a browser, logged in, on the new thread, new post and edit thread pages: the toolbar is on one line with all icons, the preview matches the saved result, the Markdown hint under the field is hidden, an empty text shows the form error, and the edit page loads the saved text
-  3. If the toolbar wraps, see the `button.table` rule in `static/css/editor.css` (EasyMDE's class name clashes with Bootstrap's `.table`)
 - **django-allauth** — authentication + GitHub OAuth
 - **cryptography** — Fernet encryption of the two-factor secrets (`users/encryption.py`)
 - **djangorestframework** — REST API
@@ -349,7 +348,7 @@ A `prod-image` job builds the production image, starts it with production settin
 
 ## Front end
 
-The pages are being rebuilt without Bootstrap (redesign in progress): hand-written CSS, no jQuery, nothing from a CDN.
+The pages use hand-written CSS: no Bootstrap, no jQuery, no icon font, nothing from a CDN. Forms are drawn by Django (`{{ form }}`), not crispy-forms.
 
 - **`static/css/base.css`** is the site's stylesheet: colour and type tokens as CSS custom properties (`--ground`, `--surface`, `--ink`, `--quiet`, `--rule`, `--spruce`, `--lichen`, `--danger`), a dark palette under `prefers-color-scheme: dark` (no toggle), element defaults, the header and the user menu. Use the tokens, never a literal colour, so both palettes keep working
 - **Typefaces** are files in `static/fonts/` (SIL Open Font License, licence texts next to them): Literata (`--serif`) for titles and post text, Schibsted Grotesk (`--sans`) for the interface. They are Latin subsets with a weight range of 400 to 700, made from the upstream variable fonts with fontTools; `make audit` doesn't cover them
@@ -357,14 +356,15 @@ The pages are being rebuilt without Bootstrap (redesign in progress): hand-writt
 - **Lists** of forums and threads are `<ul class="rows">` with `.row` items, no cards. A thread row is `templates/forums/_thread_row.html` (needs `post_count` on the thread; `show_forum` and `show_actions` are optional). A member is shown with `templates/forums/_person.html`: a monogram disc (`user.monogram`: initials or the member number; `user.monogram_tone`: one of six colours, by id) and the display name
 - **Dates** in lists use the `when` filter (`forums/templatetags/when.py`): "5 minutes ago", "yesterday", "4 days ago", then a date
 - **Template comments**: `{# #}` works on one line only, and a longer one is printed on the page; use `{% comment %}` (`tests/test_no_inline_code.py` checks)
-- **Buttons** are `.button` (plus `.button--quiet`, `.button--danger`). Bare `<button>` elements are not styled, because the editor's toolbar has its own
-- **Leftovers**: templates not rebuilt yet still carry Bootstrap class names (`btn`, `card`, `form-group`); the last section of `base.css` gives those a minimal look until each page is done. Don't add new uses
+- **Buttons** are `.button` (plus `.button--quiet`, `.button--danger`). Bare `<button>` elements are not styled, because the editor's toolbar has its own; `tests/test_template_markup.py` fails on a `<button>` without the class or a Bootstrap class name in a template
+- **Error pages** `403.html`, `404.html`, `500.html`: a title, one line and a link home. Django renders `500.html` without a request, so nothing in `_base.html` may need one (`tests/test_error_pages.py`)
+- **Favicon**: `static/favicon.svg`, a W in a spruce disc like the members' monograms, with its own dark colours under `prefers-color-scheme`. Its light colours are attributes, since the CSP blocks the SVG's `<style>` when the file is opened on its own
 - The tests don't run a browser. After changing styles, look at the pages in light and dark and at phone width
 
 ## Architecture Notes
 
 - **Content Security Policy**: `project/middleware.py` adds the header to every response from `SECURE_CSP` in `base.py` (enforced; `DJANGO_CSP_REPORT_ONLY=true` moves the policy to `SECURE_CSP_REPORT_ONLY`, which only reports in the browser console). Scripts, styles and fonts from our own origin only (nothing comes from a CDN), `data:` and `https:` images, GitHub as a form target (the login redirect), no framing, and no `'unsafe-inline'`. Anything loaded from another site (a font, a CDN, an embedded frame) must be added to `_CSP` or browsers block it; `tests/test_csp.py` fails if a project template loads a script, style, image or frame from another site. The settings are named like Django 6's built-in CSP support, which replaces the middleware at that upgrade. Known and accepted: Django's debug 404 page and DRF's browsable API page each lose an inline style. The tests don't run a browser: after changing the policy or adding scripts, open the pages and look for violations in the console
-- **No inline code in templates**: no `<script>` without `src`, no `<style>` block, no `style=` or `on...=` attribute (`tests/test_no_inline_code.py` checks the project templates). Scripts and styles go into files under `static/` (`css/base.css` for every page, `css/thread.css` and `js/thread.js` for the thread page, `css/editor.css` for the editor); pass values to a script with `data-` attributes, as `_editor.html` does. Font Awesome's `js/all.js` would add its styles to the page as an inline `<style>`: `data-auto-add-css="false"` in `_base.html` stops that, and `css/fontawesome-svg.css` holds those styles (copied from `baseStyles` in `all.js`; replace both files together: `tests/test_static_files.py` fails if they differ)
+- **No inline code in templates**: no `<script>` without `src`, no `<style>` block, no `style=` or `on...=` attribute (`tests/test_no_inline_code.py` checks the project templates). Scripts and styles go into files under `static/` (`css/base.css` for every page, `css/thread.css` and `js/thread.js` for the thread page, `css/editor.css` for the editor); pass values to a script with `data-` attributes, as `_editor.html` does.
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
 - `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` — integer PKs (not BigAutoField)

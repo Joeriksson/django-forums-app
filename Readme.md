@@ -19,7 +19,7 @@ Includes:
 - docker files for spinning up containers (python and postgresql)
 - basic tests for pages, users and forums
 - different settings files for development and production
-- basic Bootstrap styling
+- hand-written CSS with light and dark colours, self-hosted fonts, no CDN
 - api via Django REST Framework
 - caching with Redis
 - e-mail task queue with Celery
