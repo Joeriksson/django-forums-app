@@ -307,14 +307,10 @@ textarea {
     margin-top: var(--space-4);
 }
 
-/* Buttons: .button is ours; .btn is what the templates still call them. Not every
-   <button>: the editor's toolbar has its own. The variants name button.button--*
-   too, to outrank button[type='submit']. */
+/* Buttons: links and <button>s with the class .button. Not every <button>: the editor's
+   toolbar has its own. */
 
-.button,
-.btn,
-button[type='submit'],
-input[type='submit'] {
+.button {
     display: inline-block;
     padding: var(--space-2) var(--space-3);
     background: var(--spruce);
@@ -329,46 +325,29 @@ input[type='submit'] {
     cursor: pointer;
 }
 
-.button:hover,
-.btn:hover,
-button[type='submit']:hover,
-input[type='submit']:hover {
+.button:hover {
     background: var(--spruce-strong);
     border-color: var(--spruce-strong);
     color: var(--on-spruce);
 }
 
-.button--quiet,
-button.button--quiet,
-.btn-outline-secondary,
-.btn-outline-primary,
-.btn-secondary {
+.button--quiet {
     background: transparent;
     color: var(--spruce);
 }
 
-.button--quiet:hover,
-button.button--quiet:hover,
-.btn-outline-secondary:hover,
-.btn-outline-primary:hover,
-.btn-secondary:hover {
+.button--quiet:hover {
     background: transparent;
     color: var(--spruce-strong);
 }
 
-.button--danger,
-button.button--danger,
-.btn-danger,
-.btn-outline-danger {
+.button--danger {
     background: transparent;
     border-color: var(--danger);
     color: var(--danger);
 }
 
-.button--danger:hover,
-button.button--danger:hover,
-.btn-danger:hover,
-.btn-outline-danger:hover {
+.button--danger:hover {
     background: var(--danger);
     border-color: var(--danger);
     color: var(--surface);
@@ -521,14 +500,8 @@ button.button--danger:hover,
 
 /* Small helpers */
 
-.quiet,
-.text-muted {
+.quiet {
     color: var(--quiet);
-}
-
-/* Page title above the thread page and the thread and post forms */
-.heading {
-    margin: var(--space-3) 0 var(--space-4);
 }
 
 /* Page head: a title with its main action beside it */
@@ -735,49 +708,9 @@ button.button--danger:hover,
     font-size: var(--size-reading);
 }
 
-/*
- * Until each page has been rebuilt: the templates still use these Bootstrap class
- * names, and Bootstrap itself is gone. Enough to keep those pages tidy.
- */
-
-.card {
-    margin-bottom: var(--space-3);
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-}
-
-.card-header,
-.card-body {
-    padding: var(--space-3);
-}
-
-.card-header {
-    border-bottom: 1px solid var(--rule);
-}
-
-.form-group {
-    margin-bottom: var(--space-3);
-}
-
-.jumbotron {
-    padding-block: var(--space-3);
-}
-
-.float-right {
-    float: right;
-}
-
-.list-group {
-    padding: 0;
-    list-style: none;
-}
-
 @media (prefers-reduced-motion: no-preference) {
     a,
-    .button,
-    .btn,
-    button[type='submit'] {
+    .button {
         transition: background-color 0.12s, color 0.12s, border-color 0.12s;
     }
 }

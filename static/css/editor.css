@@ -110,13 +110,6 @@
 .editor-toolbar button.table { --icon: url('../icons/table.svg'); }
 .editor-toolbar button.preview { --icon: url('../icons/eye.svg'); }
 
-/* The table button has the class "table", which Bootstrap styled as a full-width table;
-   goes with the Bootstrap leftovers */
-.editor-toolbar button.table {
-    width: auto;
-    margin-bottom: 0;
-}
-
 /* The preview: the text as the thread page shows it */
 
 .EasyMDEContainer .editor-preview {
