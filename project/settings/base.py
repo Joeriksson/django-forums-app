@@ -43,8 +43,6 @@ INSTALLED_APPS = [
     # 'rest_auth',
     'corsheaders',
     # 'rest_auth.registration',
-    'crispy_forms',
-    'crispy_bootstrap4',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -198,8 +196,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 LOGIN_REDIRECT_URL = 'home'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'home'
-
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # django-allauth config
 SITE_ID = 1
