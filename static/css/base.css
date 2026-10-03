@@ -266,6 +266,31 @@ textarea {
     margin-bottom: var(--space-4);
 }
 
+/* A checkbox field: the box beside its label, the help text under the label */
+.form > div:has(> input[type='checkbox']) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 var(--space-2);
+    align-items: center;
+}
+
+.form > div:has(> input[type='checkbox']) > input {
+    grid-row: 1;
+    grid-column: 1;
+    margin: 0;
+    accent-color: var(--spruce);
+}
+
+.form > div:has(> input[type='checkbox']) > label {
+    grid-row: 1;
+    grid-column: 2;
+    margin: 0;
+}
+
+.form > div:has(> input[type='checkbox']) > :not(input, label) {
+    grid-column: 2;
+}
+
 /* The thread and post forms: the editor takes the page's width */
 .form--wide,
 .form--wide textarea {
@@ -617,6 +642,21 @@ textarea {
     gap: var(--space-3);
     margin: var(--space-2) 0 0;
     font-size: var(--size-small);
+}
+
+/* A heading over a list, e.g. the announcements above a forum's threads */
+.list-heading {
+    margin: var(--space-4) 0 var(--space-2);
+    color: var(--quiet);
+    font-family: var(--sans);
+    font-size: var(--size-small);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.list-heading + .rows {
+    margin-top: 0;
 }
 
 /* Forum and thread rows: the main part, then the counts and the latest activity in columns

@@ -10,7 +10,7 @@
 
 {% block content %}
     {% include 'forums/_trail.html' with forum=thread.forum only %}
-    <p class="kicker">Thread</p>
+    <p class="kicker">{% if thread.announcement %}Announcement{% else %}Thread{% endif %}</p>
     <h1 class="thread-title">{{ thread.title }}</h1>
 
     <article class="post post--opening" id="opening">

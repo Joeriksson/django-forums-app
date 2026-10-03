@@ -16,9 +16,19 @@
         <p><a href="{% url 'forum_update' forum.id %}">Edit this forum</a></p>
     {% endif %}
 
+    {% if announcements %}
+        <h2 class="list-heading">Announcements</h2>
+        <ul class="rows" aria-label="Announcements">
+            {% for thread in announcements %}
+                {% include 'forums/_thread_row.html' with show_actions=True %}
+            {% endfor %}
+        </ul>
+        <h2 class="list-heading">Threads</h2>
+    {% endif %}
+
     {% if threads %}
         {% include 'forums/_pages.html' with page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
-        <ul class="rows">
+        <ul class="rows" aria-label="Threads">
             {% for thread in threads %}
                 {% include 'forums/_thread_row.html' with show_actions=True %}
             {% endfor %}
