@@ -165,6 +165,8 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ### Search
 - PostgreSQL full-text search in English word forms (`SEARCH_CONFIG = 'english'` in `forums/models.py`): `THREAD_SEARCH_VECTOR` (title weight A, text B) and `POST_SEARCH_VECTOR` (text B), with GIN indexes on exactly those expressions (migration `forums/0020`). A query must use these constants, or PostgreSQL scans every row
 - `forums/search.py`: `matches()` turns the form's data into one UNION of thread and reply rows (kind, id, added, rank), filtered by forum, author, dates and kind and sorted by rank or date; `load()` loads one page's objects and gives each reply its number and thread page. Words use web search syntax (`"phrase"`, `-word`); they need 3 characters unless a filter is set
+- Matched words are marked in the excerpts: `load()` gets them from `ts_headline` (`SearchHeadline`) in the same query, marked with two private-use characters (`START`, `STOP` in `forums/search.py`, removed from the text first so members can't type them), then renders the Markdown and strips the tags (which escapes), and only then turns the markers into `<mark>`. Titles are not highlighted: `ts_headline` treats text as HTML and may drop parts that look like tags, so a title would not show as typed
+- The filters are in a `<details>` toggle, *Filters (n)* with the number in use: folded on a phone unless a filter is in use; `static/js/search.js` opens it on wider screens
 - `SearchForm` (`forums/forms.py`): the author list shows display names, with the member number for names that occur twice. Page links keep the search (`{% querystring %}` in `templates/forums/_pages.html`, which needs `request` passed into the include). Tests: `tests/forums/test_search.py`
 
 ### UpVote
