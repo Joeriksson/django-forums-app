@@ -112,6 +112,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'pages.context_processors.site_settings',
             ],
         },
     },
@@ -276,7 +277,7 @@ ACCOUNT_USER_DISPLAY = 'users.adapters.user_display'
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # Two-factor login: an authenticator app (TOTP) plus recovery codes. No passkeys.
 MFA_SUPPORTED_TYPES = ['totp', 'recovery_codes']
-MFA_TOTP_ISSUER = 'Wildvasa Forums'
+# The name authenticator apps show is the site's title (users.adapters.MFAAdapter)
 # Authenticator secrets and recovery-code seeds are encrypted in the database with this
 # key (users/encryption.py). Production must set DJANGO_MFA_ENCRYPTION_KEY; elsewhere
 # the key is derived from SECRET_KEY, so development and tests need nothing extra.
