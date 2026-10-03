@@ -1,5 +1,3 @@
-version: '3.7'
-
 # Dev images include the dev dependency group (pytest etc.), see Dockerfile
 x-build: &build
   context: .
