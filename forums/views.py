@@ -71,7 +71,7 @@ class ForumCreate(PermissionRequiredMixin, CreateView):
     model = Forum
     fields = '__all__'
     permission_required = 'forums.add_forum'
-    success_url = reverse_lazy('forum_list')
+    success_url = reverse_lazy('home')
 
 
 class ForumUpdate(PermissionRequiredMixin, UpdateView):
