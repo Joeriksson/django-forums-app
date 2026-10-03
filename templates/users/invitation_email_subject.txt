@@ -1,1 +1,1 @@
-You're invited to Wildvasa Forums
+{% autoescape off %}You're invited to {{ title }}{% endautoescape %}
