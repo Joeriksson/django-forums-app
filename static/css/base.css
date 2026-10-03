@@ -619,6 +619,108 @@ textarea {
     font-size: var(--size-small);
 }
 
+/* Forum and thread rows: the main part, then the counts and the latest activity in columns
+   on the right. On a narrow screen the columns fold into lines under the main part. */
+
+.forum-row,
+.thread-row {
+    display: grid;
+    gap: var(--space-2) var(--space-4);
+    align-items: start;
+}
+
+.forum-row {
+    grid-template-columns: minmax(0, 1fr) 6.5rem 13rem;
+}
+
+.thread-row {
+    grid-template-columns: minmax(0, 1fr) 5.5rem 11rem;
+}
+
+.forum-row__counts,
+.thread-row__count,
+.forum-row__latest,
+.thread-row__latest {
+    margin: 0;
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.forum-row__counts strong,
+.thread-row__count strong {
+    color: var(--ink);
+    font-size: var(--size-body);
+}
+
+.forum-row__counts span {
+    display: block;
+}
+
+/* The forums are the places: their titles a size up from the threads' */
+.forum-row .row__title {
+    font-size: var(--size-h2);
+}
+
+.forum-row__latest,
+.thread-row__latest {
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--rule);
+}
+
+.forum-row__thread {
+    display: block;
+    overflow: hidden;
+    color: var(--ink);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.forum-row__who,
+.thread-row__latest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+}
+
+.forum-row__who {
+    margin: var(--space-1) 0 0;
+}
+
+.thread-row__when {
+    color: inherit;
+}
+
+/* On a narrow screen the columns' place no longer says what they are */
+.row-label {
+    display: none;
+}
+
+@media (max-width: 40rem) {
+    .row-label {
+        display: inline;
+        font-weight: 600;
+    }
+
+    .forum-row,
+    .thread-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-2);
+    }
+
+    .forum-row__counts {
+        display: flex;
+        gap: var(--space-3);
+    }
+
+    .forum-row__latest,
+    .thread-row__latest {
+        padding-left: 0;
+        border-left: 0;
+    }
+}
+
 /* A member: a monogram disc and the name. The disc's colour comes from the member's id. */
 
 .person {

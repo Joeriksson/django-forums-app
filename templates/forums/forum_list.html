@@ -1,4 +1,5 @@
 {% extends '_base.html' %}
+{% load when %}
 
 {% block title %}Forums{% endblock title %}
 
@@ -15,16 +16,27 @@
     {% if forum_list %}
         <ul class="rows">
             {% for forum in forum_list %}
-                <li class="row">
-                    <a class="row__title" href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a>
-                    <p class="row__text">{{ forum.description }}</p>
-                    <p class="row__meta">
-                        {% if forum.thread_count %}
-                            <span>{{ forum.thread_count }} thread{{ forum.thread_count|pluralize }}</span>
-                        {% else %}
-                            <span>No threads yet</span>
-                        {% endif %}
+                <li class="row forum-row">
+                    <div class="forum-row__main">
+                        <a class="row__title" href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a>
+                        <p class="row__text">{{ forum.description }}</p>
+                    </div>
+                    <p class="forum-row__counts">
+                        <span><strong>{{ forum.thread_count }}</strong> thread{{ forum.thread_count|pluralize }}</span>
+                        <span><strong>{{ forum.reply_count }}</strong> repl{{ forum.reply_count|pluralize:"y,ies" }}</span>
                     </p>
+                    <div class="forum-row__latest">
+                        {% if forum.latest %}
+                            <span class="row-label">Latest</span>
+                            <a class="forum-row__thread" href="{% url 'thread_detail' forum.latest.id %}?page=last">{{ forum.latest.title }}</a>
+                            <p class="forum-row__who">
+                                {% include 'forums/_person.html' with person=forum.latest.last_replier|default:forum.latest.user %}
+                                <span>{{ forum.latest.last_activity|when }}</span>
+                            </p>
+                        {% else %}
+                            <span class="quiet">No threads yet</span>
+                        {% endif %}
+                    </div>
                 </li>
             {% endfor %}
         </ul>

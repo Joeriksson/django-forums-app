@@ -124,6 +124,6 @@ def test_home_query_count_does_not_grow_with_threads(client, member, forum, djan
         add_reply(thread, member)
     client.force_login(member)
 
-    # Six for the logged-in member, one for the threads
-    with django_assert_max_num_queries(7):
+    # Six for the logged-in member, one for the threads, one for the members who replied last
+    with django_assert_max_num_queries(8):
         client.get(reverse('home'))
