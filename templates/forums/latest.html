@@ -1,0 +1,21 @@
+{% extends '_base.html' %}
+
+{% block title %}Latest conversations{% endblock title %}
+
+{% block content %}
+    <div class="page-head">
+        <h1>Latest conversations</h1>
+    </div>
+    {% if threads %}
+        <div class="panel">
+            {% include 'forums/_thread_head.html' with name='Conversations' only %}
+            <ul class="rows">
+                {% for thread in threads %}
+                    {% include 'forums/_thread_row.html' with show_forum=True %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p class="empty">No conversations yet. Pick a <a href="{% url 'home' %}">forum</a> and start one.</p>
+    {% endif %}
+{% endblock content %}
