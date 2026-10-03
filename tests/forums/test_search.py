@@ -12,7 +12,7 @@ from django.utils import timezone
 from pytest_django.asserts import assertContains, assertNotContains, assertRedirects
 
 from forums.models import Post, Thread
-from forums.views import SearchView, ThreadDetail
+from forums.views import SearchView
 
 SEARCH_URL = reverse('search_results')
 
@@ -240,8 +240,8 @@ def test_results_come_in_pages_that_keep_the_search(client, anna, house, add_thr
 
 
 @pytest.mark.django_db
-def test_reply_links_to_its_page_and_number(client, anna, house, add_thread, add_post, monkeypatch):
-    monkeypatch.setattr(ThreadDetail, 'paginate_by', 2)
+def test_reply_links_to_its_page_and_number(client, anna, house, add_thread, add_post, site_settings):
+    site_settings(posts_per_page=2)
     thread = add_thread('Roof', 'Text', house, anna)
     posts = [add_post(f'Reply {n}', thread, anna) for n in range(4)]
     target = posts[3]

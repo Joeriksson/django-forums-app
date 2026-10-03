@@ -27,6 +27,7 @@ from .search import load, matches, search_query
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
 from .throttling import PreviewThrottle, SearchThrottle, allowed, posting_allowed
+from pages.models import SiteSettings
 from users.audit import log_moderation
 
 
@@ -35,20 +36,19 @@ class ForumsList(LoginRequiredMixin, ListView):
     context_object_name = 'forum_list'
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
     queryset = with_counts(Forum.objects.all()).order_by('title', 'id')
-    recent_count = 3
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['forum_list'] = add_top_threads(context['forum_list'])
         # Above the forums: the newest activity anywhere (all of it under Latest)
-        context['recent_threads'] = latest_threads(self.recent_count)
+        count = SiteSettings.for_request(self.request).recent_threads
+        context['recent_threads'] = latest_threads(count)
         return context
 
 
 class ForumDetail(LoginRequiredMixin, DetailView):
     model = Forum
     context_object_name = 'forum'
-    paginate_by = 20
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -61,7 +61,8 @@ class ForumDetail(LoginRequiredMixin, DetailView):
         announcements = list(threads.filter(announcement=True).order_by('-added', '-id'))
         regular = threads.filter(announcement=False).order_by('-added', '-id')
         # get_page() shows the first or last page for a page number that doesn't exist
-        page = Paginator(regular, self.paginate_by).get_page(self.request.GET.get('page'))
+        per_page = SiteSettings.for_request(self.request).threads_per_page
+        page = Paginator(regular, per_page).get_page(self.request.GET.get('page'))
         page.object_list = list(page.object_list)
         # One query for the last repliers of both lists
         add_last_repliers(announcements + page.object_list)
@@ -99,7 +100,6 @@ def thread_page_url(thread_id, page=None):
 class ThreadDetail(LoginRequiredMixin, DetailView):
     model = Thread
     context_object_name = 'thread'
-    paginate_by = 25
 
     def get_queryset(self):
         return super().get_queryset().select_related('forum', 'user__profile')
@@ -112,7 +112,7 @@ class ThreadDetail(LoginRequiredMixin, DetailView):
             .select_related('user__profile')
             .order_by('added', 'id')
         )
-        paginator = Paginator(posts, self.paginate_by)
+        paginator = Paginator(posts, SiteSettings.for_request(self.request).posts_per_page)
         page = self.request.GET.get('page')
         # get_page() shows the first or last page for a page number that doesn't exist
         context['posts'] = paginator.get_page(paginator.num_pages if page == 'last' else page)
@@ -331,7 +331,9 @@ class SearchView(LoginRequiredMixin, TemplateView):
                     request.GET.get('page')
                 )
                 results = load(
-                    page.object_list, ThreadDetail.paginate_by, search_query(form.cleaned_data)
+                    page.object_list,
+                    SiteSettings.for_request(request).posts_per_page,
+                    search_query(form.cleaned_data),
                 )
         # The filters in use, shown on the toggle that folds them away on small screens
         filter_count = sum(1 for name in ('forum', 'author', 'since', 'until') if request.GET.get(name))

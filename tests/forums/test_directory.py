@@ -12,7 +12,6 @@ from django.utils import timezone
 from pytest_django.asserts import assertContains, assertNotContains
 
 from forums.models import Post, Thread
-from forums.views import ForumDetail
 
 
 @pytest.fixture
@@ -230,8 +229,8 @@ def test_latest_rows_show_who_replied_last(client, forum, anna, bo, add_thread):
 
 
 @pytest.mark.django_db
-def test_forum_page_has_page_links_above_and_below(client, forum, anna, add_thread, monkeypatch):
-    monkeypatch.setattr(ForumDetail, 'paginate_by', 2)
+def test_forum_page_has_page_links_above_and_below(client, forum, anna, add_thread, site_settings):
+    site_settings(threads_per_page=2)
     for number in range(3):
         add_thread(f'Thread {number}', 'Text', forum, anna)
 

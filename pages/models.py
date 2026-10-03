@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -24,6 +25,26 @@ class SiteSettings(models.Model):
         default='Membership is by invitation. Got an invitation? Use the link in the email.',
         help_text='On the visitors\' home page while signup is closed.',
     )
+    recent_threads = models.PositiveSmallIntegerField(
+        default=3,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        help_text='Threads under Recent activity, above the forum list (1 to 10).',
+    )
+    latest_threads = models.PositiveSmallIntegerField(
+        default=15,
+        validators=[MinValueValidator(5), MaxValueValidator(50)],
+        help_text='Threads on the Latest page (5 to 50).',
+    )
+    threads_per_page = models.PositiveSmallIntegerField(
+        default=20,
+        validators=[MinValueValidator(5), MaxValueValidator(100)],
+        help_text='Threads per page of a forum (5 to 100). Old links to a page may then lead elsewhere.',
+    )
+    posts_per_page = models.PositiveSmallIntegerField(
+        default=25,
+        validators=[MinValueValidator(5), MaxValueValidator(100)],
+        help_text='Posts per page of a thread (5 to 100). Old links to a page may then lead elsewhere.',
+    )
 
     class Meta:
         verbose_name = 'site settings'
@@ -37,6 +58,13 @@ class SiteSettings(models.Model):
         """The record, or the defaults if it is missing. One query, no cache: every
         process sees a change at once."""
         return cls.objects.filter(pk=cls.PK).first() or cls(pk=cls.PK)
+
+    @classmethod
+    def for_request(cls, request):
+        """load(), once per request: the view and its templates share it."""
+        if not hasattr(request, '_site_settings'):
+            request._site_settings = cls.load()
+        return request._site_settings
 
     def save(self, *args, **kwargs):
         self.pk = self.PK

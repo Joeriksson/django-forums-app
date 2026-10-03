@@ -3,7 +3,6 @@ from django.core.cache import cache
 from django.urls import reverse
 from pytest_django.asserts import assertContains
 
-from forums.views import ForumDetail
 
 @pytest.fixture
 def client(client, reader):
@@ -24,9 +23,9 @@ def forum(add_forum):
 
 
 @pytest.fixture
-def five_threads(add_thread, forum, author, monkeypatch):
+def five_threads(add_thread, forum, author, site_settings):
     """Five threads, oldest first, on pages of two."""
-    monkeypatch.setattr(ForumDetail, 'paginate_by', 2)
+    site_settings(threads_per_page=2)
     return [add_thread(title=f'Thread {n}', text='Text', forum=forum, user=author) for n in range(5)]
 
 

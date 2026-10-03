@@ -97,3 +97,15 @@ def security_log(caplog):
         return [record.getMessage() for record in caplog.records if record.name == 'security']
 
     return lines
+
+
+@pytest.fixture
+def site_settings(db):
+    """Change the site settings for a test, e.g. site_settings(posts_per_page=2)."""
+    from pages.models import SiteSettings
+
+    def _site_settings(**fields):
+        # update(): no validation, so tests may use pages smaller than the admin allows
+        SiteSettings.objects.filter(pk=SiteSettings.PK).update(**fields)
+
+    return _site_settings

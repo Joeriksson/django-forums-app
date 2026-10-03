@@ -4,7 +4,6 @@ from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
 from forums.models import UpVote
-from forums.views import ThreadDetail
 
 @pytest.fixture
 def client(client, reader):
@@ -31,9 +30,9 @@ def thread(add_forum, add_thread, author):
 
 
 @pytest.fixture
-def five_posts(add_post, thread, author, monkeypatch):
+def five_posts(add_post, thread, author, site_settings):
     """Five posts, oldest first, on pages of two."""
-    monkeypatch.setattr(ThreadDetail, 'paginate_by', 2)
+    site_settings(posts_per_page=2)
     return [add_post(text=f'Post {n}', thread=thread, user=author) for n in range(5)]
 
 

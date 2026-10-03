@@ -10,7 +10,6 @@ from django.urls import reverse
 from pytest_django.asserts import assertContains, assertNotContains
 
 from forums.models import Thread
-from forums.views import ForumDetail
 
 CHECKBOX = 'name="announcement"'
 
@@ -193,9 +192,9 @@ def announcement(forum, moderator, add_thread):
 
 @pytest.mark.django_db
 def test_forum_page_lists_announcements_above_the_threads_on_every_page(
-    author_client, forum, author, add_thread, announcement, monkeypatch
+    author_client, forum, author, add_thread, announcement, site_settings
 ):
-    monkeypatch.setattr(ForumDetail, 'paginate_by', 2)
+    site_settings(threads_per_page=2)
     for number in range(3):
         add_thread(f'Thread {number}', 'Text', forum, author)
     url = reverse('forum_detail', args=[forum.pk])

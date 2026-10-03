@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.views.defaults import server_error
 from pytest_django.asserts import assertContains, assertNotContains, assertRedirects
 
+from forums.models import Forum, Post, Thread
 from pages.models import SiteSettings
 from users.adapters import MFAAdapter
 from users.models import Invitation
@@ -169,7 +170,10 @@ def test_admin_edits_the_record(staff_client, settings):
 
     staff_client.post(
         reverse('admin:pages_sitesettings_change', args=[site_settings.pk]),
-        {'title': TITLE, 'tagline': 'T', 'invitation_note': 'N'},
+        {
+            'title': TITLE, 'tagline': 'T', 'invitation_note': 'N',
+            'recent_threads': 3, 'latest_threads': 15, 'threads_per_page': 20, 'posts_per_page': 25,
+        },
     )
 
     assert SiteSettings.load().title == TITLE
@@ -182,3 +186,94 @@ def test_admin_cannot_add_or_delete(staff_client):
     assert staff_client.get(reverse('admin:pages_sitesettings_add')).status_code == 403
     delete_url = reverse('admin:pages_sitesettings_delete', args=[site_settings.pk])
     assert staff_client.get(delete_url).status_code == 403
+
+
+# The numbers for lists and pages
+
+
+@pytest.fixture
+def member_client(client, db):
+    member = User.objects.create_user(username='member', email='member@example.com', password='x')
+    client.force_login(member)
+    client.member = member
+    return client
+
+
+@pytest.fixture
+def forum(db):
+    return Forum.objects.create(title='Trips', description='Where to next')
+
+
+def add_threads(forum, user, count):
+    return [
+        Thread.objects.create(title=f'Thread {number}', text='Text', forum=forum, user=user)
+        for number in range(count)
+    ]
+
+
+@pytest.mark.django_db
+def test_the_migration_starts_the_numbers_at_todays_values():
+    site_settings = SiteSettings.objects.get()
+
+    assert site_settings.recent_threads == 3
+    assert site_settings.latest_threads == 15
+    assert site_settings.threads_per_page == 20
+    assert site_settings.posts_per_page == 25
+
+
+def test_recent_activity_shows_the_set_number(member_client, forum, site_settings):
+    site_settings(recent_threads=5)
+    add_threads(forum, member_client.member, 6)
+
+    assert len(member_client.get(reverse('home')).context['recent_threads']) == 5
+
+
+def test_latest_shows_the_set_number(member_client, forum, site_settings):
+    site_settings(latest_threads=5)
+    add_threads(forum, member_client.member, 6)
+
+    assert len(member_client.get(reverse('latest')).context['threads']) == 5
+
+
+def test_forum_page_shows_the_set_number_of_threads(member_client, forum, site_settings):
+    site_settings(threads_per_page=5)
+    add_threads(forum, member_client.member, 6)
+
+    page = member_client.get(reverse('forum_detail', args=[forum.pk])).context['threads']
+
+    assert len(page) == 5
+    assert page.paginator.num_pages == 2
+
+
+def test_thread_page_shows_the_set_number_of_posts(member_client, forum, site_settings):
+    site_settings(posts_per_page=5)
+    thread = add_threads(forum, member_client.member, 1)[0]
+    for number in range(6):
+        Post.objects.create(text=f'Reply {number}', thread=thread, user=member_client.member)
+
+    page = member_client.get(reverse('thread_detail', args=[thread.pk])).context['posts']
+
+    assert len(page) == 5
+    assert page.paginator.num_pages == 2
+
+
+@pytest.mark.parametrize(
+    'field, low, high',
+    [
+        ('recent_threads', 0, 11),
+        ('latest_threads', 4, 51),
+        ('threads_per_page', 4, 101),
+        ('posts_per_page', 4, 101),
+    ],
+)
+def test_admin_refuses_numbers_out_of_range(staff_client, field, low, high):
+    url = reverse('admin:pages_sitesettings_change', args=[SiteSettings.PK])
+    data = {
+        'title': 'T', 'tagline': 'T', 'invitation_note': 'N',
+        'recent_threads': 3, 'latest_threads': 15, 'threads_per_page': 20, 'posts_per_page': 25,
+    }
+
+    for value in (low, high):
+        resp = staff_client.post(url, {**data, field: value})
+        assert resp.status_code == 200  # the form again, with the error
+        assert getattr(SiteSettings.load(), field) == data[field]
