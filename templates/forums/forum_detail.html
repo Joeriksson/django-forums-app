@@ -17,28 +17,14 @@
     {% endif %}
 
     {% if threads %}
+        {% include 'forums/_pages.html' with page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
         <ul class="rows">
             {% for thread in threads %}
                 {% include 'forums/_thread_row.html' with show_actions=True %}
             {% endfor %}
         </ul>
+        {% include 'forums/_pages.html' with page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
     {% else %}
         <p class="empty">No threads here yet. <a href="{% url 'thread_add' forum.id %}">Start the first one</a>.</p>
-    {% endif %}
-
-    {% if threads.has_other_pages %}
-        <nav class="pages" aria-label="Pages of threads">
-            {% if threads.has_previous %}
-                <a href="?page={{ threads.previous_page_number }}">Newer threads</a>
-            {% else %}
-                <span></span>
-            {% endif %}
-            <span>Page {{ threads.number }} of {{ threads.paginator.num_pages }}</span>
-            {% if threads.has_next %}
-                <a href="?page={{ threads.next_page_number }}">Older threads</a>
-            {% else %}
-                <span></span>
-            {% endif %}
-        </nav>
     {% endif %}
 {% endblock %}
