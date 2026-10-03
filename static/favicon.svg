@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <!-- W in a disc, like a member's monogram; the colours are spruce and on-spruce from css/base.css.
+         The light ones are attributes, so they show even where the style is not applied
+         (the CSP blocks it when the file is opened on its own, not as a favicon). -->
+    <style>
+        @media (prefers-color-scheme: dark) {
+            .disc { fill: #7fc8ae; }
+            .letter { stroke: #0e1a17; }
+        }
+    </style>
+    <circle class="disc" fill="#1f5b4c" cx="16" cy="16" r="16"/>
+    <path class="letter" d="M7.5 10 L11.5 22.5 L16 12.5 L20.5 22.5 L24.5 10" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
