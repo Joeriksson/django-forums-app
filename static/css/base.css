@@ -430,6 +430,14 @@ textarea {
     text-decoration: underline;
 }
 
+/* The section the page belongs to */
+.site-nav a[aria-current='page'] {
+    color: var(--spruce);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.35em;
+}
+
 .site-main {
     padding-block: var(--space-4) var(--space-6);
 }
