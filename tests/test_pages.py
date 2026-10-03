@@ -111,9 +111,67 @@ def test_home_for_a_member_query_count_does_not_grow_with_forums(client, member,
         add_reply(thread, member)
     client.force_login(member)
 
-    # Six for the logged-in member, then the forums, their threads and the last repliers
-    with django_assert_num_queries(6 + 3):
+    # Six for the logged-in member, then the forums, their threads and the last repliers,
+    # then the recent threads and their last repliers
+    with django_assert_num_queries(6 + 3 + 2):
         client.get(reverse('home'))
+
+
+# Members: recent activity above the forum list
+
+
+def recent(resp):
+    return resp.context['recent_threads']
+
+
+def test_home_shows_the_three_threads_with_the_newest_activity(client, member, forum):
+    other_forum = Forum.objects.create(title='Garden', description='Plants')
+    old_but_active = add_thread(forum, member, 'Old but active', days_ago=30)
+    add_reply(old_but_active, member, days_ago=1)
+    newest = add_thread(other_forum, member, 'Newest', days_ago=0)
+    quiet = add_thread(forum, member, 'Quiet', days_ago=3)
+    add_thread(forum, member, 'Oldest', days_ago=40)
+    client.force_login(member)
+
+    resp = client.get(reverse('home'))
+
+    assert recent(resp) == [newest, old_but_active, quiet]
+    assertContains(resp, 'Recent activity')
+    assertContains(resp, f'href="{reverse("latest")}"')
+
+
+def test_home_recent_threads_link_to_the_newest_reply_and_name_forum_and_replier(client, member, forum):
+    thread = add_thread(forum, member, 'Midsummer at the lake', days_ago=2)
+    replier = User.objects.create_user(username='bo', email='bo@example.com', password='x')
+    add_reply(thread, replier)
+    client.force_login(member)
+
+    resp = client.get(reverse('home'))
+
+    recent_html = resp.content.decode().split('class="recent"', 1)[1].split('</section>', 1)[0]
+    assert f'href="{reverse("thread_detail", args=[thread.pk])}?page=last"' in recent_html
+    assert 'Trips' in recent_html
+    assert f'Member {replier.pk}' in recent_html
+    assert 'bo@example.com' not in recent_html
+
+
+def test_home_keeps_announcements_in_their_place_in_recent_activity(client, member, forum):
+    announcement = add_thread(forum, member, 'House rules', days_ago=10)
+    Thread.objects.filter(pk=announcement.pk).update(announcement=True)
+    for number in range(3):
+        add_thread(forum, member, f'Thread {number}', days_ago=number)
+    client.force_login(member)
+
+    assert announcement not in recent(client.get(reverse('home')))
+
+
+def test_home_without_threads_has_no_recent_activity(client, member, forum):
+    client.force_login(member)
+
+    resp = client.get(reverse('home'))
+
+    assert recent(resp) == []
+    assertNotContains(resp, 'Recent activity')
 
 
 def test_old_forum_list_address_leads_home(client, member):
