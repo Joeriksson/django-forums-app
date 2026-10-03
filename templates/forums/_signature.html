@@ -1,0 +1,11 @@
+{% comment %}
+A member's signature under a post, with the web site from the profile. Pass "profile".
+{% endcomment %}
+{% if profile.signature %}
+    <div class="signature">
+        {{ profile.signature|linebreaksbr }}
+        {% if profile.web_site %}
+            <br><a href="{{ profile.web_site }}" rel="nofollow ugc noopener">{{ profile.web_site }}</a>
+        {% endif %}
+    </div>
+{% endif %}
