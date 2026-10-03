@@ -31,6 +31,10 @@ class Thread(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     edited = models.DateTimeField(auto_now=True)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
+    # Set by moderators (forums.change_thread)
+    announcement = models.BooleanField(
+        default=False, help_text='Keep this thread at the top of its forum, above the others.'
+    )
     # user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
