@@ -927,12 +927,33 @@ textarea {
     margin: var(--space-1) 0 0;
 }
 
+/* The toggle that folds the filters away on small screens (js/search.js opens it on wide) */
+.search-form__more {
+    margin-top: var(--space-3);
+}
+
+.search-form__more summary {
+    width: fit-content;
+    color: var(--spruce);
+    font-size: var(--size-small);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* A matched word in a search result */
+mark {
+    padding: 0 0.1em;
+    border-radius: 2px;
+    background: var(--lichen-wash);
+    color: var(--ink);
+}
+
 .search-form__filters {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
     gap: var(--space-3);
     max-width: var(--measure);
-    margin-top: var(--space-4);
+    margin-top: var(--space-3);
 }
 
 .search-form__filters label {

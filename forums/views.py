@@ -23,7 +23,7 @@ from django.views.generic import (
 
 from .activity import add_last_repliers, add_top_threads, with_activity, with_counts
 from .forms import SearchForm
-from .search import load, matches
+from .search import load, matches, search_query
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
 from .throttling import PreviewThrottle, SearchThrottle, allowed, posting_allowed
@@ -327,8 +327,15 @@ class SearchView(LoginRequiredMixin, TemplateView):
                 page = Paginator(matches(form.cleaned_data), self.paginate_by).get_page(
                     request.GET.get('page')
                 )
-                results = load(page.object_list, ThreadDetail.paginate_by)
-        context = self.get_context_data(form=form, results=results, page=page, throttled=throttled)
+                results = load(
+                    page.object_list, ThreadDetail.paginate_by, search_query(form.cleaned_data)
+                )
+        # The filters in use, shown on the toggle that folds them away on small screens
+        filter_count = sum(1 for name in ('forum', 'author', 'since', 'until') if request.GET.get(name))
+        filter_count += request.GET.get('kind') in ('threads', 'replies')
+        context = self.get_context_data(
+            form=form, results=results, page=page, throttled=throttled, filter_count=filter_count
+        )
         return self.render_to_response(context, status=429 if throttled else 200)
 
     # ## SearchRank ##

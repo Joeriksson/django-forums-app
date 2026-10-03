@@ -259,7 +259,8 @@ def test_reply_links_to_its_page_and_number(client, anna, house, add_thread, add
 def test_excerpt_is_plain_text_and_escaped(client, anna, house, add_thread):
     add_thread('Pelicans', '**Bold** pelican <script>alert(1)</script>', house, anna)
 
-    content = search(client, q='pelican').content.decode()
+    # Without words: the start of the text, unmarked
+    content = search(client, forum=house.pk).content.decode()
 
     assert 'Bold pelican &lt;script&gt;alert(1)&lt;/script&gt;' in content
     assert '<script>alert' not in content
@@ -300,3 +301,111 @@ def test_old_address_keeps_the_query(client):
     resp = client.get('/forums/search/', {'q': 'pelican'})
 
     assertRedirects(resp, f'{SEARCH_URL}?q=pelican', fetch_redirect_response=False)
+
+
+# Highlighting the matched words
+
+
+@pytest.mark.django_db
+def test_matched_word_forms_are_marked(client, anna, house, add_thread):
+    add_thread('Watering the beds', 'I watered them every morning before work.', house, anna)
+
+    resp = search(client, q='water')
+
+    content = resp.content.decode()
+    assert '<mark>watered</mark>' in content
+    # Titles are shown as typed
+    assert '>Watering the beds</a>' in content
+
+
+@pytest.mark.django_db
+def test_excerpt_is_taken_around_the_match(client, anna, house, add_thread):
+    before = ' '.join(f'early{number}' for number in range(80))
+    after = ' '.join(f'late{number}' for number in range(80))
+    add_thread('Long one', f'{before} the pelican arrived {after}', house, anna)
+
+    content = search(client, q='pelican').content.decode()
+
+    assert 'the <mark>pelican</mark> arrived' in content
+    assert 'early0 early1' not in content
+
+
+@pytest.mark.django_db
+def test_marked_excerpt_is_escaped(client, anna, house, add_thread):
+    add_thread('Pelicans', '**Bold** pelican <script>alert(1)</script>', house, anna)
+
+    content = search(client, q='pelican').content.decode()
+
+    # ts_headline drops what looks like tags; whatever it keeps is escaped
+    assert '<mark>pelican</mark>' in content
+    assert '<script>alert' not in content
+
+
+@pytest.mark.django_db
+def test_markup_kept_in_an_excerpt_is_escaped(client, anna, house, add_thread):
+    add_thread('Pelicans', 'A pelican &lt;img src=x onerror=alert(1)&gt; and 1 < 2', house, anna)
+
+    content = search(client, q='pelican').content.decode()
+
+    assert '<img' not in content
+    assert '<mark>pelican</mark>' in content
+
+
+@pytest.mark.django_db
+def test_marker_characters_typed_by_a_member_make_no_tags(client, anna, house, add_thread):
+    from forums.search import START, STOP
+
+    add_thread('Odd one', f'A pelican and {START}evil{STOP} text', house, anna)
+
+    content = search(client, q='pelican').content.decode()
+
+    assert content.count('<mark>') == 1
+    assert '<mark>pelican</mark>' in content
+    assert START not in content and STOP not in content
+
+
+@pytest.mark.django_db
+def test_title_is_shown_as_typed_and_escaped(client, anna, house, add_thread):
+    add_thread('<b>Pelican</b> news', 'Text', house, anna)
+
+    content = search(client, q='pelican').content.decode()
+
+    assert '>&lt;b&gt;Pelican&lt;/b&gt; news</a>' in content
+
+
+@pytest.mark.django_db
+def test_search_without_words_marks_nothing(client, anna, house, add_thread):
+    add_thread('Pelican', 'The start of the text', house, anna)
+
+    content = search(client, forum=house.pk).content.decode()
+
+    assert '<mark>' not in content
+    assert 'The start of the text' in content
+
+
+# The filters fold away on small screens
+
+
+def filters_tag(resp):
+    return re.search(r'<details class="search-form__more"[^>]*>', resp.content.decode()).group(0)
+
+
+@pytest.mark.django_db
+def test_filters_start_folded_without_filters(client):
+    resp = search(client, q='pelican')
+
+    assert ' open' not in filters_tag(resp)
+    assertContains(resp, '<summary>Filters</summary>')
+
+
+@pytest.mark.django_db
+def test_filters_start_open_and_counted_when_used(client, house):
+    resp = search(client, q='pelican', forum=house.pk, kind='threads')
+
+    assert ' open' in filters_tag(resp)
+    assertContains(resp, '<summary>Filters (2)</summary>')
+
+
+@pytest.mark.django_db
+def test_search_page_loads_its_script(client):
+    assertContains(search(client), 'js/search.js')
