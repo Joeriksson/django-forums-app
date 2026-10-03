@@ -1,25 +1,251 @@
-/* The thread page: Markdown in posts */
+/*
+ * The thread page: the opening post, the replies, and the Markdown inside them.
+ * Code blocks are coloured by highlight.js (js/thread.js); its theme is at the end.
+ */
 
-blockquote {
-    padding: 10px 20px;
-    font-weight: 300;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-    border-left: 8px solid hsla(0, 0%, 50%, .075);
-    border-left-width: 10px;
-    margin-bottom: 20px;
+/* Two colours for code that the site's palette doesn't have */
+
+:root {
+    --code-string: #7a5300;
+    --code-number: #6d3f96;
 }
 
-:not(pre) > code {
-    font-size: .8em;
-    white-space: nowrap;
-    color: #c25;
-    padding: 1px 3px;
-    background-color: #f7f7f9;
-    border: 1px solid #e1e1e8;
-    border-radius: 3px
+@media (prefers-color-scheme: dark) {
+    :root {
+        --code-string: #e3c463;
+        --code-number: #c7a8ec;
+    }
 }
 
-body {
+/* The opening post */
+
+.opening {
+    margin: var(--space-1) 0 var(--space-4);
+}
+
+.opening__title {
+    margin: 0 0 var(--space-3);
+    max-width: var(--measure);
+}
+
+.byline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    margin: 0 0 var(--space-3);
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.byline__time {
+    color: inherit;
+    text-decoration: none;
+}
+
+.byline__time:hover {
+    color: var(--spruce);
+    text-decoration: underline;
+}
+
+.thread-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-5);
+}
+
+.thread-actions form {
+    margin: 0;
+}
+
+.thread-actions [aria-pressed='true'] {
+    background: var(--lichen-wash);
+    border-color: var(--lichen);
+    color: var(--ink);
+}
+
+/* The replies: space and a short rule between them, no boxes */
+
+.replies__heading {
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule);
+    color: var(--quiet);
+    font-family: var(--sans);
+    font-size: var(--size-small);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.reply {
+    padding: var(--space-4) 0 var(--space-3);
+    scroll-margin-top: var(--space-4);
+}
+
+.reply + .reply::before {
+    content: '';
+    display: block;
+    width: 3rem;
+    margin-bottom: var(--space-4);
+    border-top: 1px solid var(--rule);
+}
+
+.reply:target .byline .person {
+    background: var(--lichen-wash);
+    border-radius: 1rem;
+    padding-right: var(--space-2);
+}
+
+.reply__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-2);
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.reply__foot form {
+    margin: 0;
+}
+
+.button--small {
+    padding: 0.125rem var(--space-2);
+    font-size: var(--size-small);
+}
+
+.votes__mine {
+    color: var(--spruce);
+    font-weight: 600;
+}
+
+.reply__delete {
+    color: var(--quiet);
+}
+
+.reply__delete:hover {
+    color: var(--danger);
+}
+
+.signature {
+    max-width: var(--measure);
+    margin: var(--space-3) 0;
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--rule);
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.thread-end {
+    margin: var(--space-4) 0;
+}
+
+/* Post text */
+
+.prose {
+    max-width: var(--measure);
+    font-family: var(--serif);
+    font-size: var(--size-reading);
+    line-height: 1.65;
+    overflow-wrap: break-word;
+}
+
+.prose > :last-child {
+    margin-bottom: 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
     font-size: 1.1em;
+    margin: var(--space-4) 0 var(--space-2);
+}
+
+.prose blockquote {
+    margin-left: 0;
+    padding-left: var(--space-3);
+    border-left: 3px solid var(--rule);
+    color: var(--quiet);
+    font-style: italic;
+}
+
+.prose :not(pre) > code {
+    padding: 0.1em 0.3em;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.prose pre {
+    padding: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.prose table {
+    font-family: var(--sans);
+    font-size: var(--size-body);
+}
+
+/* Code colours (highlight.js): few colours, from the palette */
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-literal,
+.hljs-type,
+.hljs-meta .hljs-keyword {
+    color: var(--spruce);
+    font-weight: 600;
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-template-tag,
+.hljs-template-variable {
+    color: var(--code-string);
+}
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-variable.language_,
+.hljs-selector-id,
+.hljs-selector-class {
+    color: var(--code-number);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-name {
+    font-weight: 600;
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-meta,
+.hljs-deletion {
+    color: var(--quiet);
+    font-style: italic;
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: 700;
 }
