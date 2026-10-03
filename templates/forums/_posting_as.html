@@ -1,6 +1,6 @@
 {# Above the new thread and new post forms: a member without a profile name posts under a number #}
 {% if not user.has_profile_name %}
-    <p class="text-muted">
+    <p class="note">
         You are posting as <strong>{{ user.display_name }}</strong>.
         Set a name in <a href="{% url 'user_profile_edit' user.profile.id %}">your profile</a>.
     </p>
