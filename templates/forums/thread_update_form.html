@@ -3,7 +3,7 @@
 {% block title %}Edit {{ thread.title }}{% endblock title %}
 
 {% block content %}
-    <p class="trail"><a href="{% url 'thread_detail' thread.id %}">{{ thread.title }}</a></p>
+    {% include 'forums/_trail.html' with forum=thread.forum thread=thread only %}
     <div class="page-head">
         <h1>Edit thread</h1>
     </div>

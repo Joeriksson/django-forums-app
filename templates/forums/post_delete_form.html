@@ -4,7 +4,7 @@
 {% block title %}Delete reply{% endblock title %}
 
 {% block content %}
-    <p class="trail"><a href="{% url 'thread_detail' post.thread_id %}">{{ post.thread.title }}</a></p>
+    {% include 'forums/_trail.html' with forum=post.thread.forum thread=post.thread only %}
     <div class="page-head">
         <h1>Delete this reply?</h1>
     </div>

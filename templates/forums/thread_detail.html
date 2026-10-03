@@ -9,9 +9,10 @@
 {% endblock stylesheets %}
 
 {% block content %}
-    <p class="trail"><a href="{% url 'forum_detail' thread.forum_id %}">{{ thread.forum.title }}</a></p>
+    {% include 'forums/_trail.html' with forum=thread.forum only %}
 
     <article class="opening">
+        <p class="kicker">Thread</p>
         <h1 class="opening__title">{{ thread.title }}</h1>
         <p class="byline">
             {% include 'forums/_person.html' with person=thread.user %}

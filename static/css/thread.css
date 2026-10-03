@@ -20,7 +20,7 @@
 /* The opening post */
 
 .opening {
-    margin: var(--space-1) 0 var(--space-4);
+    margin: var(--space-3) 0 var(--space-4);
 }
 
 .opening__title {

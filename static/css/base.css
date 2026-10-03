@@ -520,14 +520,37 @@ textarea {
 }
 
 /* The way back up, above a page's title */
-.trail {
+/* The way up (forums/_trail.html): Forums › forum › thread */
+.trail ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) 0;
     margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
     font-size: var(--size-small);
     font-weight: 600;
 }
 
+.trail li + li::before {
+    content: '›';
+    margin: 0 var(--space-2);
+    color: var(--quiet);
+    font-weight: 400;
+}
+
 .trail + .page-head {
-    margin-top: var(--space-1);
+    margin-top: var(--space-3);
+}
+
+/* What kind of page this is (Forum, Thread), above its title */
+.kicker {
+    margin: 0 0 var(--space-1);
+    color: var(--quiet);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .lead {
