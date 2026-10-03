@@ -1,0 +1,142 @@
+/*
+ * allauth's pages: signing in and up, passwords, email addresses, two-factor.
+ * Their markup comes from templates/allauth/elements; forms use the styles in base.css.
+ */
+
+/* The pages keep the site's left edge but not its full width */
+
+.site-main--account > * {
+    max-width: var(--measure);
+}
+
+.site-main--entrance > * {
+    max-width: 26rem;
+}
+
+.site-main--account h1 {
+    margin-top: var(--space-3);
+}
+
+/* Links between the account's settings (allauth/layouts/manage.html) */
+
+.account-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-2) 0 var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--size-small);
+    font-weight: 600;
+}
+
+.account-nav a {
+    color: var(--quiet);
+    text-decoration: none;
+}
+
+.account-nav a:hover,
+.account-nav [aria-current='page'] {
+    color: var(--spruce);
+}
+
+.account-nav [aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.4em;
+}
+
+/* A section of a settings page, e.g. one kind of two-factor authentication */
+
+.panel {
+    margin: var(--space-4) 0;
+    padding: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+.panel h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--size-h3);
+}
+
+.panel > :last-child {
+    margin-bottom: 0;
+}
+
+/* A radio button or checkbox with its label beside it (the email addresses) */
+
+.form > .choice,
+.choice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.choice label {
+    margin: 0;
+    font-weight: 400;
+}
+
+/* Small labels: verified, primary, unverified */
+
+.badge {
+    display: inline-block;
+    margin-left: var(--space-1);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--rule);
+    border-radius: 1rem;
+    color: var(--quiet);
+    font-size: 0.75rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.badge--good {
+    border-color: var(--spruce);
+    color: var(--spruce);
+}
+
+.badge--warn {
+    background: var(--lichen-wash);
+    border-color: var(--lichen);
+    color: var(--ink);
+}
+
+/* Signing in with another site (GitHub) */
+
+.providers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: var(--space-3) 0;
+}
+
+.provider {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+/* Only GitHub is set up; another provider would need its own mark */
+.provider--github .provider__mark {
+    width: 1.125rem;
+    height: 1.125rem;
+    background: currentColor;
+    mask: url('../icons/github.svg') center / contain no-repeat;
+}
+
+/* The QR code to scan into an authenticator app: dark on light in both palettes */
+
+.site-main--account img[src^='data:'] {
+    display: block;
+    width: 12rem;
+    height: auto;
+    margin: var(--space-3) 0;
+    padding: var(--space-2);
+    background: #ffffff;
+    border-radius: var(--radius);
+}
