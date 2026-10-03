@@ -127,8 +127,9 @@ def test_search_loads_names_without_a_query_per_result(client, anna, thread, dja
     for number in range(5):
         Post.objects.create(text=f'findable {number}', thread=thread, user=anna)
 
-    # Two for the results, six for the logged-in reader
-    with django_assert_max_num_queries(8):
+    # The forums and members for the filters, the number of results, one page of them and
+    # the replies on it, six for the logged-in reader: none per result
+    with django_assert_max_num_queries(12):
         client.get(reverse('search_results') + '?q=findable')
 
 
