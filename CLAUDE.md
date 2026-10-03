@@ -186,10 +186,10 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 - `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`
 
 ### SiteSettings (`pages.SiteSettings`)
-- One record (pk 1, created by migration `pages/0001`), edited under *Site settings* in the admin, which opens it from the list and allows no adding or deleting: `title` (the site's name), `tagline` and `invitation_note` (the visitors' home page)
-- Read it with `SiteSettings.load()` (the defaults if the record is missing). Templates get it as `site_settings` from `pages.context_processors.site_settings`, lazily: one query on a page that uses it. No cache, so every gunicorn worker sees a change at once. `500.html` is rendered without context processors: `_base.html` falls back to `Wildvasa`
+- One record (pk 1, created by migration `pages/0001`), edited under *Site settings* in the admin, which opens it from the list and allows no adding or deleting: `title` (the site's name), `tagline` and `invitation_note` (the visitors' home page), and the numbers `recent_threads` (3), `latest_threads` (15), `threads_per_page` (20) and `posts_per_page` (25), each with limits checked by the admin form (not by the database)
+- Read it with `SiteSettings.for_request(request)` in views: loaded once per request and shared with the templates, which get it as `site_settings` from `pages.context_processors.site_settings`, lazily: one query on a page that uses it. `SiteSettings.load()` (the defaults if the record is missing) outside a request, e.g. in tasks. No cache, so every gunicorn worker sees a change at once. `500.html` is rendered without context processors: `_base.html` falls back to `Wildvasa`
 - Saving copies the title into the *Sites* display name. allauth's emails (`AccountAdapter.send_mail`, `format_email_subject`), the welcome and invitation emails and the name in authenticator apps (`MFAAdapter.get_totp_issuer`) read the title from `SiteSettings`, not from *Sites*, whose per-process cache would keep an old name until a restart
-- Tests: `tests/test_site_settings.py`
+- Tests: `tests/test_site_settings.py`; other tests change it with the `site_settings` fixture (root `conftest.py`), e.g. `site_settings(posts_per_page=2)`
 
 ### Invitation (`users.Invitation`)
 - `email`, `key` (random, unique), `invited_by`, `created`, `sent_at`, `accepted_at`, `accepted_by`
@@ -200,17 +200,17 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ## URL Structure
 
 ```
-/                          → HomePageView (for a visitor the name and a login link; for a member the forum list, ForumsList, under a Recent activity box with the 3 threads with the newest activity: `latest_threads()` in forums/activity.py, also used by /latest/)
-/latest/                   → LatestView (the 15 threads with the latest activity; login required)
+/                          → HomePageView (for a visitor the name and a login link; for a member the forum list, ForumsList, under a Recent activity box with the threads with the newest activity (3 by default, *Site settings*): `latest_threads()` in forums/activity.py, also used by /latest/)
+/latest/                   → LatestView (the threads with the latest activity, 15 by default (*Site settings*); login required)
 /search/                   → SearchView (words and filters as GET parameters, 20 results a page; login required; 20 searches a minute)
 # Everything under /forums/ needs a login
 /forums/                   → redirect to / (the forum list's old address)
-/forums/<pk>/              → ForumDetail (20 threads per page, newest first; ?page=<n>)
+/forums/<pk>/              → ForumDetail (threads newest first, 20 per page by default (*Site settings*); ?page=<n>)
 /forums/add/               → ForumCreate (requires forums.add_forum permission)
 /forums/<pk>/update/       → ForumUpdate (requires forums.change_forum permission)
 /forums/<pk>/add/          → ThreadCreate (login required)
 /forums/<fpk>/delete/<pk>  → ThreadDelete (owner or forums.delete_thread)
-/forums/thread/<pk>        → ThreadDetail (25 posts per page, oldest first; ?page=<n> or ?page=last)
+/forums/thread/<pk>        → ThreadDetail (posts oldest first, 25 per page by default (*Site settings*); ?page=<n> or ?page=last)
 /forums/thread/<pk>/update/→ ThreadUpdate (owner or forums.change_thread)
 /forums/thread/<pk>/notify → ThreadNotification (toggle subscription)
 /forums/thread/<pk>/post   → PostCreate (then the thread's last page)
@@ -389,7 +389,7 @@ The pages use hand-written CSS: no Bootstrap, no jQuery, no icon font, nothing f
 - **Layout**: `_base.html` has the header (`.site-header`) with the menu (*Forums*, *Latest*; the current section has `aria-current="page"`, set from `SECTIONS` by URL name in `forums/templatetags/nav.py`: a new page or menu item goes there; `tests/test_navigation.py`), the user menu and `<main class="wrap site-main">`. The menu is a `<details class="menu">`, so it works without JavaScript; `static/js/menu.js` only closes it on a click elsewhere or Escape
 - **Lists** of forums and threads are `<ul class="rows">` with `.row` items inside one `.panel` per list, whose `.panel__head` row names the columns (`templates/forums/_thread_head.html` for thread lists; hidden on a phone). Forum rows (`.forum-row`, in `forum_list.html`) list two threads under the description, announcements first, then the most active, in a *Latest* box on the page's ground (`.forum-row__recent`), with the counts on the right. Thread rows (`.thread-row`, `templates/forums/_thread_row.html`; `show_forum` and `show_actions` are optional) put the replies and the last reply in columns, which fold into lines under the title on a phone (`.row-label` names them there). The data comes from `forums/activity.py`: `with_activity()` and `add_last_repliers()` for threads, `with_counts()` and `add_top_threads()` (a window function) for forums; each adds a fixed number of queries (`tests/forums/test_directory.py`). Page links are `templates/forums/_pages.html`, above and below the list. A member is shown with `templates/forums/_person.html`: a monogram disc (`user.monogram`: initials or the member number; `user.monogram_tone`: one of six colours, by id) and the display name
 - **Where am I**: every forum page below the forum list starts with `templates/forums/_trail.html` (Forums › forum › thread; include it with `only`), and the forum and thread pages have a `.kicker` label (Forum, Thread) above the title (`tests/forums/test_trail.py`)
-- **Thread page**: each post is a panel (`.post`, `static/css/thread.css`) headed by its author, time and number: the opening post is #1 (`.post--opening`, anchor `#opening`), replies are numbered on across pages (the first reply on page 2 is #27), each number links to `?page=<n>#post-<id>`. Reply and Subscribe (`templates/forums/_thread_actions.html`) and the page links come at both ends; signatures are `templates/forums/_signature.html` (`tests/forums/test_post_panels.py`)
+- **Thread page**: each post is a panel (`.post`, `static/css/thread.css`) headed by its author, time and number: the opening post is #1 (`.post--opening`, anchor `#opening`), replies are numbered on across pages (with 25 posts a page, the first reply on page 2 is #27), each number links to `?page=<n>#post-<id>`. Reply and Subscribe (`templates/forums/_thread_actions.html`) and the page links come at both ends; signatures are `templates/forums/_signature.html` (`tests/forums/test_post_panels.py`)
 - **Dates** in lists use the `when` filter (`forums/templatetags/when.py`): "5 minutes ago", "yesterday", "4 days ago", then a date
 - **Template comments**: `{# #}` works on one line only, and a longer one is printed on the page; use `{% comment %}` (`tests/test_no_inline_code.py` checks)
 - **Buttons** are `.button` (plus `.button--quiet`, `.button--danger`). Bare `<button>` elements are not styled, because the editor's toolbar has its own; `tests/test_template_markup.py` fails on a `<button>` without the class or a Bootstrap class name in a template
