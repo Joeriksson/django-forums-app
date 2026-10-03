@@ -1,14 +1,26 @@
 {% extends '_base.html' %}
-{% load crispy_forms_tags %}
+{% load when %}
 
-{% block title %}Delete thread: {{ thread.title }}{% endblock title %}
+{% block title %}Delete thread{% endblock title %}
 
 {% block content %}
-    <h2>Delete Thread '{{ thread }}'</h2>
-    <form method="post" action="">
+    <p class="trail"><a href="{% url 'forum_detail' thread.forum_id %}">{{ thread.forum.title }}</a></p>
+    <div class="page-head">
+        <h1>Delete this thread?</h1>
+    </div>
+    <blockquote class="excerpt">
+        <p class="excerpt__title">{{ thread.title }}</p>
+        <p class="row__meta">
+            {% include 'forums/_person.html' with person=thread.user %}
+            <span>{{ thread.added|when }}</span>
+        </p>
+    </blockquote>
+    <form class="form" method="post">
         {% csrf_token %}
-        <p>Are you sure you want to delete this thread?</p>
-        <button class="btn btn-danger text-white" type="submit">Confirm</button>
-        <a href="{% url 'forum_detail' thread.forum.id %}" class="btn btn-outline-secondary">Cancel</a>
+        <p>The thread and all its replies are deleted. They can't be brought back.</p>
+        <div class="form__actions">
+            <button class="button button--danger" type="submit">Delete thread</button>
+            <a class="button button--quiet" href="{% url 'forum_detail' thread.forum_id %}">Cancel</a>
+        </div>
     </form>
-{% endblock %}
+{% endblock content %}

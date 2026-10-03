@@ -1,14 +1,26 @@
 {% extends '_base.html' %}
-{% load crispy_forms_tags %}
+{% load markdown when %}
 
-{% block title %}Delete post: {{ post.title }}{% endblock title %}
+{% block title %}Delete reply{% endblock title %}
 
 {% block content %}
-    <h2>Delete Post '{{ post }}'</h2>
-    <form method="post" action="" >
+    <p class="trail"><a href="{% url 'thread_detail' post.thread_id %}">{{ post.thread.title }}</a></p>
+    <div class="page-head">
+        <h1>Delete this reply?</h1>
+    </div>
+    <blockquote class="excerpt">
+        <p class="row__meta">
+            {% include 'forums/_person.html' with person=post.user %}
+            <span>{{ post.added|when }}</span>
+        </p>
+        <p>{{ post.text|truncatechars:400|render_markdown|striptags|truncatechars:240 }}</p>
+    </blockquote>
+    <form class="form" method="post">
         {% csrf_token %}
-        <p >Are you sure you want to delete this post?</p>
-        <button class="btn btn-danger text-white" type="submit">Confirm</button>
-        <a href="{% url 'thread_detail' post.thread.id %}" class="btn btn-outline-secondary">Cancel</a>
+        <p>It can't be brought back.</p>
+        <div class="form__actions">
+            <button class="button button--danger" type="submit">Delete reply</button>
+            <a class="button button--quiet" href="{% url 'thread_detail' post.thread_id %}">Cancel</a>
+        </div>
     </form>
-{% endblock %}
+{% endblock content %}
