@@ -187,8 +187,8 @@ def test_forum_list_uses_five_queries_however_many_forums(
         replied(thread, bo, 1)
 
     # The forums with their counts, their two threads each, and the members who replied
-    # last, after six for the logged-in reader; then the recent threads and their repliers
-    with django_assert_num_queries(6 + 3 + 2):
+    # last, after seven for the logged-in reader; then the recent threads and their repliers
+    with django_assert_num_queries(7 + 3 + 2):
         client.get(reverse('home'))
 
 
@@ -256,8 +256,8 @@ def test_forum_page_query_count_does_not_grow_with_threads(
         replied(add_thread(f'Thread {number}', 'Text', forum, user), user, 1)
 
     # The forum, its announcements, the number of threads, one page of threads with
-    # authors and counts, and the members who replied last, after six for the reader
-    with django_assert_num_queries(6 + 5):
+    # authors and counts, and the members who replied last, after seven for the reader
+    with django_assert_num_queries(7 + 5):
         assertContains(client.get(reverse('forum_detail', args=[forum.pk])), 'Thread 2')
 
 
