@@ -25,8 +25,17 @@ class ThreadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Thread
-        fields = ('id', 'title', 'text', 'forum', 'user', 'post_count', 'added', 'edited')
+        fields = (
+            'id', 'title', 'text', 'forum', 'user', 'announcement', 'post_count', 'added', 'edited'
+        )
         read_only_fields = ('user', 'added', 'edited')
+
+    def validate_announcement(self, value):
+        # Only moderators mark announcements; others may send the value unchanged
+        current = self.instance.announcement if self.instance is not None else False
+        if value != current and not self.context['request'].user.has_perm('forums.change_thread'):
+            raise serializers.ValidationError('Only moderators can mark announcements.')
+        return value
 
     def validate_forum(self, value):
         # The forum is set on create; moving an existing thread isn't allowed.
