@@ -255,7 +255,8 @@ textarea {
 }
 
 /* Buttons: .button is ours; .btn is what the templates still call them. Not every
-   <button>: the editor's toolbar has its own. */
+   <button>: the editor's toolbar has its own. The variants name button.button--*
+   too, to outrank button[type='submit']. */
 
 .button,
 .btn,
@@ -285,6 +286,7 @@ input[type='submit']:hover {
 }
 
 .button--quiet,
+button.button--quiet,
 .btn-outline-secondary,
 .btn-outline-primary,
 .btn-secondary {
@@ -293,6 +295,7 @@ input[type='submit']:hover {
 }
 
 .button--quiet:hover,
+button.button--quiet:hover,
 .btn-outline-secondary:hover,
 .btn-outline-primary:hover,
 .btn-secondary:hover {
@@ -301,6 +304,7 @@ input[type='submit']:hover {
 }
 
 .button--danger,
+button.button--danger,
 .btn-danger,
 .btn-outline-danger {
     background: transparent;
@@ -309,6 +313,7 @@ input[type='submit']:hover {
 }
 
 .button--danger:hover,
+button.button--danger:hover,
 .btn-danger:hover,
 .btn-outline-danger:hover {
     background: var(--danger);
@@ -508,6 +513,11 @@ input[type='submit']:hover {
 .empty {
     padding: var(--space-4) 0;
     color: var(--quiet);
+}
+
+.note {
+    color: var(--quiet);
+    font-size: var(--size-small);
 }
 
 /* Lists of forums and threads: plain rows, a rule between them */

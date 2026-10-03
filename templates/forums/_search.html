@@ -1,0 +1,8 @@
+{# The search box. Pass "query" to fill it in. #}
+<form class="search" action="{% url 'search_results' %}" method="get" role="search">
+    <label for="search-q">Search threads and posts</label>
+    <div class="search__row">
+        <input id="search-q" type="search" name="q" value="{{ query|default:'' }}" minlength="3" maxlength="200" required>
+        <button class="button" type="submit">Search</button>
+    </div>
+</form>

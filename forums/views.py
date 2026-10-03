@@ -104,9 +104,13 @@ class ThreadDetail(LoginRequiredMixin, DetailView):
         # get_page() shows the first or last page for a page number that doesn't exist
         context['posts'] = paginator.get_page(paginator.num_pages if page == 'last' else page)
 
-        # Check if current user upvoted
         if self.request.user.is_authenticated:
-            context['voted'] = UpVote.objects.filter(user=self.request.user)
+            # The posts on this page that the reader upvoted
+            context['voted'] = set(
+                UpVote.objects.filter(
+                    user=self.request.user, post__in=[post.id for post in context['posts']]
+                ).values_list('post_id', flat=True)
+            )
             context['subscribed'] = Notification.objects.filter(
                 thread=self.kwargs['pk'], user=self.request.user
             )
