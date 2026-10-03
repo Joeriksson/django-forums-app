@@ -9,7 +9,6 @@ import re
 import pytest
 from django.urls import reverse
 
-from forums.views import ThreadDetail
 
 
 @pytest.fixture
@@ -29,9 +28,9 @@ def thread(forum, reader, add_thread):
 
 
 @pytest.fixture
-def five_replies(thread, reader, add_post, monkeypatch):
+def five_replies(thread, reader, add_post, site_settings):
     """Five replies on pages of two."""
-    monkeypatch.setattr(ThreadDetail, 'paginate_by', 2)
+    site_settings(posts_per_page=2)
     return [add_post(f'Reply {n}', thread, reader) for n in range(5)]
 
 
