@@ -57,7 +57,8 @@ def test_home_for_a_visitor_offers_login_and_nothing_else(client, member, forum)
 def test_home_for_a_visitor_runs_no_forum_query(client, member, forum, django_assert_num_queries):
     add_thread(forum, member, 'Midsummer at the lake')
 
-    with django_assert_num_queries(0):
+    # Only the site settings (name, texts)
+    with django_assert_num_queries(1):
         client.get(reverse('home'))
 
 
@@ -111,9 +112,9 @@ def test_home_for_a_member_query_count_does_not_grow_with_forums(client, member,
         add_reply(thread, member)
     client.force_login(member)
 
-    # Six for the logged-in member, then the forums, their threads and the last repliers,
+    # Seven for the logged-in member, then the forums, their threads and the last repliers,
     # then the recent threads and their last repliers
-    with django_assert_num_queries(6 + 3 + 2):
+    with django_assert_num_queries(7 + 3 + 2):
         client.get(reverse('home'))
 
 
@@ -250,6 +251,6 @@ def test_latest_query_count_does_not_grow_with_threads(client, member, forum, dj
         add_reply(thread, member)
     client.force_login(member)
 
-    # Six for the logged-in member, one for the threads, one for the members who replied last
-    with django_assert_max_num_queries(8):
+    # Seven for the logged-in member, one for the threads, one for the members who replied last
+    with django_assert_max_num_queries(9):
         latest(client)

@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 from tests.forums.clients import reader_client
 
 
+@pytest.mark.django_db  # the 404 page names the site from SiteSettings
 def test_api_has_no_login_page_of_its_own():
     # DRF's login view would skip the two-factor step: log in on the site instead
     with pytest.raises(NoReverseMatch):

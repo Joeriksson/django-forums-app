@@ -1,9 +1,9 @@
-Hello,
+{% autoescape off %}Hello,
 
-You're invited to join Wildvasa Forums. Use this link to create your account:
+You're invited to join {{ title }}. Use this link to create your account:
 
 {{ link }}
 
 The link works once, for this email address only, until {{ expires_at|date:"j F Y" }}.
 
-If you weren't expecting this invitation, you can ignore this email.
+If you weren't expecting this invitation, you can ignore this email.{% endautoescape %}

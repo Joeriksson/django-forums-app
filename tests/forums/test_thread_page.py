@@ -176,8 +176,8 @@ def test_thread_page_uses_three_queries_however_many_posts(
 
     # The thread with its forum and author, the number of posts, one page of posts with
     # authors, the reader's subscription and the reader's upvotes on the page, after six
-    # for the logged-in reader (session, user, permissions, profile, GitHub account)
-    with django_assert_num_queries(6 + 5):
+    # for the logged-in reader (session, user, permissions, profile, GitHub account, site settings)
+    with django_assert_num_queries(7 + 5):
         thread_page(client, thread)
 
 

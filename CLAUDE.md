@@ -116,7 +116,7 @@ users/             # Custom user model (email-based auth)
   audit.py         # Security log: log_event, signal receivers, refused-request middleware
   tasks.py         # Celery task send_welcome_email_task
 
-pages/             # Home (visitors: the name, a way in, an invitation note while signup is closed, a drawn landscape; members: the forum list) and the latest conversations
+pages/             # Home (visitors: the name, a way in, an invitation note while signup is closed, a drawn landscape; members: the forum list), the latest conversations, and SiteSettings (models.py; context_processors.py)
 api/               # Django REST Framework API (mounted only with DJANGO_API_ENABLED)
   views.py         # ModelViewSet for Forum, Thread, Post, User
   serializers.py   # No nested lists: Forum has thread_count, Thread has post_count
@@ -185,6 +185,12 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 - **Names shown to others** come from `user.display_name`: the profile's first and last name if set, otherwise `Member <id>`. Never print `{{ user }}` or `username` on a page or in a mail that someone else sees: allauth derives the username from the email address (`anna.berg@example.com` → `anna.berg`). It stays in the database and is visible to staff in the admin and the users API. `has_profile_name` tells whether a name is set; the new thread and new post forms remind members without one (`templates/forums/_posting_as.html`). Profile names are not unique. Queries that list authors need `select_related('user__profile')`
 - `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`
 
+### SiteSettings (`pages.SiteSettings`)
+- One record (pk 1, created by migration `pages/0001`), edited under *Site settings* in the admin, which opens it from the list and allows no adding or deleting: `title` (the site's name), `tagline` and `invitation_note` (the visitors' home page)
+- Read it with `SiteSettings.load()` (the defaults if the record is missing). Templates get it as `site_settings` from `pages.context_processors.site_settings`, lazily: one query on a page that uses it. No cache, so every gunicorn worker sees a change at once. `500.html` is rendered without context processors: `_base.html` falls back to `Wildvasa`
+- Saving copies the title into the *Sites* display name. allauth's emails (`AccountAdapter.send_mail`, `format_email_subject`), the welcome and invitation emails and the name in authenticator apps (`MFAAdapter.get_totp_issuer`) read the title from `SiteSettings`, not from *Sites*, whose per-process cache would keep an old name until a restart
+- Tests: `tests/test_site_settings.py`
+
 ### Invitation (`users.Invitation`)
 - `email`, `key` (random, unique), `invited_by`, `created`, `sent_at`, `accepted_at`, `accepted_by`
 - Valid while unused and younger than `INVITATION_EXPIRY_DAYS` (7, in `base.py`): `Invitation.objects.valid()` / `is_valid()`
@@ -236,7 +242,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
 
 ## Authentication & Permissions
 
-- **Reading needs a login**: the forum is for its members. The forum, thread, latest and search pages have `LoginRequiredMixin` (the forum list is the members' home page) and send visitors to the login page (which leads back afterwards); only the home page and the account pages are open. In the API everything needs a login (`IsAuthenticated` is the default permission in `REST_FRAMEWORK`, the API root and the schema included); visitors get 403. A new view that shows forum content needs the mixin too. Tests: `tests/forums/test_login_required.py`; other tests read as the `reader` fixture (`tests/forums/conftest.py`) or with `reader_client()` (`tests/forums/clients.py`). A logged-in page costs six queries before its own (session, user, two for permissions, profile, GitHub account)
+- **Reading needs a login**: the forum is for its members. The forum, thread, latest and search pages have `LoginRequiredMixin` (the forum list is the members' home page) and send visitors to the login page (which leads back afterwards); only the home page and the account pages are open. In the API everything needs a login (`IsAuthenticated` is the default permission in `REST_FRAMEWORK`, the API root and the schema included); visitors get 403. A new view that shows forum content needs the mixin too. Tests: `tests/forums/test_login_required.py`; other tests read as the `reader` fixture (`tests/forums/conftest.py`) or with `reader_client()` (`tests/forums/clients.py`). A logged-in page costs seven queries before its own (session, user, two for permissions, profile, GitHub account, site settings)
 
 - `django-allauth` handles auth with email-only login (no username required)
 - **Email addresses must be confirmed** (`ACCOUNT_EMAIL_VERIFICATION = 'mandatory'` in `base.py`, every environment): signup mails a link and logs nobody in before it is used. allauth checks at every login, so an account made without signup (`createsuperuser`, the admin) gets the mail at its first login; in development the link is printed to the console. Invitation and GitHub signups arrive verified. Tests that log in through the login form need the `verify_email` fixture (root `conftest.py`); `force_login` and API tokens don't
@@ -398,7 +404,7 @@ The pages use hand-written CSS: no Bootstrap, no jQuery, no icon font, nothing f
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
 - `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` — integer PKs (not BigAutoField)
-- `SITE_ID = 1` — required by `django.contrib.sites`, which allauth uses for the site name in its emails. Our own email links use `SITE_URL`, not the *Sites* domain
+- `SITE_ID = 1` — required by `django.contrib.sites`. Its display name follows `SiteSettings.title` (saved there, never edited in *Sites*); its domain is set in *Sites*. Our own email links use `SITE_URL`, not the *Sites* domain
 - CORS: `development.py` allows `localhost:3000` / `127.0.0.1:3000` (for a local frontend client); production allows no other origin
 - Admin URL is configurable via `ADMIN_URL` env var (defaults to `nimda`) as a security measure
 
