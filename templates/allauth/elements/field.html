@@ -1,0 +1,38 @@
+{% load allauth %}
+{# One field that allauth draws itself (two-factor code, email address choice) #}
+<div{% if attrs.type == "checkbox" or attrs.type == "radio" %} class="choice"{% endif %}>
+    {% if attrs.type != "checkbox" and attrs.type != "radio" %}
+        <label for="{{ attrs.id }}">{% slot label %}{% endslot %}</label>
+    {% endif %}
+    {% if slots.help_text %}
+        <div class="helptext" id="{{ attrs.id }}_helptext">{% slot help_text %}{% endslot %}</div>
+    {% endif %}
+    {{ attrs.errors }}
+    {% if attrs.type == "textarea" %}
+        <textarea {% if attrs.required %}required{% endif %}
+                  {% if attrs.rows %}rows="{{ attrs.rows }}"{% endif %}
+                  {% if attrs.disabled %}disabled{% endif %}
+                  {% if attrs.readonly %}readonly{% endif %}
+                  {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+                  {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+                  {% if slots.help_text %}aria-describedby="{{ attrs.id }}_helptext"{% endif %}
+                  {% if attrs.errors %}aria-invalid="true"{% endif %}
+                  {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}>{% slot value %}{% endslot %}</textarea>
+    {% else %}
+        <input {% if attrs.required %}required{% endif %}
+               {% if attrs.disabled %}disabled{% endif %}
+               {% if attrs.readonly %}readonly{% endif %}
+               {% if attrs.checked %}checked{% endif %}
+               {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+               {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+               {% if slots.help_text %}aria-describedby="{{ attrs.id }}_helptext"{% endif %}
+               {% if attrs.errors %}aria-invalid="true"{% endif %}
+               {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+               {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
+               {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}
+               type="{{ attrs.type }}">
+    {% endif %}
+    {% if attrs.type == "checkbox" or attrs.type == "radio" %}
+        <label for="{{ attrs.id }}">{% slot label %}{% endslot %}</label>
+    {% endif %}
+</div>

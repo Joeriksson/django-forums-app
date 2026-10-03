@@ -121,4 +121,4 @@ def test_server_error_page_renders_without_request(rf, signup_open):
     resp = server_error(rf.get('/'))
 
     assert resp.status_code == 500
-    assert b'Log' in resp.content
+    assert b'Sign in' in resp.content

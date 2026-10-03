@@ -21,9 +21,9 @@
     {% else %}
         <div class="door">
             <h1 class="door__name">Wildvasa</h1>
-            <p class="door__text">A private forum. Log in to read and write.</p>
+            <p class="door__text">A private forum. Sign in to read and write.</p>
             <p>
-                <a class="button" href="{% url 'account_login' %}">Log in</a>
+                <a class="button" href="{% url 'account_login' %}">Sign in</a>
                 {% signup_is_open as signup_open %}
                 {% if signup_open %}
                     <a class="button button--quiet" href="{% url 'account_signup' %}">Sign up</a>

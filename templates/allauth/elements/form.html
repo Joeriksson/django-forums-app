@@ -1,0 +1,15 @@
+{% load allauth %}
+{% comment %}
+allauth's forms (login, signup, two-factor, email addresses): the same markup as the
+site's other forms, so base.css styles them.
+{% endcomment %}
+<form class="form" method="{{ attrs.method }}"{% if attrs.action %} action="{{ attrs.action }}"{% endif %}>
+    {% slot body %}
+    {% endslot %}
+    {% if slots.actions %}
+        <div class="form__actions">
+            {% slot actions %}
+            {% endslot %}
+        </div>
+    {% endif %}
+</form>

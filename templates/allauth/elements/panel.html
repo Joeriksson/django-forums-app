@@ -1,0 +1,15 @@
+{% load allauth %}
+{# A section of an account page, e.g. one kind of two-factor authentication #}
+<section class="panel">
+    <h2>
+        {% slot title %}
+        {% endslot %}
+    </h2>
+    {% slot body %}
+    {% endslot %}
+    {% if slots.actions %}
+        <div class="form__actions">
+            {% for action in slots.actions %}{{ action }}{% endfor %}
+        </div>
+    {% endif %}
+</section>
