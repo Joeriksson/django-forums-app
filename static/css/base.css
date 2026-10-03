@@ -995,7 +995,21 @@ mark {
 /* The home page for a visitor: the name, and the way in */
 
 .door {
+    display: grid;
+    gap: var(--space-5);
+    align-items: center;
     padding-block: clamp(2rem, 10vh, 6rem);
+}
+
+@media (min-width: 48rem) {
+    .door {
+        grid-template-columns: minmax(0, 1fr) 14rem;
+    }
+
+    /* Smaller beside the picture, so the name keeps to its column */
+    .door .door__name {
+        font-size: clamp(3.25rem, 9vw, 6.5rem);
+    }
 }
 
 .door__name {
@@ -1011,6 +1025,49 @@ mark {
     max-width: 24rem;
     color: var(--quiet);
     font-size: var(--size-reading);
+}
+
+.door__note {
+    margin: var(--space-4) 0 0;
+    max-width: 24rem;
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.door__picture {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 14rem;
+}
+
+.door__sky {
+    fill: var(--lichen-wash);
+}
+
+.door__sun {
+    fill: var(--lichen);
+}
+
+.door__far-trees,
+.door__far {
+    fill: color-mix(in srgb, var(--spruce) 45%, var(--ground));
+}
+
+.door__near-trees,
+.door__near {
+    fill: var(--spruce);
+}
+
+.door__lake {
+    fill: color-mix(in srgb, var(--spruce) 14%, var(--ground));
+}
+
+.door__glint {
+    fill: none;
+    stroke: var(--lichen);
+    stroke-width: 3;
+    stroke-linecap: round;
 }
 
 @media (prefers-reduced-motion: no-preference) {
