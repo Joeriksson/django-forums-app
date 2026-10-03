@@ -116,7 +116,7 @@ users/             # Custom user model (email-based auth)
   audit.py         # Security log: log_event, signal receivers, refused-request middleware
   tasks.py         # Celery task send_welcome_email_task
 
-pages/             # Home (visitors: a way in; members: the forum list) and the latest conversations
+pages/             # Home (visitors: the name, a way in, an invitation note while signup is closed, a drawn landscape; members: the forum list) and the latest conversations
 api/               # Django REST Framework API (mounted only with DJANGO_API_ENABLED)
   views.py         # ModelViewSet for Forum, Thread, Post, User
   serializers.py   # No nested lists: Forum has thread_count, Thread has post_count
