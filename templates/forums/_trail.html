@@ -1,0 +1,12 @@
+{% comment %}
+The way up from this page: Forums, then the forum and the thread when given. Include it
+with "only", so a thread or forum in the page's own context doesn't slip in:
+{% include 'forums/_trail.html' with forum=thread.forum thread=thread only %}
+{% endcomment %}
+<nav class="trail" aria-label="You are here">
+    <ol>
+        <li><a href="{% url 'forum_list' %}">Forums</a></li>
+        {% if forum %}<li><a href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a></li>{% endif %}
+        {% if thread %}<li><a href="{% url 'thread_detail' thread.id %}">{{ thread.title }}</a></li>{% endif %}
+    </ol>
+</nav>
