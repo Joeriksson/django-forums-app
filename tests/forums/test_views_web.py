@@ -37,7 +37,7 @@ def post(add_post, thread, author):
 @pytest.mark.django_db
 def test_forum_list_page(client, forum, reader):
     client.force_login(reader)
-    resp = client.get(reverse('forum_list'))
+    resp = client.get(reverse('home'))
 
     assert resp.status_code == 200
     assertTemplateUsed(resp, 'forums/forum_list.html')
@@ -94,7 +94,7 @@ def test_forum_create(client, author, add_totp):
         reverse('forum_add'), {'title': 'New Forum', 'description': 'Desc'}
     )
 
-    assertRedirects(resp, reverse('forum_list'))
+    assertRedirects(resp, reverse('home'))
     assert Forum.objects.filter(title='New Forum', description='Desc').exists()
 
 

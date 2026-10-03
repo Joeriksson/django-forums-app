@@ -102,7 +102,7 @@ def test_forum_list_shows_each_forum_with_its_thread_count(client, forum, author
     for number in range(2):
         add_thread(title=f'Thread {number}', text='Text', forum=forum, user=author)
 
-    resp = client.get(reverse('forum_list'))
+    resp = client.get(reverse('home'))
 
     assertContains(resp, 'General Forum')
     assertContains(resp, 'This is a general forum')
@@ -116,12 +116,12 @@ def test_forum_list_shows_each_forum_with_its_thread_count(client, forum, author
 def test_forum_list_counts_one_thread_in_the_singular(client, forum, author, add_thread):
     add_thread(title='Only one', text='Text', forum=forum, user=author)
 
-    assertContains(client.get(reverse('forum_list')), '<strong>1</strong> thread<')
+    assertContains(client.get(reverse('home')), '<strong>1</strong> thread<')
 
 
 @pytest.mark.django_db
 def test_forum_list_has_a_search_form(client, forum):
-    resp = client.get(reverse('forum_list'))
+    resp = client.get(reverse('home'))
 
     assertContains(resp, f'action="{reverse("search_results")}"')
     assertContains(resp, 'name="q"')

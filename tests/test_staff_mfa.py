@@ -21,7 +21,7 @@ User = get_user_model()
 PASSWORD = 'testpass123'
 ADMIN_INDEX = reverse('admin:index')
 MFA_INDEX = reverse('mfa_index')
-FORUM_LIST = reverse('forum_list')
+FORUM_LIST = reverse('home')
 
 
 def totp_code(secret):
@@ -134,7 +134,7 @@ def test_staff_logs_in_to_admin_with_password_and_code(client, staff, add_totp, 
 # The rest of the site: staff, superusers, moderators and anyone given a permission
 
 
-@pytest.mark.parametrize('url_name', ['home', 'forum_list'])
+@pytest.mark.parametrize('url_name', ['home', 'latest'])
 def test_privileged_user_without_authenticator_app_is_sent_to_set_it_up(
     client, privileged, url_name
 ):

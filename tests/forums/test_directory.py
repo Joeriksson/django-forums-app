@@ -68,7 +68,7 @@ def test_forum_list_counts_threads_and_replies(client, forum, anna, bo, add_thre
     replied(first, bo, 2)
     replied(first, anna, 1)
 
-    resp = client.get(reverse('forum_list'))
+    resp = client.get(reverse('home'))
 
     counts = block(resp, 'forum-row__counts')
     assert '<strong>2</strong> threads' in counts
@@ -79,7 +79,7 @@ def test_forum_list_counts_threads_and_replies(client, forum, anna, bo, add_thre
 def test_forum_list_counts_in_the_singular(client, forum, anna, bo, add_thread):
     replied(add_thread('Roof', 'Text', forum, anna), bo, 1)
 
-    counts = block(client.get(reverse('forum_list')), 'forum-row__counts')
+    counts = block(client.get(reverse('home')), 'forum-row__counts')
 
     assert '<strong>1</strong> thread<' in counts
     assert '<strong>1</strong> reply<' in counts
@@ -100,11 +100,11 @@ def test_forum_list_shows_the_two_most_active_threads(client, forum, anna, bo, a
     # The oldest thread has the newest activity
     replied(roof, bo, 1)
 
-    content = block(client.get(reverse('forum_list')), 'forum-row__threads')
+    content = block(client.get(reverse('home')), 'forum-row__threads')
 
     assert content.index('Roof') < content.index('Wood')
     assert 'Keys' not in content
-    assertContains(client.get(reverse('forum_list')), '<p class="forum-row__label">Latest</p>')
+    assertContains(client.get(reverse('home')), '<p class="forum-row__label">Latest</p>')
 
 
 @pytest.mark.django_db
@@ -115,7 +115,7 @@ def test_forum_list_line_names_the_last_replier_or_the_starter(client, forum, an
     replied(roof, bo, 1)
     started(keys, 5)
 
-    content = block(client.get(reverse('forum_list')), 'forum-row__threads')
+    content = block(client.get(reverse('home')), 'forum-row__threads')
 
     roof_line, keys_line = content.split('</li>')[:2]
     assert f'Member {bo.pk}' in roof_line
@@ -133,7 +133,7 @@ def test_forum_list_puts_announcements_first(client, forum, anna, bo, add_thread
     for title in ('Roof', 'Keys'):
         replied(add_thread(title, 'Text', forum, anna), bo, 1)
 
-    content = block(client.get(reverse('forum_list')), 'forum-row__threads')
+    content = block(client.get(reverse('home')), 'forum-row__threads')
 
     first, second = content.split('</li>')[:2]
     assert 'House rules' in first
@@ -150,7 +150,7 @@ def test_forum_list_two_announcements_fill_both_lines(client, forum, anna, add_t
         announce(add_thread(title, 'Text', forum, anna))
     add_thread('Roof', 'Text', forum, anna)
 
-    content = block(client.get(reverse('forum_list')), 'forum-row__threads')
+    content = block(client.get(reverse('home')), 'forum-row__threads')
 
     assert content.count('<li>') == 2
     assert 'Roof' not in content
@@ -162,7 +162,7 @@ def test_forum_list_lines_stay_in_their_forum(client, forum, anna, add_forum, ad
     trips = add_forum('Trips', 'Where to')
     add_thread('Lake', 'Text', trips, anna)
 
-    resp = client.get(reverse('forum_list'))
+    resp = client.get(reverse('home'))
     rows = resp.content.decode().split('class="row forum-row"')[1:]
 
     # Forums in title order: The house, Trips
@@ -172,7 +172,7 @@ def test_forum_list_lines_stay_in_their_forum(client, forum, anna, add_forum, ad
 
 @pytest.mark.django_db
 def test_forum_list_forum_without_threads(client, forum):
-    resp = client.get(reverse('forum_list'))
+    resp = client.get(reverse('home'))
 
     assertContains(resp, 'No threads yet')
     assertNotContains(resp, 'forum-row__threads')
@@ -189,7 +189,7 @@ def test_forum_list_uses_three_queries_however_many_forums(
     # The forums with their counts, their two threads each, and the members who replied
     # last, after six for the logged-in reader
     with django_assert_num_queries(6 + 3):
-        client.get(reverse('forum_list'))
+        client.get(reverse('home'))
 
 
 # Thread rows
@@ -221,10 +221,10 @@ def test_thread_row_without_replies(client, forum, anna, add_thread):
 
 
 @pytest.mark.django_db
-def test_home_rows_show_who_replied_last(client, forum, anna, bo, add_thread):
+def test_latest_rows_show_who_replied_last(client, forum, anna, bo, add_thread):
     replied(add_thread('Roof', 'Text', forum, anna), bo, 1)
 
-    resp = client.get(reverse('home'))
+    resp = client.get(reverse('latest'))
 
     assert f'Member {bo.pk}' in block(resp, 'thread-row__latest')
 
@@ -265,7 +265,7 @@ def test_forum_page_query_count_does_not_grow_with_threads(
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize('url_name', ['forum_list', 'home'])
+@pytest.mark.parametrize('url_name', ['home', 'latest'])
 def test_lists_are_in_a_panel_with_column_names(client, forum, anna, add_thread, url_name):
     add_thread('Roof', 'Text', forum, anna)
 

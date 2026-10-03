@@ -3,35 +3,20 @@
 
 {% block title %}Wildvasa{% endblock title %}
 
+{% comment %}
+The home page for visitors: the name and the way in. Members get the forum list here
+(pages.views.HomePageView).
+{% endcomment %}
 {% block content %}
-    {% if user.is_authenticated %}
-        <div class="page-head">
-            <h1>Latest conversations</h1>
-            <a class="button button--quiet" href="{% url 'forum_list' %}">All forums</a>
-        </div>
-        {% if threads %}
-            <div class="panel">
-                {% include 'forums/_thread_head.html' with name='Conversations' only %}
-                <ul class="rows">
-                    {% for thread in threads %}
-                        {% include 'forums/_thread_row.html' with show_forum=True %}
-                    {% endfor %}
-                </ul>
-            </div>
-        {% else %}
-            <p class="empty">No conversations yet. Pick a <a href="{% url 'forum_list' %}">forum</a> and start one.</p>
-        {% endif %}
-    {% else %}
-        <div class="door">
-            <h1 class="door__name">Wildvasa</h1>
-            <p class="door__text">A private forum. Sign in to read and write.</p>
-            <p>
-                <a class="button" href="{% url 'account_login' %}">Sign in</a>
-                {% signup_is_open as signup_open %}
-                {% if signup_open %}
-                    <a class="button button--quiet" href="{% url 'account_signup' %}">Sign up</a>
-                {% endif %}
-            </p>
-        </div>
-    {% endif %}
+    <div class="door">
+        <h1 class="door__name">Wildvasa</h1>
+        <p class="door__text">A private forum. Sign in to read and write.</p>
+        <p>
+            <a class="button" href="{% url 'account_login' %}">Sign in</a>
+            {% signup_is_open as signup_open %}
+            {% if signup_open %}
+                <a class="button button--quiet" href="{% url 'account_signup' %}">Sign up</a>
+            {% endif %}
+        </p>
+    </div>
 {% endblock content %}

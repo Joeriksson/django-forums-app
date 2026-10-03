@@ -47,7 +47,7 @@ def member_client(client, reader):
 
 
 def forums():
-    return reverse('forum_list')
+    return reverse('home')
 
 
 def forum_page(forum):

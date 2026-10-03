@@ -1,4 +1,4 @@
-{% load static signup %}
+{% load nav static signup %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +17,9 @@
         <a class="site-name" href="{% url 'home' %}">Wildvasa</a>
         <nav class="site-nav" aria-label="Main">
             {% if user.is_authenticated %}
-                <a href="{% url 'forum_list' %}">Forums</a>
+                {% nav_section as section %}
+                <a href="{% url 'home' %}"{% if section == 'forums' %} aria-current="page"{% endif %}>Forums</a>
+                <a href="{% url 'latest' %}"{% if section == 'latest' %} aria-current="page"{% endif %}>Latest</a>
                 {% if user.is_staff %}
                     <a href="{% url 'admin:index' %}">Admin</a>
                 {% endif %}

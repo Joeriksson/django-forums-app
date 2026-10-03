@@ -69,7 +69,7 @@ def test_no_api_for_staff_while_disabled(client, api_off, add_totp, url):
 def test_site_works_while_disabled(client, api_off, member):
     client.force_login(member)
     assert client.get(reverse('home')).status_code == 200
-    assert client.get(reverse('forum_list')).status_code == 200
+    assert client.get(reverse('latest')).status_code == 200
 
 
 @pytest.mark.django_db

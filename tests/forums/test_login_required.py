@@ -26,7 +26,7 @@ def thread(member):
 
 def reading_pages(thread):
     return [
-        reverse('forum_list'),
+        reverse('latest'),
         reverse('forum_detail', args=[thread.forum_id]),
         reverse('thread_detail', args=[thread.pk]),
         reverse('search_results') + '?q=secret',

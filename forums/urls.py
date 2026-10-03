@@ -1,7 +1,7 @@
 from django.urls import path
+from django.views.generic import RedirectView
 
 from .views import (
-    ForumsList,
     ForumDetail,
     ForumCreate,
     ForumUpdate,
@@ -19,7 +19,8 @@ from .views import (
 
 
 urlpatterns = [
-    path('', ForumsList.as_view(), name='forum_list'),
+    # The forum list is the home page now; old links still lead there
+    path('', RedirectView.as_view(pattern_name='home')),
     path('add/', ForumCreate.as_view(), name='forum_add'),
     path('<int:pk>/', ForumDetail.as_view(), name='forum_detail'),
     path('<int:pk>/update/', ForumUpdate.as_view(), name='forum_update'),

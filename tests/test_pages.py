@@ -4,10 +4,10 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import resolve, reverse
 from django.utils import timezone
-from pytest_django.asserts import assertContains, assertNotContains, assertTemplateUsed
+from pytest_django.asserts import assertContains, assertNotContains, assertRedirects, assertTemplateUsed
 
 from forums.models import Forum, Post, Thread
-from pages.views import HomePageView
+from pages.views import HomePageView, LatestView
 
 User = get_user_model()
 
@@ -69,15 +69,60 @@ def test_home_offers_signup_only_while_it_is_open(client, db, settings):
     assertContains(client.get(reverse('home')), reverse('account_signup'))
 
 
-# Members: the latest conversations
+# Members: the forum list at home
 
 
-def test_home_for_a_member_lists_threads_with_their_forum(client, member, forum):
-    thread = add_thread(forum, member, 'Midsummer at the lake')
+def test_home_for_a_member_is_the_forum_list(client, member, forum):
+    add_thread(forum, member, 'Midsummer at the lake')
     client.force_login(member)
 
     resp = client.get(reverse('home'))
 
+    assertTemplateUsed(resp, 'forums/forum_list.html')
+    assertContains(resp, '<h1>Forums</h1>')
+    assertContains(resp, 'Trips')
+    assertContains(resp, 'Midsummer at the lake')
+
+
+def test_home_for_a_member_query_count_does_not_grow_with_forums(client, member, django_assert_num_queries):
+    for number in range(4):
+        thread = add_thread(Forum.objects.create(title=f'Forum {number}', description='D'), member, 'T')
+        add_reply(thread, member)
+    client.force_login(member)
+
+    # Six for the logged-in member, then the forums, their threads and the last repliers
+    with django_assert_num_queries(6 + 3):
+        client.get(reverse('home'))
+
+
+def test_old_forum_list_address_leads_home(client, member):
+    client.force_login(member)
+
+    resp = client.get('/forums/')
+
+    assertRedirects(resp, reverse('home'), fetch_redirect_response=False)
+    assert resp.status_code == 302
+
+
+# Members: the latest conversations
+
+
+def latest(client):
+    return client.get(reverse('latest'))
+
+
+def test_latest_url():
+    assert reverse('latest') == '/latest/'
+    assert resolve('/latest/').func.view_class is LatestView
+
+
+def test_latest_lists_threads_with_their_forum(client, member, forum):
+    thread = add_thread(forum, member, 'Midsummer at the lake')
+    client.force_login(member)
+
+    resp = latest(client)
+
+    assertTemplateUsed(resp, 'forums/latest.html')
     assertContains(resp, 'Midsummer at the lake')
     assertContains(resp, f'href="{reverse("thread_detail", args=[thread.pk])}"')
     assertContains(resp, 'Trips')
@@ -85,40 +130,42 @@ def test_home_for_a_member_lists_threads_with_their_forum(client, member, forum)
     assertNotContains(resp, 'member@example.com</a>')
 
 
-def test_home_orders_threads_by_latest_activity(client, member, forum):
+def test_latest_orders_threads_by_latest_activity(client, member, forum):
     old_but_active = add_thread(forum, member, 'Old but active', days_ago=30)
     newer_quiet = add_thread(forum, member, 'Newer and quiet', days_ago=3)
     oldest = add_thread(forum, member, 'Oldest', days_ago=40)
     add_reply(old_but_active, member, days_ago=1)
     client.force_login(member)
 
-    threads = list(client.get(reverse('home')).context['threads'])
+    threads = list(latest(client).context['threads'])
 
     assert threads == [old_but_active, newer_quiet, oldest]
     assert threads[0].post_count == 1
     assert threads[1].post_count == 0
 
 
-def test_home_shows_at_most_fifteen_threads(client, member, forum):
+def test_latest_shows_at_most_fifteen_threads(client, member, forum):
     for number in range(17):
         add_thread(forum, member, f'Thread {number}', days_ago=number)
     client.force_login(member)
 
-    resp = client.get(reverse('home'))
+    resp = latest(client)
 
     assert len(resp.context['threads']) == 15
     assertContains(resp, 'Thread 0')
     assertNotContains(resp, 'Thread 16')
-    assertContains(resp, f'href="{reverse("forum_list")}"')
 
 
-def test_home_without_threads_says_so(client, member):
+def test_latest_without_threads_says_so(client, member):
     client.force_login(member)
 
-    assertContains(client.get(reverse('home')), 'No conversations yet')
+    resp = latest(client)
+
+    assertContains(resp, 'No conversations yet')
+    assertContains(resp, f'href="{reverse("home")}"')
 
 
-def test_home_query_count_does_not_grow_with_threads(client, member, forum, django_assert_max_num_queries):
+def test_latest_query_count_does_not_grow_with_threads(client, member, forum, django_assert_max_num_queries):
     for number in range(10):
         thread = add_thread(forum, User.objects.create_user(username=f'u{number}', email=f'u{number}@example.com'), f'Thread {number}')
         add_reply(thread, member)
@@ -126,4 +173,4 @@ def test_home_query_count_does_not_grow_with_threads(client, member, forum, djan
 
     # Six for the logged-in member, one for the threads, one for the members who replied last
     with django_assert_max_num_queries(8):
-        client.get(reverse('home'))
+        latest(client)
