@@ -10,37 +10,23 @@
 
 {% block content %}
     {% include 'forums/_trail.html' with forum=thread.forum only %}
+    <p class="kicker">Thread</p>
+    <h1 class="thread-title">{{ thread.title }}</h1>
 
-    <article class="opening">
-        <p class="kicker">Thread</p>
-        <h1 class="opening__title">{{ thread.title }}</h1>
-        <p class="byline">
+    <article class="post post--opening" id="opening">
+        <header class="post__head">
             {% include 'forums/_person.html' with person=thread.user %}
             <time datetime="{{ thread.added|date:'c' }}" title="{{ thread.added }}">{{ thread.added|when }}</time>
-        </p>
-        <div class="prose">{{ thread.text|render_markdown }}</div>
-        {% if thread.user.profile.signature %}
-            <div class="signature">
-                {{ thread.user.profile.signature|linebreaksbr }}
-                {% if thread.user.profile.web_site %}
-                    <br><a href="{{ thread.user.profile.web_site }}" rel="nofollow ugc noopener">{{ thread.user.profile.web_site }}</a>
-                {% endif %}
-            </div>
-        {% endif %}
+            <span class="post__tag">Opening post</span>
+            <a class="post__number" href="#opening">#1</a>
+        </header>
+        <div class="post__body">
+            <div class="prose">{{ thread.text|render_markdown }}</div>
+            {% include 'forums/_signature.html' with profile=thread.user.profile only %}
+        </div>
     </article>
 
-    <div class="thread-actions">
-        <a class="button" href="{% url 'post_add' thread.id %}">Reply</a>
-        <form method="post" action="{% url 'thread_notification' thread.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="page" value="{{ posts.number }}">
-            {% if subscribed %}
-                <button class="button button--quiet" type="submit" aria-pressed="true" title="You get an email for each new reply. Click to stop.">Subscribed</button>
-            {% else %}
-                <button class="button button--quiet" type="submit" aria-pressed="false" title="Get an email for each new reply">Subscribe</button>
-            {% endif %}
-        </form>
-    </div>
+    {% include 'forums/_thread_actions.html' with page=posts %}
 
     <section class="replies" aria-labelledby="replies-heading">
         <h2 class="replies__heading" id="replies-heading">
@@ -51,59 +37,48 @@
             {% endif %}
         </h2>
 
+        {% include 'forums/_pages.html' with page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
+
         {% for post in posts %}
-            <article class="reply" id="post-{{ post.id }}">
-                <p class="byline">
-                    {% include 'forums/_person.html' with person=post.user %}
-                    <a class="byline__time" href="#post-{{ post.id }}"><time datetime="{{ post.added|date:'c' }}" title="{{ post.added }}">{{ post.added|when }}</time></a>
-                </p>
-                <div class="prose">{{ post.text|render_markdown }}</div>
-                {% if post.user.profile.signature %}
-                    <div class="signature">
-                        {{ post.user.profile.signature|linebreaksbr }}
-                        {% if post.user.profile.web_site %}
-                            <br><a href="{{ post.user.profile.web_site }}" rel="nofollow ugc noopener">{{ post.user.profile.web_site }}</a>
-                        {% endif %}
+            {# Numbered on from the opening post (#1), across pages #}
+            {% with number=forloop.counter|add:posts.start_index %}
+                <article class="post" id="post-{{ post.id }}">
+                    <header class="post__head">
+                        {% include 'forums/_person.html' with person=post.user %}
+                        <time datetime="{{ post.added|date:'c' }}" title="{{ post.added }}">{{ post.added|when }}</time>
+                        <a class="post__number" href="?page={{ posts.number }}#post-{{ post.id }}">#{{ number }}</a>
+                    </header>
+                    <div class="post__body">
+                        <div class="prose">{{ post.text|render_markdown }}</div>
+                        {% include 'forums/_signature.html' with profile=post.user.profile only %}
+                        <div class="post__foot">
+                            {% if post.upvotes %}<span class="votes">{{ post.upvotes }} upvote{{ post.upvotes|pluralize }}</span>{% endif %}
+                            {% if post.id in voted %}
+                                <span class="votes__mine">You upvoted</span>
+                            {% elif post.user != user %}
+                                <form method="post" action="{% url 'post_upvote' thread.id post.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="page" value="{{ posts.number }}">
+                                    <button class="button button--quiet button--small" type="submit">+1</button>
+                                </form>
+                            {% endif %}
+                            {% if post.user == user or perms.forums.delete_post %}
+                                <a class="post__delete" href="{% url 'post_delete' thread.id post.id %}">Delete</a>
+                            {% endif %}
+                        </div>
                     </div>
-                {% endif %}
-                <div class="reply__foot">
-                    {% if post.upvotes %}<span class="votes">{{ post.upvotes }} upvote{{ post.upvotes|pluralize }}</span>{% endif %}
-                    {% if post.id in voted %}
-                        <span class="votes__mine">You upvoted</span>
-                    {% elif post.user != user %}
-                        <form method="post" action="{% url 'post_upvote' thread.id post.id %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="page" value="{{ posts.number }}">
-                            <button class="button button--quiet button--small" type="submit">+1</button>
-                        </form>
-                    {% endif %}
-                    {% if post.user == user or perms.forums.delete_post %}
-                        <a class="reply__delete" href="{% url 'post_delete' thread.id post.id %}">Delete</a>
-                    {% endif %}
-                </div>
-            </article>
+                </article>
+            {% endwith %}
         {% endfor %}
+
+        {% include 'forums/_pages.html' with page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
     </section>
 
-    {% if posts.has_other_pages %}
-        <nav class="pages" aria-label="Pages of replies">
-            {% if posts.has_previous %}
-                <a href="?page={{ posts.previous_page_number }}">Earlier replies</a>
-            {% else %}
-                <span></span>
-            {% endif %}
-            <span>Page {{ posts.number }} of {{ posts.paginator.num_pages }}</span>
-            {% if posts.has_next %}
-                <a href="?page={{ posts.next_page_number }}">Later replies</a>
-            {% else %}
-                <span></span>
-            {% endif %}
-        </nav>
+    {% if posts.paginator.count %}
+        {% include 'forums/_thread_actions.html' with page=posts %}
     {% endif %}
 
-    {% if posts.paginator.count and not posts.has_next %}
-        <p class="thread-end"><a class="button" href="{% url 'post_add' thread.id %}">Reply</a></p>
-    {% endif %}
+    <p class="thread-back"><a href="{% url 'forum_detail' thread.forum_id %}">Back to {{ thread.forum.title }}</a></p>
 {% endblock content %}
 
 {% block javascripts %}

@@ -17,100 +17,97 @@
     }
 }
 
-/* The opening post */
+/* The title, then each post in a panel: a header bar with the author, the time and the
+   post's number, then the text. The opening post is marked with a spruce edge. */
 
-.opening {
-    margin: var(--space-3) 0 var(--space-4);
+.trail + .kicker {
+    margin-top: var(--space-4);
 }
 
-.opening__title {
-    margin: 0 0 var(--space-3);
+.thread-title {
+    margin: 0 0 var(--space-4);
     max-width: var(--measure);
 }
 
-.byline {
+.post {
+    margin: 0 0 var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    scroll-margin-top: var(--space-4);
+}
+
+.post--opening {
+    border-left: 4px solid var(--spruce);
+}
+
+.post:target {
+    border-color: var(--lichen);
+    box-shadow: 0 0 0 2px var(--lichen-wash);
+}
+
+.post__head {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-1) var(--space-3);
-    margin: 0 0 var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule);
     color: var(--quiet);
     font-size: var(--size-small);
 }
 
-.byline__time {
-    color: inherit;
+.post__tag {
+    padding: 0 var(--space-2);
+    border-radius: 1rem;
+    background: var(--lichen-wash);
+    color: var(--ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.post__number {
+    margin-left: auto;
+    color: var(--quiet);
+    font-weight: 600;
     text-decoration: none;
 }
 
-.byline__time:hover {
+.post__number:hover {
     color: var(--spruce);
     text-decoration: underline;
 }
 
-.thread-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2);
-    margin: 0 0 var(--space-5);
+.post__body {
+    padding: var(--space-3) var(--space-3) var(--space-3);
 }
 
-.thread-actions form {
-    margin: 0;
+/* Code on the page's ground, so it stands out from the panel */
+.post .prose pre,
+.post .prose :not(pre) > code {
+    background: var(--ground);
 }
 
-.thread-actions [aria-pressed='true'] {
-    background: var(--lichen-wash);
-    border-color: var(--lichen);
-    color: var(--ink);
-}
-
-/* The replies: space and a short rule between them, no boxes */
-
-.replies__heading {
-    margin: 0;
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--rule);
-    color: var(--quiet);
-    font-family: var(--sans);
-    font-size: var(--size-small);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.reply {
-    padding: var(--space-4) 0 var(--space-3);
-    scroll-margin-top: var(--space-4);
-}
-
-.reply + .reply::before {
-    content: '';
-    display: block;
-    width: 3rem;
-    margin-bottom: var(--space-4);
-    border-top: 1px solid var(--rule);
-}
-
-.reply:target .byline .person {
-    background: var(--lichen-wash);
-    border-radius: 1rem;
-    padding-right: var(--space-2);
-}
-
-.reply__foot {
+.post__foot {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2) var(--space-3);
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
     color: var(--quiet);
     font-size: var(--size-small);
 }
 
-.reply__foot form {
+.post__foot form {
     margin: 0;
+}
+
+.post__delete {
+    color: var(--quiet);
+}
+
+.post__delete:hover {
+    color: var(--danger);
 }
 
 .button--small {
@@ -123,25 +120,55 @@
     font-weight: 600;
 }
 
-.reply__delete {
-    color: var(--quiet);
-}
-
-.reply__delete:hover {
-    color: var(--danger);
-}
-
 .signature {
     max-width: var(--measure);
-    margin: var(--space-3) 0;
+    margin: var(--space-3) 0 0;
     padding-top: var(--space-2);
     border-top: 1px dashed var(--rule);
     color: var(--quiet);
     font-size: var(--size-small);
 }
 
-.thread-end {
+.thread-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-4) 0 var(--space-5);
+}
+
+.thread-actions form {
+    margin: 0;
+}
+
+.thread-actions [aria-pressed='true'] {
+    background: var(--lichen-wash);
+    border-color: var(--lichen);
+    color: var(--ink);
+}
+
+/* The replies */
+
+.replies__heading {
+    margin: 0 0 var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule);
+    color: var(--quiet);
+    font-family: var(--sans);
+    font-size: var(--size-small);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.thread-back {
     margin: var(--space-4) 0;
+    font-size: var(--size-small);
+    font-weight: 600;
+}
+
+.thread-back a::before {
+    content: '‹ ';
 }
 
 /* Post text */
