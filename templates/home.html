@@ -10,11 +10,14 @@
             <a class="button button--quiet" href="{% url 'forum_list' %}">All forums</a>
         </div>
         {% if threads %}
-            <ul class="rows">
-                {% for thread in threads %}
-                    {% include 'forums/_thread_row.html' with show_forum=True %}
-                {% endfor %}
-            </ul>
+            <div class="panel">
+                {% include 'forums/_thread_head.html' with name='Conversations' only %}
+                <ul class="rows">
+                    {% for thread in threads %}
+                        {% include 'forums/_thread_row.html' with show_forum=True %}
+                    {% endfor %}
+                </ul>
+            </div>
         {% else %}
             <p class="empty">No conversations yet. Pick a <a href="{% url 'forum_list' %}">forum</a> and start one.</p>
         {% endif %}

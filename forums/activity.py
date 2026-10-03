@@ -4,8 +4,8 @@ replied last. Each helper adds a fixed number of queries, however many rows ther
 """
 
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Max, OuterRef, Subquery
-from django.db.models.functions import Coalesce
+from django.db.models import Count, F, Max, OuterRef, Subquery, Window
+from django.db.models.functions import Coalesce, RowNumber
 
 from .models import Post, Thread
 
@@ -34,38 +34,35 @@ def add_last_repliers(threads):
     return threads
 
 
-def with_counts_and_latest(forums):
-    """
-    Add thread_count, reply_count and, for finding the latest thread, the newest thread
-    and the thread with the newest reply to a queryset of forums.
-    """
-    newest_thread = Thread.objects.filter(forum=OuterRef('pk')).order_by('-added', '-id')
-    newest_reply = Post.objects.filter(thread__forum=OuterRef('pk')).order_by('-added', '-id')
+def with_counts(forums):
+    """Add thread_count and reply_count to a queryset of forums."""
     return forums.annotate(
         thread_count=Count('threads', distinct=True),
         reply_count=Count('threads__posts', distinct=True),
-        newest_thread_id=Subquery(newest_thread.values('id')[:1]),
-        newest_thread_added=Subquery(newest_thread.values('added')[:1]),
-        newest_reply_thread_id=Subquery(newest_reply.values('thread')[:1]),
-        newest_reply_added=Subquery(newest_reply.values('added')[:1]),
     )
 
 
-def add_latest_threads(forums):
+def add_top_threads(forums, per_forum=2):
     """
-    Set latest on each forum from with_counts_and_latest(): the thread with the newest
-    activity, with its activity and last replier, or None. Two queries for all forums.
+    Set top_threads on each forum: its announcements first, then the threads with the
+    newest activity, per_forum in all, each with its activity and last replier. Two
+    queries for all forums.
     """
     forums = list(forums)
-    for forum in forums:
-        forum.latest_id = forum.newest_thread_id
-        if forum.newest_reply_added and forum.newest_reply_added > forum.newest_thread_added:
-            forum.latest_id = forum.newest_reply_thread_id
-    ids = {forum.latest_id for forum in forums if forum.latest_id}
-    threads = add_last_repliers(
-        with_activity(Thread.objects.filter(id__in=ids).select_related('user__profile'))
+    rank = Window(
+        RowNumber(),
+        partition_by='forum',
+        order_by=(F('announcement').desc(), F('last_activity').desc(), F('id').desc()),
     )
-    by_id = {thread.id: thread for thread in threads}
+    threads = add_last_repliers(
+        with_activity(Thread.objects.filter(forum__in=forums).select_related('user__profile'))
+        .annotate(rank=rank)
+        .filter(rank__lte=per_forum)
+        .order_by('forum', 'rank')
+    )
+    by_forum = {}
+    for thread in threads:
+        by_forum.setdefault(thread.forum_id, []).append(thread)
     for forum in forums:
-        forum.latest = by_id.get(forum.latest_id)
+        forum.top_threads = by_forum.get(forum.id, [])
     return forums
