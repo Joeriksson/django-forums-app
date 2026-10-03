@@ -21,7 +21,7 @@ from django.views.generic import (
     FormView,
 )
 
-from .activity import add_last_repliers, add_latest_threads, with_activity, with_counts_and_latest
+from .activity import add_last_repliers, add_top_threads, with_activity, with_counts
 from .forms import SearchForm
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
@@ -34,11 +34,11 @@ class ForumsList(LoginRequiredMixin, ListView, FormView):
     context_object_name = 'forum_list'
     form_class = SearchForm
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
-    queryset = with_counts_and_latest(Forum.objects.all()).order_by('title', 'id')
+    queryset = with_counts(Forum.objects.all()).order_by('title', 'id')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['forum_list'] = add_latest_threads(context['forum_list'])
+        context['forum_list'] = add_top_threads(context['forum_list'])
         return context
 
 
