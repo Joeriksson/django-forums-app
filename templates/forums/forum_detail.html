@@ -28,7 +28,7 @@
     {% endif %}
 
     {% if threads %}
-        {% include 'forums/_pages.html' with page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
+        {% include 'forums/_pages.html' with request=request page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
         <div class="panel">
             {% include 'forums/_thread_head.html' with name='Threads' only %}
             <ul class="rows" aria-label="Threads">
@@ -37,7 +37,7 @@
                 {% endfor %}
             </ul>
         </div>
-        {% include 'forums/_pages.html' with page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
+        {% include 'forums/_pages.html' with request=request page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
     {% else %}
         <p class="empty">No threads here yet. <a href="{% url 'thread_add' forum.id %}">Start the first one</a>.</p>
     {% endif %}

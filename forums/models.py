@@ -1,6 +1,8 @@
 import os
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector
 from django.db import models
 from django.urls import reverse
 from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE
@@ -12,6 +14,14 @@ MARKDOWN_HELP = 'You can use Markdown: **bold**, *italic*, `code`, > quote, list
 # Checked by the forms and the API, not by the database: texts are rendered on every page view
 MAX_TEXT_LENGTH = 20_000
 MAX_SIGNATURE_LENGTH = 500
+
+# Full-text search in English word forms (forums/search.py). The indexes below are built on
+# the same expressions, so a search must use these to be fast. A title weighs more than text.
+SEARCH_CONFIG = 'english'
+THREAD_SEARCH_VECTOR = SearchVector('title', weight='A', config=SEARCH_CONFIG) + SearchVector(
+    'text', weight='B', config=SEARCH_CONFIG
+)
+POST_SEARCH_VECTOR = SearchVector('text', weight='B', config=SEARCH_CONFIG)
 
 
 class Forum(models.Model):
@@ -46,6 +56,7 @@ class Thread(models.Model):
 
     class Meta:
         ordering = ['-added']
+        indexes = [GinIndex(THREAD_SEARCH_VECTOR, name='thread_search')]
 
 
 class Post(LifecycleModelMixin, models.Model):
@@ -64,6 +75,7 @@ class Post(LifecycleModelMixin, models.Model):
 
     class Meta:
         ordering = ['added']
+        indexes = [GinIndex(POST_SEARCH_VECTOR, name='post_search')]
 
     @hook(AFTER_CREATE, on_commit=True)
     def notify_subscribers(self):

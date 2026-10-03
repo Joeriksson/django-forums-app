@@ -37,7 +37,7 @@
             {% endif %}
         </h2>
 
-        {% include 'forums/_pages.html' with page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
+        {% include 'forums/_pages.html' with request=request page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
 
         {% for post in posts %}
             {# Numbered on from the opening post (#1), across pages #}
@@ -71,7 +71,7 @@
             {% endwith %}
         {% endfor %}
 
-        {% include 'forums/_pages.html' with page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
+        {% include 'forums/_pages.html' with request=request page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
     </section>
 
     {% if posts.paginator.count %}

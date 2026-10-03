@@ -1,18 +1,19 @@
 {% comment %}
 Links to the neighbouring pages of a list, shown only when there is more than one page.
+The links keep the rest of the address (a search's words and filters).
 Pass "page" (a Paginator page), "label" (for screen readers), "previous" and "next" (the
 link texts).
 {% endcomment %}
 {% if page.has_other_pages %}
     <nav class="pages" aria-label="{{ label }}">
         {% if page.has_previous %}
-            <a href="?page={{ page.previous_page_number }}">{{ previous }}</a>
+            <a href="{% querystring page=page.previous_page_number %}">{{ previous }}</a>
         {% else %}
             <span></span>
         {% endif %}
         <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
         {% if page.has_next %}
-            <a href="?page={{ page.next_page_number }}">{{ next }}</a>
+            <a href="{% querystring page=page.next_page_number %}">{{ next }}</a>
         {% else %}
             <span></span>
         {% endif %}

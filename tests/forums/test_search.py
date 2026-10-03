@@ -1,9 +1,21 @@
+"""
+The search page: English word forms (PostgreSQL full-text search), filters for forum,
+author, dates and kind, sorting, and every result in pages.
+"""
+
+import re
+from datetime import timedelta
+
 import pytest
 from django.urls import reverse
+from django.utils import timezone
+from pytest_django.asserts import assertContains, assertNotContains, assertRedirects
 
-from forums.views import SearchResultsView
+from forums.models import Post, Thread
+from forums.views import SearchView, ThreadDetail
 
 SEARCH_URL = reverse('search_results')
+
 
 @pytest.fixture
 def client(client, reader):
@@ -12,116 +24,279 @@ def client(client, reader):
     return client
 
 
+@pytest.fixture
+def anna(add_user):
+    return add_user('anna', 'anna@example.com', 'x')
+
 
 @pytest.fixture
-def author(add_user):
-    return add_user('author', 'author@email.com', 'testpass123')
+def bo(add_user):
+    return add_user('bo', 'bo@example.com', 'x')
 
 
 @pytest.fixture
-def forum(add_forum):
-    return add_forum(title='General Forum', description='This is a general forum')
+def house(add_forum):
+    return add_forum('The house', 'Repairs')
 
 
-def search(client, query):
-    resp = client.get(SEARCH_URL, {'q': query})
+@pytest.fixture
+def trips(add_forum):
+    return add_forum('Trips', 'Where to')
+
+
+def search(client, **params):
+    resp = client.get(SEARCH_URL, params)
     assert resp.status_code == 200
     return resp
 
 
+def found(resp):
+    return list(resp.context['results'])
+
+
+def days_ago(obj, days):
+    obj.__class__.objects.filter(pk=obj.pk).update(added=timezone.now() - timedelta(days=days))
+    obj.refresh_from_db()
+    return obj
+
+
+# Words
+
+
 @pytest.mark.django_db
-def test_search_finds_threads_and_posts(client, author, forum, add_thread, add_post):
-    thread = add_thread(title='About pelicans', text='Birds', forum=forum, user=author)
-    other = add_thread(title='Something else', text='Nothing here', forum=forum, user=author)
-    post = add_post(text='I saw a pelican today', thread=other, user=author)
+def test_finds_threads_and_replies(client, anna, house, add_thread, add_post):
+    thread = add_thread('About pelicans', 'Birds', house, anna)
+    other = add_thread('Something else', 'Nothing here', house, anna)
+    post = add_post('I saw a pelican today', other, anna)
 
-    resp = search(client, 'pelican')
+    assert set(found(search(client, q='pelican'))) == {thread, post}
 
-    assert list(resp.context['object_list']) == [post, thread]
+
+@pytest.mark.django_db
+def test_finds_english_word_forms(client, anna, house, add_thread, add_post):
+    thread = add_thread('Tomatoes', 'I watered the beds every morning', house, anna)
+    post = add_post('A watering can is enough', thread, anna)
+
+    assert set(found(search(client, q='water'))) == {thread, post}
+
+
+@pytest.mark.django_db
+def test_quoted_words_are_a_phrase(client, anna, house, add_thread):
+    exact = add_thread('Valves', 'Buy one that is normally closed', house, anna)
+    add_thread('Doors', 'Closed doors are normally locked', house, anna)
+
+    assert found(search(client, q='"normally closed"')) == [exact]
+
+
+@pytest.mark.django_db
+def test_minus_leaves_a_word_out(client, anna, house, add_thread):
+    sensor = add_thread('Watering', 'A valve with a sensor', house, anna)
+    add_thread('Watering, simpler', 'A valve with a timer', house, anna)
+
+    assert found(search(client, q='valve -timer')) == [sensor]
+
+
+@pytest.mark.django_db
+def test_best_match_puts_titles_first(client, anna, house, add_thread, add_post):
+    other = add_thread('Something else', 'Nothing here', house, anna)
+    in_text = add_post('Someone mentioned a pelican', other, anna)
+    in_title = days_ago(add_thread('Pelican', 'Birds', house, anna), 3)
+
+    assert found(search(client, q='pelican')) == [in_title, in_text]
+
+
+@pytest.mark.django_db
+def test_newest_first_when_asked(client, anna, house, add_thread, add_post):
+    other = add_thread('Something else', 'Nothing here', house, anna)
+    in_text = add_post('Someone mentioned a pelican', other, anna)
+    days_ago(add_thread('Pelican', 'Birds', house, anna), 3)
+
+    assert found(search(client, q='pelican', sort='newest'))[0] == in_text
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize('query', ['', ' ', 'pe', ' pe '])
-def test_search_needs_three_characters(client, author, forum, add_thread, query):
-    add_thread(title='About pelicans', text='Birds', forum=forum, user=author)
+def test_words_need_three_characters_without_a_filter(client, anna, house, add_thread, query):
+    add_thread('About pelicans', 'Birds', house, anna)
 
-    resp = search(client, query)
+    resp = search(client, q=query, sort='best')
 
-    assert list(resp.context['object_list']) == []
-    assert 'at least 3 characters' in resp.content.decode()
-
-
-@pytest.mark.django_db
-def test_search_shows_the_newest_results_up_to_a_limit(
-    client, author, forum, add_thread, add_post, monkeypatch
-):
-    monkeypatch.setattr(SearchResultsView, 'max_results', 2)
-    threads = [
-        add_thread(title=f'Pelican {n}', text='Birds', forum=forum, user=author) for n in range(3)
-    ]
-    posts = [add_post(text=f'pelican post {n}', thread=threads[0], user=author) for n in range(3)]
-
-    resp = search(client, 'pelican')
-
-    # The newest two of each kind; the oldest are left out
-    assert list(resp.context['object_list']) == [posts[2], posts[1], threads[2], threads[1]]
-    assert 'Only the newest results are shown' in resp.content.decode()
+    assert resp.context['results'] is None
+    assertContains(resp, 'at least 3 characters')
 
 
 @pytest.mark.django_db
-def test_search_within_the_limit_has_no_note(client, author, forum, add_thread):
-    add_thread(title='About pelicans', text='Birds', forum=forum, user=author)
+def test_page_without_anything_shows_only_the_form(client):
+    resp = search(client)
 
-    resp = search(client, 'pelican')
-
-    assert 'Only the newest results are shown' not in resp.content.decode()
-
-
-@pytest.mark.django_db
-def test_search_without_results_says_so(client):
-    resp = search(client, 'pelican')
-
-    assert "Nothing found for" in resp.content.decode()
+    assert resp.context['results'] is None
+    assertContains(resp, 'name="q"')
+    assertNotContains(resp, 'at least 3 characters')
+    assertNotContains(resp, 'Nothing found')
 
 
 @pytest.mark.django_db
-def test_search_uses_two_queries_however_many_results(
-    client, add_user, forum, add_thread, add_post, django_assert_num_queries
-):
-    for n in range(3):
-        user = add_user(f'user{n}', f'user{n}@email.com', 'testpass123')
-        thread = add_thread(title=f'Pelican {n}', text='Birds', forum=forum, user=user)
-        add_post(text=f'pelican post {n}', thread=thread, user=user)
+def test_without_results_says_so(client):
+    assertContains(search(client, q='pelican'), 'Nothing found')
 
-    # One for posts, one for threads: their users, threads and forums come along. Before
-    # them, six for the logged-in reader (session, user, permissions, profile, GitHub account)
-    with django_assert_num_queries(6 + 2):
-        search(client, 'pelican')
+
+# Filters
 
 
 @pytest.mark.django_db
-def test_search_page_has_a_search_box_with_the_query(client):
-    content = search(client, 'pelican').content.decode()
+def test_forum_filter(client, anna, house, trips, add_thread):
+    roof = add_thread('Roof water', 'Text', house, anna)
+    add_thread('Lake water', 'Text', trips, anna)
 
-    assert 'name="q"' in content
-    assert 'value="pelican"' in content
+    assert found(search(client, q='water', forum=house.pk)) == [roof]
+
+
+@pytest.mark.django_db
+def test_author_filter(client, anna, bo, house, add_thread, add_post):
+    thread = add_thread('Roof water', 'Text', house, anna)
+    reply = add_post('More water', thread, bo)
+
+    assert found(search(client, q='water', author=bo.pk)) == [reply]
+
+
+@pytest.mark.django_db
+def test_date_filter(client, anna, house, add_thread):
+    old = days_ago(add_thread('Old water', 'Text', house, anna), 40)
+    recent = days_ago(add_thread('Recent water', 'Text', house, anna), 5)
+    days_ago(add_thread('Today water', 'Text', house, anna), 0)
+    today = timezone.localdate()
+
+    resp = search(
+        client, q='water', since=(today - timedelta(days=10)).isoformat(),
+        until=(today - timedelta(days=1)).isoformat(),
+    )
+
+    assert found(resp) == [recent]
+    assert old not in found(resp)
+
+
+@pytest.mark.django_db
+def test_dates_the_wrong_way_round_are_an_error(client):
+    resp = search(client, q='water', since='2026-10-02', until='2026-10-01')
+
+    assert resp.context['results'] is None
+    assertContains(resp, 'The end date is before the start date')
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('kind, expected', [('threads', 'thread'), ('replies', 'post')])
+def test_kind_filter(client, anna, house, add_thread, add_post, kind, expected):
+    thread = add_thread('Water', 'Text', house, anna)
+    post = add_post('More water', thread, anna)
+
+    assert found(search(client, q='water', kind=kind)) == [{'thread': thread, 'post': post}[expected]]
+
+
+@pytest.mark.django_db
+def test_filters_without_words_list_everything_newest_first(client, anna, bo, house, add_thread, add_post):
+    first = days_ago(add_thread('Roof', 'Text', house, anna), 2)
+    reply = add_post('Hm', first, anna)
+    add_thread('Keys', 'Text', house, bo)
+
+    assert found(search(client, author=anna.pk)) == [reply, first]
+
+
+@pytest.mark.django_db
+def test_forum_list_shows_plain_titles(client, house):
+    assertContains(search(client), f'<option value="{house.pk}">The house</option>')
+
+
+@pytest.mark.django_db
+def test_author_list_names_members_and_tells_twins_apart(client, anna, bo, add_user):
+    for user in (anna, bo):
+        user.profile.first_name, user.profile.last_name = 'Anna', 'Berg'
+        user.profile.save()
+
+    content = search(client).content.decode()
+
+    assert f'<option value="{anna.pk}">Anna Berg (member {anna.pk})</option>' in content
+    assert f'<option value="{bo.pk}">Anna Berg (member {bo.pk})</option>' in content
+    assert 'anna@example.com' not in content
+
+
+# Results
+
+
+@pytest.mark.django_db
+def test_results_come_in_pages_that_keep_the_search(client, anna, house, add_thread, monkeypatch):
+    monkeypatch.setattr(SearchView, 'paginate_by', 2)
+    for number in range(3):
+        add_thread(f'Water {number}', 'Text', house, anna)
+
+    resp = search(client, q='water', forum=house.pk, sort='newest')
+
+    assert len(found(resp)) == 2
+    content = resp.content.decode()
+    assert content.count('aria-label="Pages of results"') == 2
+    link = re.search(r'<a href="(\?[^"]*page=2[^"]*)">', content).group(1).replace('&amp;', '&')
+    assert 'q=water' in link and f'forum={house.pk}' in link and 'sort=newest' in link
+
+    assert len(found(search(client, q='water', forum=house.pk, sort='newest', page=2))) == 1
+
+
+@pytest.mark.django_db
+def test_reply_links_to_its_page_and_number(client, anna, house, add_thread, add_post, monkeypatch):
+    monkeypatch.setattr(ThreadDetail, 'paginate_by', 2)
+    thread = add_thread('Roof', 'Text', house, anna)
+    posts = [add_post(f'Reply {n}', thread, anna) for n in range(4)]
+    target = posts[3]
+    Post.objects.filter(pk=target.pk).update(text='The pelican came back')
+
+    content = search(client, q='pelican').content.decode()
+
+    # The fourth reply is post #5, on the second page of two replies each
+    url = reverse('thread_detail', args=[thread.pk])
+    assert f'href="{url}?page=2#post-{target.pk}"' in content
+    assert '#5' in content
+
+
+@pytest.mark.django_db
+def test_excerpt_is_plain_text_and_escaped(client, anna, house, add_thread):
+    add_thread('Pelicans', '**Bold** pelican <script>alert(1)</script>', house, anna)
+
+    content = search(client, q='pelican').content.decode()
+
+    assert 'Bold pelican &lt;script&gt;alert(1)&lt;/script&gt;' in content
+    assert '<script>alert' not in content
+    assert '**Bold**' not in content
 
 
 @pytest.mark.django_db
 def test_search_box_escapes_the_query(client):
-    content = search(client, '"><b>x').content.decode()
+    content = search(client, q='"><b>x').content.decode()
 
     assert 'value="&quot;&gt;&lt;b&gt;x"' in content
 
 
 @pytest.mark.django_db
-def test_search_excerpt_is_plain_text_and_escaped(client, author, forum, add_thread):
-    add_thread(
-        title='Pelicans', text='**Bold** pelican <script>alert(1)</script>', forum=forum, user=author
-    )
+def test_query_count_does_not_grow_with_results(
+    client, add_user, house, add_thread, add_post, django_assert_num_queries
+):
+    for number in range(3):
+        user = add_user(f'user{number}', f'user{number}@example.com', 'x')
+        thread = add_thread(f'Pelican {number}', 'Birds', house, user)
+        add_post(f'pelican post {number}', thread, user)
 
-    content = search(client, 'pelican').content.decode()
+    # The forums and members for the filters, the number of results, one page of them,
+    # and the threads and replies on it, after six for the logged-in reader
+    with django_assert_num_queries(6 + 6):
+        search(client, q='pelican')
 
-    assert 'Bold pelican &lt;script&gt;alert(1)&lt;/script&gt;' in content
-    assert '<script>alert' not in content
-    assert '**Bold**' not in content
+
+# Addresses
+
+
+def test_search_url():
+    assert SEARCH_URL == '/search/'
+
+
+@pytest.mark.django_db
+def test_old_address_keeps_the_query(client):
+    resp = client.get('/forums/search/', {'q': 'pelican'})
+
+    assertRedirects(resp, f'{SEARCH_URL}?q=pelican', fetch_redirect_response=False)
