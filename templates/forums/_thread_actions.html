@@ -1,0 +1,16 @@
+{% comment %}
+Reply and Subscribe, under the opening post and again at the end of the thread. Pass
+"thread", "subscribed" and "page" (the page of replies, for coming back to it).
+{% endcomment %}
+<div class="thread-actions">
+    <a class="button" href="{% url 'post_add' thread.id %}">Reply</a>
+    <form method="post" action="{% url 'thread_notification' thread.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="page" value="{{ page.number }}">
+        {% if subscribed %}
+            <button class="button button--quiet" type="submit" aria-pressed="true" title="You get an email for each new reply. Click to stop.">Subscribed</button>
+        {% else %}
+            <button class="button button--quiet" type="submit" aria-pressed="false" title="Get an email for each new reply">Subscribe</button>
+        {% endif %}
+    </form>
+</div>

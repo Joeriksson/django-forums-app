@@ -82,7 +82,8 @@ def test_thread_page_with_a_bad_page_number_still_loads(client, thread, five_pos
 def test_thread_page_with_one_page_has_no_page_links(client, thread, add_post, author):
     add_post(text='Only post', thread=thread, user=author)
 
-    assert '?page=' not in thread_page(client, thread).content.decode()
+    # The post numbers link to ?page=1#post-<id>; only the page links are missing
+    assert 'Pages of replies' not in thread_page(client, thread).content.decode()
 
 
 @pytest.mark.django_db
@@ -161,8 +162,8 @@ def test_thread_page_has_the_page_number_in_its_forms(client, thread, five_posts
 
     content = thread_page(client, thread, 2).content.decode()
 
-    # The subscribe form and one upvote form per post on the page
-    assert content.count('<input type="hidden" name="page" value="2">') == 3
+    # The subscribe form at both ends and one upvote form per post on the page
+    assert content.count('<input type="hidden" name="page" value="2">') == 4
 
 
 @pytest.mark.django_db
