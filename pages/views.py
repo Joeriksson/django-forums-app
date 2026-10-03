@@ -4,6 +4,8 @@ from django.views.generic import TemplateView
 from forums.activity import latest_threads
 from forums.views import ForumsList
 
+from .models import SiteSettings
+
 
 class HomePageView(TemplateView):
     """Members get the forum list; visitors only a way in."""
@@ -20,9 +22,8 @@ class LatestView(LoginRequiredMixin, TemplateView):
     """The conversations with the newest activity, across all forums."""
 
     template_name = 'forums/latest.html'
-    thread_count = 15
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['threads'] = latest_threads(self.thread_count)
+        context['threads'] = latest_threads(SiteSettings.for_request(self.request).latest_threads)
         return context
