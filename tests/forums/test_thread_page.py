@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
+from forums.models import UpVote
 from forums.views import ThreadDetail
 
 @pytest.fixture
@@ -107,7 +108,30 @@ def test_upvote_returns_to_the_same_page(client, thread, five_posts, reader):
     five_posts[2].refresh_from_db()
     assert five_posts[2].upvotes == 1
     # The page shows the new count at once
-    assert 'upvotes: 1' in client.get(resp.url).content.decode()
+    assert '1 upvote' in client.get(resp.url).content.decode()
+
+
+@pytest.mark.django_db
+def test_thread_page_marks_the_posts_the_reader_upvoted(client, thread, five_posts, reader, add_user):
+    UpVote.objects.create(post=five_posts[0], user=reader)
+    # Someone else's vote doesn't count as the reader's
+    UpVote.objects.create(post=five_posts[1], user=add_user('other', 'other@email.com', 'pass'))
+
+    resp = thread_page(client, thread)
+
+    assert resp.context['voted'] == {five_posts[0].pk}
+    content = resp.content.decode()
+    assert content.count('You upvoted') == 1
+    assert reverse('post_upvote', args=[thread.pk, five_posts[0].pk]) not in content
+    assert reverse('post_upvote', args=[thread.pk, five_posts[1].pk]) in content
+
+
+@pytest.mark.django_db
+def test_thread_page_looks_up_votes_on_its_own_posts_only(client, thread, five_posts, reader):
+    UpVote.objects.create(post=five_posts[4], user=reader)
+
+    assert thread_page(client, thread).context['voted'] == set()
+    assert thread_page(client, thread, 3).context['voted'] == {five_posts[4].pk}
 
 
 @pytest.mark.django_db
@@ -150,9 +174,9 @@ def test_thread_page_uses_three_queries_however_many_posts(
         add_post(text=f'Post {n}', thread=thread, user=user)
 
     # The thread with its forum and author, the number of posts, one page of posts with
-    # authors, and the reader's subscription, after six for the logged-in reader
-    # (session, user, permissions, profile, GitHub account)
-    with django_assert_num_queries(6 + 4):
+    # authors, the reader's subscription and the reader's upvotes on the page, after six
+    # for the logged-in reader (session, user, permissions, profile, GitHub account)
+    with django_assert_num_queries(6 + 5):
         thread_page(client, thread)
 
 
