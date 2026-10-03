@@ -26,17 +26,17 @@
                 <details class="menu">
                     <summary>{{ user.display_name }}</summary>
                     <div class="menu__items">
-                        <div class="menu__who">Logged in as {{ user.email }}</div>
+                        <div class="menu__who">Signed in as {{ user.email }}</div>
                         <a href="{% url 'user_profile_edit' request.user.profile.id %}">Edit profile</a>
                         {% if not user.socialaccount_set.first %}
                             <a href="{% url 'account_change_password' %}">Change password</a>
                         {% endif %}
                         <a href="{% url 'mfa_index' %}">Two-factor authentication</a>
-                        <a href="{% url 'account_logout' %}">Log out</a>
+                        <a href="{% url 'account_logout' %}">Sign out</a>
                     </div>
                 </details>
             {% else %}
-                <a href="{% url 'account_login' %}">Log in</a>
+                <a href="{% url 'account_login' %}">Sign in</a>
                 {% signup_is_open as signup_open %}
                 {% if signup_open %}
                     <a href="{% url 'account_signup' %}">Sign up</a>
@@ -46,7 +46,7 @@
     </div>
 </header>
 
-<main class="wrap site-main">
+<main class="wrap site-main{% block main_class %}{% endblock main_class %}">
     {% if messages %}
         <ul class="notices">
             {% for message in messages %}
@@ -56,6 +56,7 @@
             {% endfor %}
         </ul>
     {% endif %}
+    {% block before_content %}{% endblock before_content %}
     {% block content %}
     {% endblock content %}
 </main>
