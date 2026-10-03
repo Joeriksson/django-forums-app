@@ -30,7 +30,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:16.15
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
@@ -42,7 +42,7 @@ jobs:
           - 5432:5432
 
       redis:
-        image: redis
+        image: redis:8.10-alpine
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -52,9 +52,9 @@ jobs:
           - 6379:6379
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
     - name: Install uv
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
       with:
         python-version: "3.12"
     - name: Install Dependencies
@@ -67,9 +67,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
     - name: Install uv
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
       with:
         python-version: "3.12"
     - name: Check dependencies for known vulnerabilities
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
     - name: Build the production image
       run: docker build -t forums-prod .
     # Postgres set up as in production: docker-compose-prod.yml mounts the same script
@@ -89,7 +89,7 @@ jobs:
         docker network create prod
         docker run -d --name db --network prod \
           -e POSTGRES_PASSWORD=ci-superuser -e POSTGRES_APP_PASSWORD=ci-app \
-          -v "$PWD/docker/postgres:/docker-entrypoint-initdb.d:ro" postgres:16
+          -v "$PWD/docker/postgres:/docker-entrypoint-initdb.d:ro" postgres:16.15
     # Fake values only: the checks need no Redis or real secrets
     - name: Start the image with production settings
       run: >-
