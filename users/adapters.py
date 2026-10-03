@@ -7,6 +7,11 @@ from django.core.exceptions import ValidationError
 from .encryption import decrypt_secret, encrypt_secret
 from .models import Invitation
 
+def user_display(user):
+    """How allauth names a user (ACCOUNT_USER_DISPLAY): never the username."""
+    return user.display_name
+
+
 # allauth also calls clean_email for e.g. password resets; only these pages sign up
 SIGNUP_URL_NAMES = {'account_signup', 'socialaccount_signup'}
 

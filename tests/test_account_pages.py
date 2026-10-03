@@ -58,3 +58,21 @@ def test_failed_logins_are_limited_per_forwarded_address(client, settings):
 
     assert too_many in blocked.content.decode()
     assert too_many not in other_visitor.content.decode()
+
+
+@pytest.mark.django_db
+def test_allauth_names_the_member_not_the_username(client, django_user_model, verify_email):
+    # allauth derives the username from the address: anna.berg@... becomes anna.berg
+    user = django_user_model.objects.create_user(
+        username='anna.berg', email='anna@example.com', password='testpass123'
+    )
+    verify_email(user)
+
+    resp = client.post(
+        reverse('account_login'),
+        {'login': 'anna@example.com', 'password': 'testpass123'},
+        follow=True,
+    )
+
+    messages = [str(message) for message in resp.context['messages']]
+    assert messages == [f'Successfully signed in as {user.display_name}.']

@@ -271,6 +271,9 @@ ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
 ACCOUNT_UNIQUE_EMAIL = True
+# allauth's pages and messages name the user by display_name: by default it shows the
+# username, which allauth derives from the email address
+ACCOUNT_USER_DISPLAY = 'users.adapters.user_display'
 # Nobody logs in before clicking the link mailed to their address. Checked at every
 # login, so an account made without signup (createsuperuser, the admin) confirms at
 # its first one. Invitation and GitHub signups arrive verified.
