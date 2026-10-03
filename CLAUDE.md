@@ -35,7 +35,7 @@ The image runs as the unprivileged user `app` (uid 1000); the code and the venv 
 
 gunicorn's settings are in `gunicorn.conf.py` (address, 2 workers with 4 threads each; `WEB_CONCURRENCY` changes the worker count; its control socket is off, since it would be a file in `/code`). The compose command is just `gunicorn project.wsgi`: flags on the command line would win over the file.
 
-uv is pinned to an exact version (`COPY --from=ghcr.io/astral-sh/uv:<version>` in the `Dockerfile`). `make audit` doesn't cover it, so bump it when upgrading dependencies, and check uv's release notes for security fixes.
+uv is pinned to an exact version (`COPY --from=ghcr.io/astral-sh/uv:<version>` in the `Dockerfile`). `make audit` doesn't cover it, so bump it when upgrading dependencies, and check uv's release notes for security fixes. The same goes for the other images, pinned to patch versions (`python:3.12.15-slim` in the `Dockerfile`; `postgres:16.15` and `redis:8.10-alpine` in both compose files and in CI, kept equal), and for the GitHub Actions, pinned to commit SHAs with the version in a comment (`.github/workflows/django.yml`; find a tag's commit with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`, and for an annotated tag follow it to its commit). No Dependabot: bump them by hand.
 
 ## Running Tests
 
@@ -347,6 +347,19 @@ The **security log** is the `security` logger: one line per event, `event key=va
 - **django-debug-toolbar** — in the dev dependency group, loaded only by `development.py`; the production image doesn't install it
 - **uv** — package/project manager (replaces pip/pipenv)
 - **pytest + pytest-django + pytest-xdist** — parallel test runner
+
+### Files kept from other projects
+
+`make audit` checks only `uv.lock`. These files are copies in the repo: watch their projects' security notes and replace them by hand, checking the npm package's integrity hash where there is one.
+
+| File | Version | Source | Licence |
+|---|---|---|---|
+| `static/js/highlight.min.js` | 11.11.2 | highlight.js | BSD-3-Clause |
+| `static/js/easymde.min.js`, `static/css/easymde.min.css` | 2.21.0 | npm `easymde` (upgrade steps above) | MIT |
+| `static/fonts/literata*.woff2` | 3.103 | Literata variable fonts, Latin subset made with fontTools | OFL 1.1 |
+| `static/fonts/schibsted-grotesk.woff2` | 1.1 | Schibsted Grotesk variable font, Latin subset made with fontTools | OFL 1.1 |
+| `static/icons/*.svg` except `github.svg` | 1.51.0 | npm `lucide-static` | ISC |
+| `static/icons/github.svg` | 19.38.0 | npm `@primer/octicons` (`mark-github-16.svg`) | MIT |
 
 ## CI/CD
 
