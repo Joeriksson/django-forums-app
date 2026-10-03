@@ -200,7 +200,7 @@ def test_forum_page_query_count_does_not_grow_with_threads(
         user = add_user(f'user{number}', f'user{number}@example.com', 'x')
         replied(add_thread(f'Thread {number}', 'Text', forum, user), user, 1)
 
-    # The forum, the number of threads, one page of threads with authors and counts, and
-    # the members who replied last, after six for the logged-in reader
-    with django_assert_num_queries(6 + 4):
+    # The forum, its announcements, the number of threads, one page of threads with
+    # authors and counts, and the members who replied last, after six for the reader
+    with django_assert_num_queries(6 + 5):
         assertContains(client.get(reverse('forum_detail', args=[forum.pk])), 'Thread 2')

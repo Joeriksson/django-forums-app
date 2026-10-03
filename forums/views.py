@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import (
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.forms import modelform_factory
 from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
@@ -48,15 +49,20 @@ class ForumDetail(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # One page of threads, with each author, profile and reply count in the same query
-        threads = (
-            with_activity(Thread.objects.filter(forum=self.object).select_related('user__profile'))
-            # Django skips Meta.ordering on GROUP BY queries, so order explicitly
-            .order_by('-added', '-id')
+        # Threads with each author, profile and reply count in the same query
+        threads = with_activity(
+            Thread.objects.filter(forum=self.object).select_related('user__profile')
         )
+        # Announcements on every page, above the threads and outside their pages.
+        # Django skips Meta.ordering on GROUP BY queries, so order explicitly.
+        announcements = list(threads.filter(announcement=True).order_by('-added', '-id'))
+        regular = threads.filter(announcement=False).order_by('-added', '-id')
         # get_page() shows the first or last page for a page number that doesn't exist
-        page = Paginator(threads, self.paginate_by).get_page(self.request.GET.get('page'))
-        page.object_list = add_last_repliers(page.object_list)
+        page = Paginator(regular, self.paginate_by).get_page(self.request.GET.get('page'))
+        page.object_list = list(page.object_list)
+        # One query for the last repliers of both lists
+        add_last_repliers(announcements + page.object_list)
+        context['announcements'] = announcements
         context['threads'] = page
         return context
 
@@ -121,7 +127,17 @@ class ThreadDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class AnnouncementFieldMixin:
+    """The thread form, with the announcement checkbox for moderators only."""
+
+    def get_form_class(self):
+        fields = list(self.fields)
+        if self.request.user.has_perm('forums.change_thread'):
+            fields.append('announcement')
+        return modelform_factory(self.model, fields=fields)
+
+
+class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, AnnouncementFieldMixin, UpdateView):
     model = Thread
     fields = ('title', 'text')
     template_name_suffix = '_update_form'
@@ -156,7 +172,9 @@ class PostingLimitMixin:
         return super().form_valid(form)
 
 
-class ThreadCreate(LoginRequiredMixin, PostingLimitMixin, SuccessMessageMixin, CreateView):
+class ThreadCreate(
+    LoginRequiredMixin, PostingLimitMixin, AnnouncementFieldMixin, SuccessMessageMixin, CreateView
+):
     model = Thread
     context_object_name = 'thread'
     fields = ['title', 'text']

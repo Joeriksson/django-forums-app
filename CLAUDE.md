@@ -157,6 +157,10 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 - Fields: `first_name`, `last_name`, `bio`, `location`, `gender` (TextChoices), `web_site`, `github_url`, `signature` (max 500 characters)
 - The `max_length` of the text fields and the signature (`MAX_TEXT_LENGTH`, `MAX_SIGNATURE_LENGTH` in `forums/models.py`) is checked by the forms and the API, not by the database; the editor preview refuses longer text too
 
+### Announcements
+- `Thread.announcement` (BooleanField): kept at the top of its forum page, in its own list on every page and outside the pagination; the thread page's label says *Announcement*. Per forum, no limit
+- Set by anyone with `forums.change_thread` (moderators, superusers): a checkbox on the new and edit thread forms (`AnnouncementFieldMixin` in `forums/views.py`), shown to them only, so an author's edit keeps a moderator's mark. A moderator marking someone else's thread is logged as moderation. The API shows the field to all and refuses a change by anyone else (`ThreadSerializer.validate_announcement`). Tests: `tests/forums/test_announcements.py`
+
 ### UpVote
 - `post` (ForeignKey → Post)
 - `user` (ForeignKey → AUTH_USER_MODEL)
