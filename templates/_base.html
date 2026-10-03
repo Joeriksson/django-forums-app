@@ -7,9 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block stylesheets %}
         <link rel="stylesheet" href="{% static 'css/base.css' %}">
-        <link rel="stylesheet" href="{% static 'css/bootstrap-social.css' %}">
-        <link rel="stylesheet" href="{% static 'css/brands.css' %}">
-        <link rel="stylesheet" href="{% static 'css/fontawesome-svg.css' %}">
     {% endblock stylesheets %}
 </head>
 
@@ -63,8 +60,6 @@
 
 {% block javascripts %}
     <script defer src="{% static 'js/menu.js' %}"></script>
-    {# Font Awesome would add its styles as an inline <style>; they are in css/fontawesome-svg.css #}
-    <script defer src="{% static 'js/all.js' %}" data-auto-add-css="false"></script>
 {% endblock %}
 </body>
 </html>
