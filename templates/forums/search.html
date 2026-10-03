@@ -1,0 +1,71 @@
+{% extends '_base.html' %}
+{% load markdown when %}
+
+{% block title %}Search{% endblock title %}
+
+{% block content %}
+    <div class="page-head">
+        <h1>Search</h1>
+    </div>
+
+    <form class="search-form" method="get" role="search">
+        {{ form.non_field_errors }}
+        <div class="search-form__words">
+            {{ form.q.label_tag }}
+            <div class="search__row">
+                {{ form.q }}
+                <button class="button" type="submit">Search</button>
+            </div>
+            <p class="helptext">{{ form.q.help_text }}</p>
+            {{ form.q.errors }}
+        </div>
+        <div class="search-form__filters">
+            {% for field in form %}
+                {% if field.name != 'q' %}
+                    <div>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </form>
+
+    {% if throttled %}
+        <p class="empty">Too many searches. Wait a minute and try again.</p>
+    {% elif results is not None %}
+        {% if results %}
+            <p class="search-count">{{ page.paginator.count }} result{{ page.paginator.count|pluralize }}</p>
+            {% include 'forums/_pages.html' with request=request page=page label='Pages of results' previous='Previous' next='Next' only %}
+            <div class="panel">
+                <ul class="rows">
+                    {% for result in results %}
+                        <li class="row result">
+                            {% if result.thread_id %}
+                                <p class="result__kind">Reply #{{ result.number }} in</p>
+                                <a class="row__title" href="{% url 'thread_detail' result.thread_id %}?page={{ result.thread_page }}#post-{{ result.id }}">{{ result.thread.title }}</a>
+                                <p class="row__text">{{ result.text|truncatechars:400|render_markdown|striptags|truncatechars:160 }}</p>
+                                <p class="row__meta">
+                                    {% include 'forums/_person.html' with person=result.user %}
+                                    <span>in <a href="{% url 'forum_detail' result.thread.forum_id %}">{{ result.thread.forum.title }}</a>, {{ result.added|when }}</span>
+                                </p>
+                            {% else %}
+                                <p class="result__kind">{% if result.announcement %}Announcement{% else %}Thread{% endif %}</p>
+                                <a class="row__title" href="{% url 'thread_detail' result.id %}">{{ result.title }}</a>
+                                <p class="row__text">{{ result.text|truncatechars:400|render_markdown|striptags|truncatechars:160 }}</p>
+                                <p class="row__meta">
+                                    {% include 'forums/_person.html' with person=result.user %}
+                                    <span>in <a href="{% url 'forum_detail' result.forum_id %}">{{ result.forum.title }}</a>, {{ result.added|when }}</span>
+                                </p>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% include 'forums/_pages.html' with request=request page=page label='Pages of results' previous='Previous' next='Next' only %}
+        {% else %}
+            <p class="empty">Nothing found. Try other words, or fewer filters.</p>
+        {% endif %}
+    {% endif %}
+{% endblock content %}

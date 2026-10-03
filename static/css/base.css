@@ -239,6 +239,7 @@ input[type='password'],
 input[type='url'],
 input[type='search'],
 input[type='number'],
+input[type='date'],
 select,
 textarea {
     width: 100%;
@@ -915,6 +916,43 @@ textarea {
 .search__row input {
     flex: 1;
     min-width: 0;
+}
+
+/* The search page: the words, then the filters in a grid that wraps */
+.search-form {
+    margin: var(--space-4) 0 var(--space-5);
+}
+
+.search-form__words .helptext {
+    margin: var(--space-1) 0 0;
+}
+
+.search-form__filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: var(--space-3);
+    max-width: var(--measure);
+    margin-top: var(--space-4);
+}
+
+.search-form__filters label {
+    font-size: var(--size-small);
+}
+
+.search-count {
+    margin: 0;
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+/* What a result is: a thread, an announcement, or a reply and its number */
+.result__kind {
+    margin: 0 0 var(--space-1);
+    color: var(--quiet);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 /* Newer and older pages of a list */
