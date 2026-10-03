@@ -115,7 +115,7 @@ users/             # Custom user model (email-based auth)
   audit.py         # Security log: log_event, signal receivers, refused-request middleware
   tasks.py         # Celery task send_welcome_email_task
 
-pages/             # Static pages (home, etc.)
+pages/             # Home (visitors: a way in; members: the forum list) and the latest conversations
 api/               # Django REST Framework API (mounted only with DJANGO_API_ENABLED)
   views.py         # ModelViewSet for Forum, Thread, Post, User
   serializers.py   # No nested lists: Forum has thread_count, Thread has post_count
@@ -186,9 +186,10 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ## URL Structure
 
 ```
-/                          → pages (home: for a visitor the name and a login link, for a member the 15 threads with the latest activity)
+/                          → HomePageView (for a visitor the name and a login link; for a member the forum list, ForumsList)
+/latest/                   → LatestView (the 15 threads with the latest activity; login required)
 # Everything under /forums/ needs a login
-/forums/                   → ForumsList
+/forums/                   → redirect to / (the forum list's old address)
 /forums/<pk>/              → ForumDetail (20 threads per page, newest first; ?page=<n>)
 /forums/add/               → ForumCreate (requires forums.add_forum permission)
 /forums/<pk>/update/       → ForumUpdate (requires forums.change_forum permission)
@@ -226,7 +227,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
 
 ## Authentication & Permissions
 
-- **Reading needs a login**: the forum is for its members. The forum list, forum, thread and search pages have `LoginRequiredMixin` and send visitors to the login page (which leads back afterwards); only the home page and the account pages are open. In the API everything needs a login (`IsAuthenticated` is the default permission in `REST_FRAMEWORK`, the API root and the schema included); visitors get 403. A new view that shows forum content needs the mixin too. Tests: `tests/forums/test_login_required.py`; other tests read as the `reader` fixture (`tests/forums/conftest.py`) or with `reader_client()` (`tests/forums/clients.py`). A logged-in page costs six queries before its own (session, user, two for permissions, profile, GitHub account)
+- **Reading needs a login**: the forum is for its members. The forum, thread, latest and search pages have `LoginRequiredMixin` (the forum list is the members' home page) and send visitors to the login page (which leads back afterwards); only the home page and the account pages are open. In the API everything needs a login (`IsAuthenticated` is the default permission in `REST_FRAMEWORK`, the API root and the schema included); visitors get 403. A new view that shows forum content needs the mixin too. Tests: `tests/forums/test_login_required.py`; other tests read as the `reader` fixture (`tests/forums/conftest.py`) or with `reader_client()` (`tests/forums/clients.py`). A logged-in page costs six queries before its own (session, user, two for permissions, profile, GitHub account)
 
 - `django-allauth` handles auth with email-only login (no username required)
 - **Email addresses must be confirmed** (`ACCOUNT_EMAIL_VERIFICATION = 'mandatory'` in `base.py`, every environment): signup mails a link and logs nobody in before it is used. allauth checks at every login, so an account made without signup (`createsuperuser`, the admin) gets the mail at its first login; in development the link is printed to the console. Invitation and GitHub signups arrive verified. Tests that log in through the login form need the `verify_email` fixture (root `conftest.py`); `force_login` and API tokens don't
@@ -357,7 +358,7 @@ The pages use hand-written CSS: no Bootstrap, no jQuery, no icon font, nothing f
 
 - **`static/css/base.css`** is the site's stylesheet: colour and type tokens as CSS custom properties (`--ground`, `--surface`, `--ink`, `--quiet`, `--rule`, `--spruce`, `--lichen`, `--danger`), a dark palette under `prefers-color-scheme: dark` (no toggle), element defaults, the header and the user menu. Use the tokens, never a literal colour, so both palettes keep working
 - **Typefaces** are files in `static/fonts/` (SIL Open Font License, licence texts next to them): Literata (`--serif`) for titles and post text, Schibsted Grotesk (`--sans`) for the interface. They are Latin subsets with a weight range of 400 to 700, made from the upstream variable fonts with fontTools; `make audit` doesn't cover them
-- **Layout**: `_base.html` has the header (`.site-header`), the user menu and `<main class="wrap site-main">`. The menu is a `<details class="menu">`, so it works without JavaScript; `static/js/menu.js` only closes it on a click elsewhere or Escape
+- **Layout**: `_base.html` has the header (`.site-header`) with the menu (*Forums*, *Latest*; the current section has `aria-current="page"`, set from `SECTIONS` by URL name in `forums/templatetags/nav.py`: a new page or menu item goes there; `tests/test_navigation.py`), the user menu and `<main class="wrap site-main">`. The menu is a `<details class="menu">`, so it works without JavaScript; `static/js/menu.js` only closes it on a click elsewhere or Escape
 - **Lists** of forums and threads are `<ul class="rows">` with `.row` items inside one `.panel` per list, whose `.panel__head` row names the columns (`templates/forums/_thread_head.html` for thread lists; hidden on a phone). Forum rows (`.forum-row`, in `forum_list.html`) list two threads under the description, announcements first, then the most active, in a *Latest* box on the page's ground (`.forum-row__recent`), with the counts on the right. Thread rows (`.thread-row`, `templates/forums/_thread_row.html`; `show_forum` and `show_actions` are optional) put the replies and the last reply in columns, which fold into lines under the title on a phone (`.row-label` names them there). The data comes from `forums/activity.py`: `with_activity()` and `add_last_repliers()` for threads, `with_counts()` and `add_top_threads()` (a window function) for forums; each adds a fixed number of queries (`tests/forums/test_directory.py`). Page links are `templates/forums/_pages.html`, above and below the list. A member is shown with `templates/forums/_person.html`: a monogram disc (`user.monogram`: initials or the member number; `user.monogram_tone`: one of six colours, by id) and the display name
 - **Where am I**: every forum page below the forum list starts with `templates/forums/_trail.html` (Forums › forum › thread; include it with `only`), and the forum and thread pages have a `.kicker` label (Forum, Thread) above the title (`tests/forums/test_trail.py`)
 - **Thread page**: each post is a panel (`.post`, `static/css/thread.css`) headed by its author, time and number: the opening post is #1 (`.post--opening`, anchor `#opening`), replies are numbered on across pages (the first reply on page 2 is #27), each number links to `?page=<n>#post-<id>`. Reply and Subscribe (`templates/forums/_thread_actions.html`) and the page links come at both ends; signatures are `templates/forums/_signature.html` (`tests/forums/test_post_panels.py`)
