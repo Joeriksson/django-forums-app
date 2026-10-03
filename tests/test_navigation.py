@@ -1,4 +1,4 @@
-"""The header's menu: Forums and Latest for members, the current section marked."""
+"""The header's menu: Forums, Latest and Search for members, the current section marked."""
 
 import re
 
@@ -39,6 +39,7 @@ def test_members_have_forums_and_latest(client, member):
 
     assert re.search(rf'href="{reverse("home")}"[^>]*>Forums</a>', menu)
     assert re.search(rf'href="{reverse("latest")}"[^>]*>Latest</a>', menu)
+    assert re.search(rf'href="{reverse("search_results")}"[^>]*>Search</a>', menu)
 
 
 @pytest.mark.django_db
@@ -49,6 +50,7 @@ def test_members_have_forums_and_latest(client, member):
         (lambda thread: reverse('forum_detail', args=[thread.forum_id]), 'Forums'),
         (lambda thread: reverse('thread_detail', args=[thread.pk]), 'Forums'),
         (lambda thread: reverse('latest'), 'Latest'),
+        (lambda thread: reverse('search_results'), 'Search'),
     ],
 )
 def test_menu_marks_the_current_section(client, member, thread, url, section):
