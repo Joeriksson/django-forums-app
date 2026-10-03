@@ -20,6 +20,7 @@
                 {% nav_section as section %}
                 <a href="{% url 'home' %}"{% if section == 'forums' %} aria-current="page"{% endif %}>Forums</a>
                 <a href="{% url 'latest' %}"{% if section == 'latest' %} aria-current="page"{% endif %}>Latest</a>
+                <a href="{% url 'search_results' %}"{% if section == 'search' %} aria-current="page"{% endif %}>Search</a>
                 {% if user.is_staff %}
                     <a href="{% url 'admin:index' %}">Admin</a>
                 {% endif %}
