@@ -3,9 +3,12 @@
 {% block title %}{{ forum.title }}{% endblock title %}
 
 {% block content %}
-    <p class="trail"><a href="{% url 'forum_list' %}">Forums</a></p>
+    {% include 'forums/_trail.html' only %}
     <div class="page-head">
-        <h1>{{ forum.title }}</h1>
+        <div>
+            <p class="kicker">Forum</p>
+            <h1>{{ forum.title }}</h1>
+        </div>
         <a class="button" href="{% url 'thread_add' forum.id %}">New thread</a>
     </div>
     <p class="lead">{{ forum.description }}</p>
