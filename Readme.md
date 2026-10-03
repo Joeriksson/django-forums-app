@@ -1,106 +1,79 @@
 ![django test workflow](https://github.com/joeriksson/django-forums-app/actions/workflows/django.yml/badge.svg)
 
-# Django Forums
+# Wildvasa Forums App
 
-A sample forums app built on the Django framework. I built this app to learn Django more, and I wanted to learn how to do a parent/child database model to also learn that aspect of Django. It can also be seen as an example app to see how the features listed below could be implemented in Django.
+A private discussion forum built with Django. Members read and write in forums, threads and replies; new members join by invitation, or by signing up while signup is open.
 
-> [!NOTE]
-> I am currently continuing to build this forum app with Claude AI.
+## Features
 
-Includes:
-
-- forums, threads and posts (reply in threads)
-- subscribe to threads and get email notifications
-- custom user model (email instead of username)
-- optionally login via github account
-- user profile in a separate model from user
-- e-mail verification
-- django debug toolbar (only in development)
-- docker files for spinning up containers (python and postgresql)
-- basic tests for pages, users and forums
-- different settings files for development and production
-- hand-written CSS with light and dark colours, self-hosted fonts, no CDN
-- api via Django REST Framework
-- caching with Redis
-- e-mail task queue with Celery
+- **Forums and threads**: Markdown replies with an editor and preview, announcements, upvotes, recent activity, full-text search with filters, email notifications for subscribed threads
+- **Members**: sign in with email or GitHub, invitations, confirmed email addresses, optional two-factor authentication (required for staff and moderators), profile names shown instead of usernames
+- **Moderation**: a Moderators group that can edit and delete others' threads and posts, and a security log
+- **Site**: hand-written CSS with light and dark palettes, self-hosted fonts, a strict Content Security Policy, nothing loaded from a CDN, an optional REST API
 
 ## Tech stack
 
-- **Python** 3.12
-- **Django** 5.2 (LTS)
-- **PostgreSQL** 16
-- **Redis** (caching and Celery broker)
-- **Celery** (async task queue)
-- **uv** (dependency management)
-- **Docker** / **Docker Compose** (containerised development and production)
+Python 3.12 · Django 5.2 · PostgreSQL 16 · Redis 8 · Celery · uv · Docker Compose
 
-## Production and development settings
+## Development setup
 
-The settings files are split into production and development. The project also has one `docker-compose-dev.yml` for development and one `docker-compose-prod.yml` for production. To make it easier and less to type for each command, there is a Makefile with the most common operations.
+You need Docker with Compose and `make`. [uv](https://github.com/astral-sh/uv) on the host is optional: `make audit` and your editor use it.
 
-## Quick start
+1. Clone the repository and create your `.env` (its comments explain every variable; set `SECRET_KEY`):
 
-1. Clone this repository
+   ```bash
+   git clone https://github.com/Joeriksson/django-forums-app.git
+   cd django-forums-app
+   cp .env.example .env
+   ```
 
-```
-git clone https://github.com/Joeriksson/django-forums-app.git
-```
+2. Build and start the containers, then set up the database and an admin account:
 
-2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop) to be able to use the docker environment.
+   ```bash
+   make dev_build
+   make dev_web_exec cmd='python manage.py migrate'
+   make dev_web_exec cmd='python manage.py createsuperuser'
+   ```
 
-3. Copy `.env.example` to `.env` in the root folder and set `SECRET_KEY`. The comments in the file explain every variable:
+3. Open http://127.0.0.1:8000 and sign in. The first login asks you to confirm your email address: development prints mail to the console, so find the link with `make dev_logs`. The admin is at `/nimda/` by default; pick your own path with `ADMIN_URL` in `.env` (recommended, at least in production).
 
-```
-cp .env.example .env
-```
+Development differs from production: signup is open, staff don't need two-factor authentication, and the API is on. To try the site with signup closed, set `DJANGO_SIGNUP_OPEN=false` in `.env` and restart with `make dev_down` and `make dev`.
 
-4. In the directory where you cloned the repository, build and start the containers:
+GitHub login is optional: add a *Social application* for GitHub in the admin.
 
-```
-make dev_build
-```
+The containers write files (such as migrations) into the repository as uid 1000. If your user has another uid, add `user:` to the services in `docker-compose-dev.yml`.
 
-5. The containers should now be up and running. Check in your browser that you see a start page at `http://127.0.0.1:8000`
+## Everyday commands
 
-6. Run the database migrations:
+| Command | What it does |
+|---|---|
+| `make dev` / `make dev_down` | Start / stop the containers |
+| `make dev_logs` | Show the logs (and mail sent in development) |
+| `make dev_web_exec cmd='...'` | Run a command in the web container |
+| `make dev_pytest` | Run the tests |
+| `make audit` | Check the locked dependencies for known vulnerabilities |
 
-```
-make dev_web_exec cmd='python manage.py migrate'
-```
+## Tests
 
-7. Create a Django superuser to log in to the admin:
+`make dev_pytest` runs the suite in parallel with pytest. CI runs it on every push and pull request, together with the audit and a check of the production image.
 
-```
-make dev_web_exec cmd='python manage.py createsuperuser'
-```
+## Dependencies
 
-8. Go to the admin pages (see `urls.py`) and log in with the superuser account you just created.
-
-To stop the containers:
-
-```
-make dev_down
-```
-
-## Running tests
-
-Two test suites are available. Run them inside the Docker containers:
-
-```bash
-make dev_pytest      # pytest (tests/ directory)
-make dev_test        # Django test runner (parallel)
-```
-
-## Dependency management
-
-Dependencies are managed with [uv](https://github.com/astral-sh/uv). The `pyproject.toml` file defines all direct dependencies and the `uv.lock` file pins the full dependency tree.
-
-Common commands:
+Dependencies are managed with uv: `pyproject.toml` lists them and `uv.lock` pins the full tree.
 
 ```bash
 uv add <package>        # Add a runtime dependency
 uv add --dev <package>  # Add a development dependency
 uv remove <package>     # Remove a dependency
-uv sync                 # Install all dependencies from uv.lock
-uv lock                 # Regenerate uv.lock after manual edits to pyproject.toml
+uv sync                 # Install everything from uv.lock
 ```
+
+Some front-end files are copies from other projects and not covered by `make audit`; `CLAUDE.md` lists them with their versions.
+
+## Deployment
+
+Production runs `docker-compose-prod.yml` on a VPS behind a reverse proxy (Caddy) that handles HTTPS. See [docs/deployment-vps.md](docs/deployment-vps.md) for the proxy, the `.env` checklist, the first deploy, updates, backups and troubleshooting.
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).
