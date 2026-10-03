@@ -1,7 +1,149 @@
-/* The Markdown editor (EasyMDE), see templates/forums/_editor.html */
+/* The Markdown editor (EasyMDE), see templates/forums/_editor.html and js/editor.js */
 
-/* The table button has the class "table", which Bootstrap styles as a full-width table */
+/* The editor's colours from the site's tokens, so it follows light and dark */
+
+.EasyMDEContainer .CodeMirror {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--quiet);
+    border-radius: 0 0 var(--radius) var(--radius);
+    font-family: var(--mono);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+
+.EasyMDEContainer .CodeMirror-cursor {
+    border-left-color: var(--ink);
+}
+
+.EasyMDEContainer .CodeMirror-selected,
+.EasyMDEContainer .CodeMirror-focused .CodeMirror-selected,
+.EasyMDEContainer .CodeMirror-line::selection,
+.EasyMDEContainer .CodeMirror-line > span::selection,
+.EasyMDEContainer .CodeMirror-line > span > span::selection {
+    background: var(--lichen-wash);
+}
+
+.EasyMDEContainer .CodeMirror-placeholder {
+    color: var(--quiet);
+}
+
+/* Markdown as it is typed: marks quiet, headers and links in the accent */
+
+.EasyMDEContainer .cm-formatting,
+.EasyMDEContainer .cm-url,
+.EasyMDEContainer .cm-comment,
+.EasyMDEContainer .cm-quote {
+    color: var(--quiet);
+}
+
+.EasyMDEContainer .cm-header,
+.EasyMDEContainer .cm-link {
+    color: var(--spruce);
+}
+
+.EasyMDEContainer .cm-comment {
+    background: transparent;
+}
+
+/* The toolbar */
+
+.editor-toolbar {
+    background: var(--ground);
+    border-color: var(--quiet);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: var(--space-1) var(--space-2);
+}
+
+.editor-toolbar button {
+    color: var(--ink);
+    border-color: transparent;
+}
+
+.editor-toolbar button.active,
+.editor-toolbar button:hover {
+    background: var(--surface);
+    border-color: var(--rule);
+}
+
+.editor-toolbar i.separator {
+    border-left-color: var(--rule);
+    border-right-color: transparent;
+}
+
+/* At phone width the separators go and the buttons narrow, so the toolbar fits on one line */
+@media (max-width: 30rem) {
+    .editor-toolbar {
+        padding-inline: var(--space-1);
+    }
+
+    .editor-toolbar i.separator {
+        display: none;
+    }
+
+    .editor-toolbar button {
+        width: 28px;
+    }
+}
+
+/* Each button's icon (Lucide, static/icons), drawn in the text colour */
+
+.editor-toolbar button.icon::before {
+    content: '';
+    display: inline-block;
+    width: 1.125rem;
+    height: 1.125rem;
+    vertical-align: middle;
+    background: currentColor;
+    mask: var(--icon) center / contain no-repeat;
+}
+
+.editor-toolbar button.bold { --icon: url('../icons/bold.svg'); }
+.editor-toolbar button.italic { --icon: url('../icons/italic.svg'); }
+.editor-toolbar button.strikethrough { --icon: url('../icons/strikethrough.svg'); }
+.editor-toolbar button.heading { --icon: url('../icons/heading.svg'); }
+.editor-toolbar button.quote { --icon: url('../icons/quote.svg'); }
+.editor-toolbar button.code { --icon: url('../icons/code.svg'); }
+.editor-toolbar button.unordered-list { --icon: url('../icons/list.svg'); }
+.editor-toolbar button.ordered-list { --icon: url('../icons/list-ordered.svg'); }
+.editor-toolbar button.link { --icon: url('../icons/link.svg'); }
+.editor-toolbar button.table { --icon: url('../icons/table.svg'); }
+.editor-toolbar button.preview { --icon: url('../icons/eye.svg'); }
+
+/* The table button has the class "table", which Bootstrap styled as a full-width table;
+   goes with the Bootstrap leftovers */
 .editor-toolbar button.table {
     width: auto;
     margin-bottom: 0;
+}
+
+/* The preview: the text as the thread page shows it */
+
+.EasyMDEContainer .editor-preview {
+    background: var(--surface);
+    color: var(--ink);
+    padding: var(--space-3);
+    font-family: var(--serif);
+    font-size: var(--size-reading);
+    line-height: 1.65;
+}
+
+.EasyMDEContainer .editor-preview > :last-child {
+    margin-bottom: 0;
+}
+
+.EasyMDEContainer .editor-preview blockquote {
+    margin-left: 0;
+    padding-left: var(--space-3);
+    border-left: 3px solid var(--rule);
+    color: var(--quiet);
+    font-style: italic;
+}
+
+.EasyMDEContainer .editor-preview pre {
+    padding: var(--space-3);
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
 }

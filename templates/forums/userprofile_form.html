@@ -1,21 +1,20 @@
 {% extends '_base.html' %}
-{% load crispy_forms_tags %}
 
-{% block title %}Edit Profile{% endblock title %}
+{% block title %}Your profile{% endblock title %}
 
 {% block content %}
-    <h2>Edit Profile</h2>
-    <form method="post">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm">
-                    <button class="btn btn-success float-right" type="submit">Save Profile</button>
-                </div>
-            </div>
-        </div>
-
+    <div class="page-head">
+        <h1>Your profile</h1>
+    </div>
+    <p class="lead">
+        Others see your first and last name next to what you write{% if not user.has_profile_name %}; without them you are shown as {{ user.display_name }}{% endif %}.
+    </p>
+    <form class="form" method="post">
         {% csrf_token %}
-        {{ form|crispy }}
-
+        {{ form }}
+        <div class="form__actions">
+            <button class="button" type="submit">Save profile</button>
+            <a class="button button--quiet" href="{% url 'home' %}">Cancel</a>
+        </div>
     </form>
 {% endblock content %}

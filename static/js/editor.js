@@ -39,6 +39,12 @@
     // hidden field: the form would silently refuse to submit. The server still checks it.
     textarea.required = false;
 
+    // EasyMDE's own buttons are Font Awesome icons. Ours get the class "icon" instead, and
+    // editor.css draws each one from static/icons by the button's name.
+    function button(name, action, title, noDisable) {
+        return {name: name, action: action, title: title, className: 'icon', noDisable: noDisable};
+    }
+
     new EasyMDE({
         element: textarea,
         forceSync: true,
@@ -49,10 +55,20 @@
         status: false,
         previewRender: renderPreview,
         toolbar: [
-            'bold', 'italic', 'strikethrough', 'heading', '|',
-            'quote', 'code', 'unordered-list', 'ordered-list', '|',
-            'link', 'table', '|',
-            'preview'
+            button('bold', EasyMDE.toggleBold, 'Bold'),
+            button('italic', EasyMDE.toggleItalic, 'Italic'),
+            button('strikethrough', EasyMDE.toggleStrikethrough, 'Strikethrough'),
+            button('heading', EasyMDE.toggleHeadingSmaller, 'Heading'),
+            '|',
+            button('quote', EasyMDE.toggleBlockquote, 'Quote'),
+            button('code', EasyMDE.toggleCodeBlock, 'Code'),
+            button('unordered-list', EasyMDE.toggleUnorderedList, 'Bulleted list'),
+            button('ordered-list', EasyMDE.toggleOrderedList, 'Numbered list'),
+            '|',
+            button('link', EasyMDE.drawLink, 'Link'),
+            button('table', EasyMDE.drawTable, 'Table'),
+            '|',
+            button('preview', EasyMDE.togglePreview, 'Preview', true)
         ]
     });
 
