@@ -110,7 +110,7 @@ Then:
 1. **Check email:** `docker compose -f docker-compose-prod.yml exec web python manage.py sendtestemail you@example.com`
 2. **Confirm the superuser's address.** Nobody logs in before confirming their email address, and `createsuperuser` doesn't confirm it. Log in at `https://forum.example.com/accounts/login/`: instead of logging you in, the site mails a confirmation link. Open it, confirm, and log in again. This is why email has to work first; see [Troubleshooting](#troubleshooting) if the mail doesn't arrive. Then set up two-factor authentication, see [section 8](#8-two-factor-authentication-for-staff-and-moderators).
 3. **Set the site name.** Log in to `https://forum.example.com/<ADMIN_URL>/`, open *Sites*, and change `example.com` to `forum.example.com`. The login emails (password reset, address confirmation) use the site's name. Links in notification and invitation emails use `DJANGO_SITE_URL` instead.
-4. **Optional, GitHub login:** add a *Social application* for GitHub in the admin. Without one, the login page simply doesn't show the GitHub button.
+4. **Optional, GitHub login:** see [github-login.md](github-login.md). Without it, the login page simply doesn't show the GitHub button.
 
 ## 4. Updating
 

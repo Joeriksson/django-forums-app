@@ -39,7 +39,7 @@ You need Docker with Compose and `make`. [uv](https://github.com/astral-sh/uv) o
 
 Development differs from production: signup is open, staff don't need two-factor authentication, and the API is on. To try the site with signup closed, set `DJANGO_SIGNUP_OPEN=false` in `.env` and restart with `make dev_down` and `make dev`.
 
-GitHub login is optional: add a *Social application* for GitHub in the admin.
+GitHub login is optional; [docs/github-login.md](docs/github-login.md) explains how to set it up.
 
 The containers write files (such as migrations) into the repository as uid 1000. If your user has another uid, add `user:` to the services in `docker-compose-dev.yml`.
 
