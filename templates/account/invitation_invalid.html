@@ -1,9 +1,9 @@
-{% extends '_base.html' %}
+{% extends 'account/base_entrance.html' %}
 
-{% block title %}Invitation Not Valid{% endblock %}
+{% block head_title %}Invitation not valid{% endblock head_title %}
 
 {% block content %}
-<h1>Invitation Not Valid</h1>
-<p>This invitation link doesn't work: it has expired or has already been used. Ask the person who invited you for a new one.</p>
-<p>If you already have an account, <a href="{% url 'account_login' %}">log in</a>.</p>
+    <h1>Invitation not valid</h1>
+    <p>This invitation link doesn't work: it has expired or has already been used. Ask the person who invited you for a new one.</p>
+    <p>If you already have an account, <a href="{% url 'account_login' %}">sign in</a>.</p>
 {% endblock content %}
