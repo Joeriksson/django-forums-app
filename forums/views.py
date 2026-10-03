@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import (
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import Count, F, Max, Q
+from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
@@ -20,6 +20,7 @@ from django.views.generic import (
     FormView,
 )
 
+from .activity import add_last_repliers, add_latest_threads, with_activity, with_counts_and_latest
 from .forms import SearchForm
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
@@ -32,7 +33,12 @@ class ForumsList(LoginRequiredMixin, ListView, FormView):
     context_object_name = 'forum_list'
     form_class = SearchForm
     # Django skips Meta.ordering on GROUP BY queries, so order explicitly
-    queryset = Forum.objects.annotate(thread_count=Count('threads')).order_by('title', 'id')
+    queryset = with_counts_and_latest(Forum.objects.all()).order_by('title', 'id')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['forum_list'] = add_latest_threads(context['forum_list'])
+        return context
 
 
 class ForumDetail(LoginRequiredMixin, DetailView):
@@ -42,18 +48,16 @@ class ForumDetail(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # One page of threads, with each author, profile and post count in the same query
+        # One page of threads, with each author, profile and reply count in the same query
         threads = (
-            Thread.objects.filter(forum=self.object)
-            .select_related('user__profile')
-            .annotate(post_count=Count('posts'), last_activity=Max('posts__added'))
+            with_activity(Thread.objects.filter(forum=self.object).select_related('user__profile'))
             # Django skips Meta.ordering on GROUP BY queries, so order explicitly
             .order_by('-added', '-id')
         )
         # get_page() shows the first or last page for a page number that doesn't exist
-        context['threads'] = Paginator(threads, self.paginate_by).get_page(
-            self.request.GET.get('page')
-        )
+        page = Paginator(threads, self.paginate_by).get_page(self.request.GET.get('page'))
+        page.object_list = add_last_repliers(page.object_list)
+        context['threads'] = page
         return context
 
 
