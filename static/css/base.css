@@ -644,23 +644,41 @@ textarea {
     font-size: var(--size-small);
 }
 
-/* A heading over a list, e.g. the announcements above a forum's threads */
-.list-heading {
-    margin: var(--space-4) 0 var(--space-2);
+/* A panel around a list (phpBB-like): a header row naming the columns, then the rows
+   with a rule between them */
+
+.panel {
+    margin: var(--space-4) 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+.panel__head {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule);
     color: var(--quiet);
-    font-family: var(--sans);
-    font-size: var(--size-small);
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
-.list-heading + .rows {
-    margin-top: 0;
+.panel .rows {
+    margin: 0;
+    border-top: 0;
 }
 
-/* Forum and thread rows: the main part, then the counts and the latest activity in columns
-   on the right. On a narrow screen the columns fold into lines under the main part. */
+.panel .row {
+    padding: var(--space-3);
+}
+
+.panel .row:last-child {
+    border-bottom: 0;
+}
+
+/* Forum and thread rows: the main part, then the counts (and for threads the latest
+   reply) in columns on the right. On a narrow screen the columns fold into lines. */
 
 .forum-row,
 .thread-row {
@@ -670,7 +688,7 @@ textarea {
 }
 
 .forum-row {
-    grid-template-columns: minmax(0, 1fr) 6.5rem 13rem;
+    grid-template-columns: minmax(0, 1fr) 9rem;
 }
 
 .thread-row {
@@ -679,7 +697,6 @@ textarea {
 
 .forum-row__counts,
 .thread-row__count,
-.forum-row__latest,
 .thread-row__latest {
     margin: 0;
     color: var(--quiet);
@@ -701,31 +718,84 @@ textarea {
     font-size: var(--size-h2);
 }
 
-.forum-row__latest,
-.thread-row__latest {
-    padding-left: var(--space-3);
-    border-left: 1px solid var(--rule);
+/* A forum's announcements and most active threads, under its description: a box of
+   their own on the page's ground, so they read as threads inside the forum */
+.forum-row__recent {
+    margin: var(--space-3) 0 0;
+    padding: var(--space-2) var(--space-3);
+    background: var(--ground);
+    border-radius: var(--radius);
 }
 
-.forum-row__thread {
-    display: block;
-    overflow: hidden;
+.forum-row__label {
+    margin: 0 0 var(--space-1);
+    color: var(--quiet);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.forum-row__threads {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--sans);
+    font-size: var(--size-small);
+}
+
+.forum-row__threads li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-2);
+    padding: var(--space-1) 0;
+}
+
+.forum-row__threads li + li {
+    border-top: 1px dashed var(--rule);
+}
+
+.forum-row__threads a {
+    min-width: 0;
     color: var(--ink);
     font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.forum-row__threads a:hover {
+    color: var(--spruce);
+    text-decoration: underline;
 }
 
 .forum-row__who,
+.forum-row__empty {
+    color: var(--quiet);
+}
+
+.forum-row__empty {
+    margin: var(--space-2) 0 0;
+    font-size: var(--size-small);
+}
+
+/* A small label, e.g. Announcement */
+.tag {
+    padding: 0 var(--space-2);
+    border-radius: 1rem;
+    background: var(--lichen-wash);
+    color: var(--ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 .thread-row__latest {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-1) var(--space-2);
-}
-
-.forum-row__who {
-    margin: var(--space-1) 0 0;
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--rule);
 }
 
 .thread-row__when {
@@ -743,6 +813,10 @@ textarea {
         font-weight: 600;
     }
 
+    .panel__head {
+        display: none;
+    }
+
     .forum-row,
     .thread-row {
         grid-template-columns: minmax(0, 1fr);
@@ -754,7 +828,6 @@ textarea {
         gap: var(--space-3);
     }
 
-    .forum-row__latest,
     .thread-row__latest {
         padding-left: 0;
         border-left: 0;

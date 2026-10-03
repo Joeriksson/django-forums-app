@@ -14,32 +14,41 @@
     {% include 'forums/_search.html' %}
 
     {% if forum_list %}
-        <ul class="rows">
-            {% for forum in forum_list %}
-                <li class="row forum-row">
-                    <div class="forum-row__main">
-                        <a class="row__title" href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a>
-                        <p class="row__text">{{ forum.description }}</p>
-                    </div>
-                    <p class="forum-row__counts">
-                        <span><strong>{{ forum.thread_count }}</strong> thread{{ forum.thread_count|pluralize }}</span>
-                        <span><strong>{{ forum.reply_count }}</strong> repl{{ forum.reply_count|pluralize:"y,ies" }}</span>
-                    </p>
-                    <div class="forum-row__latest">
-                        {% if forum.latest %}
-                            <span class="row-label">Latest</span>
-                            <a class="forum-row__thread" href="{% url 'thread_detail' forum.latest.id %}?page=last">{{ forum.latest.title }}</a>
-                            <p class="forum-row__who">
-                                {% include 'forums/_person.html' with person=forum.latest.last_replier|default:forum.latest.user %}
-                                <span>{{ forum.latest.last_activity|when }}</span>
-                            </p>
-                        {% else %}
-                            <span class="quiet">No threads yet</span>
-                        {% endif %}
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
+        <div class="panel">
+            <div class="panel__head forum-row" aria-hidden="true">
+                <span>Forum</span>
+                <span>Threads · replies</span>
+            </div>
+            <ul class="rows">
+                {% for forum in forum_list %}
+                    <li class="row forum-row">
+                        <div class="forum-row__main">
+                            <a class="row__title" href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a>
+                            <p class="row__text">{{ forum.description }}</p>
+                            {% if forum.top_threads %}
+                                {# Announcements first, then the threads with the newest activity #}
+                                <div class="forum-row__recent">
+                                    <p class="forum-row__label">Latest</p>
+                                    <ul class="forum-row__threads">
+                                        {% for thread in forum.top_threads %}
+                                            {% with who=thread.last_replier|default:thread.user %}
+                                                <li>{% if thread.announcement %}<span class="tag">Announcement</span>{% endif %}<a href="{% url 'thread_detail' thread.id %}?page=last">{{ thread.title }}</a><span class="forum-row__who">{{ who.display_name }}, {{ thread.last_activity|when }}</span></li>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% else %}
+                                <p class="forum-row__empty">No threads yet</p>
+                            {% endif %}
+                        </div>
+                        <p class="forum-row__counts">
+                            <span><strong>{{ forum.thread_count }}</strong> thread{{ forum.thread_count|pluralize }}</span>
+                            <span><strong>{{ forum.reply_count }}</strong> repl{{ forum.reply_count|pluralize:"y,ies" }}</span>
+                        </p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
     {% else %}
         <p class="empty">There are no forums yet.{% if perms.forums.add_forum %} <a href="{% url 'forum_add' %}">Add the first one</a>.{% endif %}</p>
     {% endif %}
