@@ -6,6 +6,8 @@
     <title>{% block title %}{{ site_settings.title|default:'Wildvasa' }}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+    {% comment %}Before the stylesheets and not deferred: the saved colours apply before the page draws{% endcomment %}
+    <script src="{% static 'js/theme.js' %}"></script>
     {% block stylesheets %}
         <link rel="stylesheet" href="{% static 'css/base.css' %}">
     {% endblock stylesheets %}
@@ -43,6 +45,8 @@
                     <a href="{% url 'account_signup' %}">Sign up</a>
                 {% endif %}
             {% endif %}
+            {% comment %}Light or dark colours; js/theme.js shows it, since it needs JavaScript{% endcomment %}
+            <button class="button button--quiet theme-toggle" type="button" aria-label="Dark colours" aria-pressed="false" hidden></button>
         </nav>
     </div>
 </header>

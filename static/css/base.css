@@ -32,27 +32,29 @@
 /* Tokens */
 
 :root {
+    /* Each colour as light-dark(light, dark): the page's color-scheme picks one. That is
+       the system setting, unless the switch in the header (js/theme.js) set data-theme. */
     color-scheme: light dark;
 
-    --ground: #f1f4f0;
-    --surface: #ffffff;
-    --ink: #16231f;
-    --quiet: #5e6b66;
-    --rule: #d5dbd6;
-    --spruce: #1f5b4c;
-    --spruce-strong: #17463a;
-    --on-spruce: #ffffff;
-    --lichen: #e3b505;
-    --lichen-wash: #fbf3cf;
-    --danger: #a3271f;
+    --ground: light-dark(#f1f4f0, #12201c);
+    --surface: light-dark(#ffffff, #1a2b26);
+    --ink: light-dark(#16231f, #e6ece8);
+    --quiet: light-dark(#5e6b66, #9db0a8);
+    --rule: light-dark(#d5dbd6, #2c423b);
+    --spruce: light-dark(#1f5b4c, #7fc8ae);
+    --spruce-strong: light-dark(#17463a, #a3dcc7);
+    --on-spruce: light-dark(#ffffff, #0e1a17);
+    --lichen: light-dark(#e3b505, #f0c93a);
+    --lichen-wash: light-dark(#fbf3cf, #3a3413);
+    --danger: light-dark(#a3271f, #f08a80);
 
     /* Monogram discs: six quiet tints, one per member (by id) */
-    --tone-1: #cfe3d9;
-    --tone-2: #f3e2a0;
-    --tone-3: #d9d3ec;
-    --tone-4: #f0cfc0;
-    --tone-5: #c9dff0;
-    --tone-6: #dcdcd0;
+    --tone-1: light-dark(#cfe3d9, #2f5a4c);
+    --tone-2: light-dark(#f3e2a0, #6a5a16);
+    --tone-3: light-dark(#d9d3ec, #4a4370);
+    --tone-4: light-dark(#f0cfc0, #6b4334);
+    --tone-5: light-dark(#c9dff0, #2f5270);
+    --tone-6: light-dark(#dcdcd0, #4c4f45);
 
     /* Reading (titles, post text) and interface (everything else) */
     --serif: 'Literata', Georgia, 'Times New Roman', serif;
@@ -78,27 +80,12 @@
     --radius: 6px;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --ground: #12201c;
-        --surface: #1a2b26;
-        --ink: #e6ece8;
-        --quiet: #9db0a8;
-        --rule: #2c423b;
-        --spruce: #7fc8ae;
-        --spruce-strong: #a3dcc7;
-        --on-spruce: #0e1a17;
-        --lichen: #f0c93a;
-        --lichen-wash: #3a3413;
-        --danger: #f08a80;
+:root[data-theme='light'] {
+    color-scheme: light;
+}
 
-        --tone-1: #2f5a4c;
-        --tone-2: #6a5a16;
-        --tone-3: #4a4370;
-        --tone-4: #6b4334;
-        --tone-5: #2f5270;
-        --tone-6: #4c4f45;
-    }
+:root[data-theme='dark'] {
+    color-scheme: dark;
 }
 
 /* Elements */
@@ -437,6 +424,38 @@ textarea {
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 0.35em;
+}
+
+/* The light/dark switch (js/theme.js): a moon to go dark, a sun to go light */
+
+.theme-toggle {
+    align-self: center;
+    padding: var(--space-1);
+    border-color: var(--rule);
+    color: var(--ink);
+    line-height: 0;
+}
+
+.theme-toggle:hover {
+    border-color: var(--spruce);
+    color: var(--spruce);
+}
+
+.theme-toggle[hidden] {
+    display: none;
+}
+
+.theme-toggle::before {
+    content: '';
+    display: inline-block;
+    width: 1.125rem;
+    height: 1.125rem;
+    background: currentColor;
+    mask: url('../icons/moon.svg') center / contain no-repeat;
+}
+
+.theme-toggle[aria-pressed='true']::before {
+    mask-image: url('../icons/sun.svg');
 }
 
 .site-main {
