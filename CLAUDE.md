@@ -106,8 +106,9 @@ forums/            # Core app — Forum, Thread, Post, UpVote, Notification, Use
   tasks.py         # Celery tasks (send_notifications_task)
   activity.py      # Reply counts, latest activity and last repliers for the forum and thread lists
   throttling.py    # Posting, search and preview limits: DRF throttles, shared by the web views and the API
+  search.py        # Full-text search over threads and replies (one UNION, sorted and paged); SearchForm is in forms.py
   signals.py       # Django signals (if any)
-  templatetags/    # Custom template tags (class_name)
+  templatetags/    # Template tags: when (dates), markdown, nav (the header's current section)
 
 users/             # Custom user model (email-based auth)
   models.py        # CustomUser extends AbstractUser; sends welcome email on create
@@ -161,6 +162,11 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 - `Thread.announcement` (BooleanField): kept at the top of its forum page, in its own list on every page and outside the pagination, and listed first under its forum in the forum list; the thread page's label says *Announcement*. Per forum, no limit
 - Set by anyone with `forums.change_thread` (moderators, superusers): a checkbox on the new and edit thread forms (`AnnouncementFieldMixin` in `forums/views.py`), shown to them only, so an author's edit keeps a moderator's mark. A moderator marking someone else's thread is logged as moderation. The API shows the field to all and refuses a change by anyone else (`ThreadSerializer.validate_announcement`). Tests: `tests/forums/test_announcements.py`
 
+### Search
+- PostgreSQL full-text search in English word forms (`SEARCH_CONFIG = 'english'` in `forums/models.py`): `THREAD_SEARCH_VECTOR` (title weight A, text B) and `POST_SEARCH_VECTOR` (text B), with GIN indexes on exactly those expressions (migration `forums/0020`). A query must use these constants, or PostgreSQL scans every row
+- `forums/search.py`: `matches()` turns the form's data into one UNION of thread and reply rows (kind, id, added, rank), filtered by forum, author, dates and kind and sorted by rank or date; `load()` loads one page's objects and gives each reply its number and thread page. Words use web search syntax (`"phrase"`, `-word`); they need 3 characters unless a filter is set
+- `SearchForm` (`forums/forms.py`): the author list shows display names, with the member number for names that occur twice. Page links keep the search (`{% querystring %}` in `templates/forums/_pages.html`, which needs `request` passed into the include). Tests: `tests/forums/test_search.py`
+
 ### UpVote
 - `post` (ForeignKey → Post)
 - `user` (ForeignKey → AUTH_USER_MODEL)
@@ -188,6 +194,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ```
 /                          → HomePageView (for a visitor the name and a login link; for a member the forum list, ForumsList)
 /latest/                   → LatestView (the 15 threads with the latest activity; login required)
+/search/                   → SearchView (words and filters as GET parameters, 20 results a page; login required; 20 searches a minute)
 # Everything under /forums/ needs a login
 /forums/                   → redirect to / (the forum list's old address)
 /forums/<pk>/              → ForumDetail (20 threads per page, newest first; ?page=<n>)
@@ -201,7 +208,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 /forums/thread/<pk>/post   → PostCreate (then the thread's last page)
 /forums/thread/<tpk>/post/<pk>/delete  → PostDelete
 /forums/thread/<tpk>/post/<pk>/upvote  → PostUpvote
-/forums/search/            → SearchResultsView (?q= of at least 3 characters; the 50 newest posts and 50 newest threads; 20 a minute)
+/forums/search/            → redirect to /search/, keeping the query string
 /forums/preview/           → MarkdownPreview (POST, login required: Markdown text → HTML for the editor's preview)
 
 # /api/ exists only while DJANGO_API_ENABLED is true (default: off; on in development and tests)
@@ -238,7 +245,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
 - allauth's pages are allauth's own templates (wording included: "Sign in", "Sign out"), styled through our overrides of its elements in `templates/allauth/elements/` (form, fields, field, button, …: the site's form and button markup) and its layouts in `templates/allauth/layouts/` (`base.html` adds `css/account.css`; `entrance.html` is the narrow column for signing in and up; `manage.html` adds the links between Email, Password and Two-factor). Only `account/signup_closed.html` and `account/invitation_invalid.html` are ours. allauth names users with `ACCOUNT_USER_DISPLAY` (`users.adapters.user_display`: `display_name`, never the username). The GitHub button is the `provider` element, with GitHub's mark from `static/icons/github.svg` (Octicons, MIT, `static/icons/LICENSE-octicons`)
 - The API is throttled (`REST_FRAMEWORK` in `base.py`): 120 requests a minute per user (visitors are refused with 403 before anything is counted, so the 60 a minute per address for anonymous clients is only a fallback); over that it answers 429, which the security log records as `denied status=429`. `NUM_PROXIES` is `0` in `base.py` and `1` in production, like `ALLAUTH_TRUSTED_PROXY_COUNT`; a second proxy needs 2. The counters are in the cache, so the API fails while Redis is down. DRF reads the rates at import: tests change them with the `rates` fixture in `tests/forums/conftest.py`
 - **Posting limit**: a user may create 5 threads or posts a minute and 30 an hour (`posting_burst`, `posting_hour` in `DEFAULT_THROTTLE_RATES`), counted together for the website and the API, staff and moderators included. `forums/throttling.py` has the two DRF throttles; `PostingLimitMixin` in `forums/views.py` (the form comes back with status 429 and the text kept; forms with errors don't count) and in `api/views.py` (on `create`) use them. A new view that creates threads or posts needs the mixin too
-- **Search and preview limits**: 20 searches a minute per user (searches too short to run don't count) and 30 Markdown previews a minute per user (`search`, `preview` in `DEFAULT_THROTTLE_RATES`; `SearchThrottle`, `PreviewThrottle` in `forums/throttling.py`). Over the limit the search page says so with status 429 and runs no query; the editor shows that the preview could not be loaded
+- **Search and preview limits**: 20 searches a minute per user (searches that don't run, the empty form or too few characters, don't count) and 30 Markdown previews a minute per user (`search`, `preview` in `DEFAULT_THROTTLE_RATES`; `SearchThrottle`, `PreviewThrottle` in `forums/throttling.py`). Over the limit the search page says so with status 429 and runs no query; the editor shows that the preview could not be loaded
 - The REST API is off unless `DJANGO_API_ENABLED=true`. Code outside `api/` must not `reverse()` its routes: they may not exist (`users/security.py` uses the fixed `API_PATH`). Tests of the off state reload the URL configuration with the `api_off` fixture in `tests/test_api_switch.py`
 - Session + Token authentication for the REST API. The API has no login page of its own (DRF's `api-auth/` would skip the two-factor step): log in on the site
 - **Staff and moderators must use two-factor authentication** while `STAFF_REQUIRE_MFA` is on (default; off in development). It applies to every privileged user (`users.security.is_privileged`): staff, superusers, and anyone holding a permission, directly or through a group such as Moderators. Members have no permissions:
