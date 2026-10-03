@@ -254,6 +254,59 @@ textarea {
     line-height: 1.5;
 }
 
+/* Forms drawn by Django ({{ form }}): one <div> per field with the label, the help text,
+   the errors and the field, in that order. Errors for the whole form come first. */
+
+.form {
+    max-width: var(--measure);
+    margin: var(--space-4) 0;
+}
+
+.form > div {
+    margin-bottom: var(--space-4);
+}
+
+/* The thread and post forms: the editor takes the page's width */
+.form--wide,
+.form--wide textarea {
+    max-width: none;
+}
+
+.helptext {
+    margin: 0 0 var(--space-2);
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.errorlist {
+    margin: 0 0 var(--space-2);
+    padding: 0;
+    list-style: none;
+    color: var(--danger);
+    font-size: var(--size-small);
+    font-weight: 600;
+}
+
+.errorlist.nonfield {
+    margin-bottom: var(--space-4);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius);
+    font-size: var(--size-body);
+}
+
+[aria-invalid='true'] {
+    border-color: var(--danger);
+}
+
+.form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
 /* Buttons: .button is ours; .btn is what the templates still call them. Not every
    <button>: the editor's toolbar has its own. The variants name button.button--*
    too, to outrank button[type='submit']. */
@@ -601,6 +654,32 @@ button.button--danger:hover,
 .monogram--4 { background: var(--tone-4); }
 .monogram--5 { background: var(--tone-5); }
 .monogram--6 { background: var(--tone-6); }
+
+/* What a delete page is about to delete */
+
+.excerpt {
+    max-width: var(--measure);
+    margin: var(--space-4) 0;
+    padding: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+.excerpt > :last-child {
+    margin-bottom: 0;
+}
+
+.excerpt .row__meta {
+    margin: 0 0 var(--space-2);
+}
+
+.excerpt__title {
+    margin: 0 0 var(--space-2);
+    font-family: var(--serif);
+    font-size: var(--size-h3);
+    font-weight: 600;
+}
 
 /* Search */
 
