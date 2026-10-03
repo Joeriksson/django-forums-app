@@ -1,12 +1,19 @@
 {% extends '_base.html' %}
-{# Layout for allauth pages that have no template of our own (e.g. two-factor authentication) #}
+{% load static %}
+{% comment %}
+The layout of allauth's pages (login, signup, password, email addresses, two-factor):
+the site's layout plus css/account.css. entrance.html and manage.html build on it.
+{% endcomment %}
 
 {% block title %}{% block head_title %}{% endblock head_title %}{% endblock title %}
 
 {% block stylesheets %}
     {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/account.css' %}">
     {% block extra_head %}{% endblock extra_head %}
 {% endblock stylesheets %}
+
+{% block main_class %} site-main--account{% endblock main_class %}
 
 {% block javascripts %}
     {{ block.super }}
