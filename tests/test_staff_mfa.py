@@ -5,7 +5,6 @@ import pytest
 from allauth.account.models import EmailAddress
 from allauth.mfa.models import Authenticator
 from allauth.mfa.recovery_codes.internal.auth import RecoveryCodes
-from allauth.mfa.totp.internal import auth as totp
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.management import CommandError, call_command
@@ -22,11 +21,6 @@ PASSWORD = 'testpass123'
 ADMIN_INDEX = reverse('admin:index')
 MFA_INDEX = reverse('mfa_index')
 FORUM_LIST = reverse('home')
-
-
-def totp_code(secret):
-    counter = next(totp.yield_hotp_counters_from_time())
-    return totp.format_hotp_value(totp.hotp_value(secret, counter))
 
 
 def token_client(user):
@@ -114,7 +108,9 @@ def test_staff_with_authenticator_app_reaches_admin(client, staff, add_totp):
     assert client.get(ADMIN_INDEX).status_code == 200
 
 
-def test_staff_logs_in_to_admin_with_password_and_code(client, staff, add_totp, verify_email):
+def test_staff_logs_in_to_admin_with_password_and_code(
+    client, staff, add_totp, verify_email, totp_code
+):
     verify_email(staff)
     secret = add_totp(staff)
 
