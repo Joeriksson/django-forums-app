@@ -91,5 +91,6 @@ networks:
   # Fixed name, so it doesn't depend on the directory the repo is cloned into.
   proxy:
     name: forum_proxy
+    external: true
 volumes:
   postgres_data:
