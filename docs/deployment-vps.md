@@ -99,9 +99,10 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 git clone <repo-url> forum && cd forum
 cp .env.example .env   # then fill it in as above
 docker compose -f docker-compose-prod.yml up -d --build
-docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 docker compose -f docker-compose-prod.yml exec web python manage.py createsuperuser
 ```
+
+The `web` container applies the database migrations each time it starts, before it serves anything, so wait for it before `createsuperuser`: `docker compose -f docker-compose-prod.yml logs web` shows the migrations and then gunicorn's `Listening at`.
 
 The first `up` creates the `forum_proxy` network. Start (or restart) the Caddy stack only after that, with its own `docker compose up -d`, since Caddy can't join a network that doesn't exist yet.
 
@@ -115,14 +116,15 @@ Then:
 ## 4. Updating
 
 ```bash
+# Back up the database first (section 5)
 git pull
 docker compose -f docker-compose-prod.yml up -d --build --remove-orphans
-docker compose -f docker-compose-prod.yml exec web python manage.py migrate
+docker compose -f docker-compose-prod.yml logs web   # the migrations, then gunicorn
 ```
 
 `--remove-orphans` removes the container of a service that is no longer in the compose file. Use `up`, not `down` followed by `up`. `down` tries to remove `forum_proxy`, which fails with "network has active endpoints" while Caddy is attached. If you do need `down`, stop Caddy first.
 
-Migrations don't run automatically. **Back up the database before migrating** (see below); some migrations change data. For example, `forums.0015` deletes duplicate upvotes and subscriptions, and that can't be undone.
+Migrations run automatically: the new `web` container applies them when it starts, before gunicorn. So **back up the database before `up`** ([section 5](#5-backups)); some migrations change data. For example, `forums.0015` deletes duplicate upvotes and subscriptions, and that can't be undone. If a migration fails, `web` exits and restarts, and the site is down until that is fixed: see [Troubleshooting](#troubleshooting).
 
 Static files are collected into the image when it's built (`collectstatic` in the `Dockerfile`), and WhiteNoise serves them. `--build` in the commands above picks up changes under `static/` and new package versions; there's nothing to run by hand.
 
@@ -274,6 +276,7 @@ After the first deployment with this setup, check that lines arrive: `journalctl
 | **502 Bad Gateway** from Caddy | `web` isn't running, or Caddy isn't on `forum_proxy` (it was started before the network existed: restart the Caddy stack) |
 | Containers fail to start with `failed to initialize logging driver` | The host has no systemd journal: remove the `logging` lines from `docker-compose-prod.yml` |
 | Part of a page doesn't load or isn't styled, and the browser console says `Refused to load ...` or `violates the following Content Security Policy directive` | The page loads something the policy doesn't allow, usually a file from another site. Add the source to `_CSP` in `project/settings/base.py`; until that is deployed, `DJANGO_CSP_REPORT_ONLY=true` switches the blocking off |
+| After an update `web` keeps restarting and the proxy answers 502 | A migration failed: `docker compose -f docker-compose-prod.yml logs web` shows the error. Fix it and run `up -d --build` again, or check out the previous version and do the same (restore the backup if the migration had already changed data) |
 | `network forum_proxy ... has active endpoints` on `down` | Caddy is still attached; see [Updating](#4-updating) |
 
 Logs: `docker compose -f docker-compose-prod.yml logs -f web celery` (see [Logs and the security log](#9-logs-and-the-security-log))
@@ -285,7 +288,6 @@ The stack can be started locally to check that it comes up, but not browsed: the
 ```bash
 docker compose -f docker-compose-prod.yml up -d --build
 docker compose -f docker-compose-prod.yml ps                  # all four services running
-docker compose -f docker-compose-prod.yml exec web python manage.py migrate
 docker compose -f docker-compose-prod.yml exec web python manage.py check --deploy
 docker compose -f docker-compose-prod.yml exec web python manage.py sendtestemail you@example.com  # mail shows in the logs
 docker compose -f docker-compose-prod.yml logs celery
