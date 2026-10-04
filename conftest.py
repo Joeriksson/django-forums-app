@@ -1,4 +1,6 @@
 import logging
+import time
+from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
@@ -73,6 +75,25 @@ def add_totp(db):
         return secret
 
     return _add_totp
+
+
+@pytest.fixture
+def totp_code(monkeypatch):
+    """
+    The code an authenticator app shows for a secret: totp_code(secret).
+
+    Holds allauth's clock still for the test. A code is valid for one 30-second period,
+    so with the real clock a test fails whenever a period ends between making the code
+    and checking it.
+    """
+    now = time.time()
+    monkeypatch.setattr(totp, 'time', SimpleNamespace(time=lambda: now))
+
+    def _totp_code(secret):
+        counter = next(totp.yield_hotp_counters_from_time())
+        return totp.format_hotp_value(totp.hotp_value(secret, counter))
+
+    return _totp_code
 
 
 @pytest.fixture

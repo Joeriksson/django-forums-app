@@ -21,12 +21,6 @@ EMAIL = 'member@example.com'
 PASSWORD = 'testpass123'
 
 
-def totp_code(secret):
-    """The code an authenticator app shows right now for `secret`."""
-    counter = next(totp.yield_hotp_counters_from_time())
-    return totp.format_hotp_value(totp.hotp_value(secret, counter))
-
-
 def new_key():
     return base64.urlsafe_b64encode(os.urandom(32)).decode()
 
@@ -87,7 +81,7 @@ def test_recovery_seed_is_not_readable_in_the_database(user):
     assert authenticator.wrap().get_unused_codes() == codes
 
 
-def test_login_with_code_from_an_encrypted_secret(client, user, add_totp):
+def test_login_with_code_from_an_encrypted_secret(client, user, add_totp, totp_code):
     secret = add_totp(user)
 
     client.post(reverse('account_login'), {'login': EMAIL, 'password': PASSWORD})
@@ -142,7 +136,7 @@ def test_migration_encrypts_cleartext_rows(user, cleartext_rows, migration):
     assert secret not in str(totp_data) and seed not in str(recovery_data)
 
 
-def test_migrated_authenticator_still_checks_codes(user, cleartext_rows, migration):
+def test_migrated_authenticator_still_checks_codes(user, cleartext_rows, migration, totp_code):
     secret, _ = cleartext_rows
 
     migration.encrypt_rows(apps, None)

@@ -13,12 +13,6 @@ EMAIL = 'member@example.com'
 PASSWORD = 'testpass123'
 
 
-def totp_code(secret):
-    """The code an authenticator app shows right now for `secret`."""
-    counter = next(totp.yield_hotp_counters_from_time())
-    return totp.format_hotp_value(totp.hotp_value(secret, counter))
-
-
 def password_login(client):
     return client.post(reverse('account_login'), {'login': EMAIL, 'password': PASSWORD})
 
@@ -70,7 +64,7 @@ def test_passkeys_are_not_offered():
         reverse('mfa_add_webauthn')
 
 
-def test_user_sets_up_authenticator_app(client, user):
+def test_user_sets_up_authenticator_app(client, user, totp_code):
     password_login(client)
     page = client.get(reverse('mfa_activate_totp'))
     assertContains(page, 'site-header')
@@ -99,7 +93,7 @@ def test_password_login_without_mfa_needs_no_code(client, user):
     assert is_logged_in(client)
 
 
-def test_password_login_asks_for_code(client, user, totp_secret):
+def test_password_login_asks_for_code(client, user, totp_secret, totp_code):
     resp = password_login(client)
 
     assertRedirects(resp, reverse('mfa_authenticate'), fetch_redirect_response=False)
@@ -120,7 +114,7 @@ def test_wrong_code_does_not_log_in(client, user, totp_secret):
     assert not is_logged_in(client)
 
 
-def test_github_login_asks_for_code(client, user, totp_secret, github_login):
+def test_github_login_asks_for_code(client, user, totp_secret, github_login, totp_code):
     SocialAccount.objects.create(user=user, provider='github', uid='12345')
 
     resp = github_login(EMAIL)
