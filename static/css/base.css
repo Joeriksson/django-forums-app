@@ -237,6 +237,13 @@ textarea {
     border-radius: var(--radius);
 }
 
+/* A value that can't be changed, e.g. the invited address on the signup form */
+input[readonly] {
+    background: var(--ground);
+    border-color: var(--rule);
+    color: var(--quiet);
+}
+
 textarea {
     min-height: 10rem;
     line-height: 1.5;

@@ -1,3 +1,5 @@
+from allauth.account.forms import SignupForm
+from allauth.core import context as allauth_context
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -67,3 +69,18 @@ class InvitationAdminForm(forms.ModelForm):
                 'Use "Resend invitation" in the list instead.'
             )
         return email
+
+
+class InvitedSignupForm(SignupForm):
+    """allauth's signup form (ACCOUNT_FORMS). With an invitation, the address is fixed."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = allauth_context.request
+        # While signup is closed, only the invited address is accepted
+        # (AccountAdapter.clean_email): don't offer to change it. The check there is the
+        # guard; a read-only field is still posted and can be changed by hand.
+        if request and not settings.SIGNUP_OPEN and Invitation.from_session(request):
+            email = self.fields['email']
+            email.widget.attrs['readonly'] = True
+            email.help_text = 'Your invitation is for this address.'

@@ -293,6 +293,8 @@ STAFF_REQUIRE_MFA = env_bool('DJANGO_STAFF_REQUIRE_MFA', True)
 # New accounts, by email or GitHub, only while DJANGO_SIGNUP_OPEN is true. Closed by
 # default, so a missing variable never opens a production forum by accident.
 ACCOUNT_ADAPTER = 'users.adapters.AccountAdapter'
+# The invited address is read-only on the signup form
+ACCOUNT_FORMS = {'signup': 'users.forms.InvitedSignupForm'}
 SOCIALACCOUNT_ADAPTER = 'users.adapters.SocialAccountAdapter'
 SIGNUP_OPEN = env_bool('DJANGO_SIGNUP_OPEN')
 # The REST API under /api/ exists only while DJANGO_API_ENABLED is true (project/urls.py).
