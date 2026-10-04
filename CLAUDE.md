@@ -195,7 +195,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 - `email`, `key` (random, unique), `invited_by`, `created`, `sent_at`, `accepted_at`, `accepted_by`
 - Valid while unused and younger than `INVITATION_EXPIRY_DAYS` (7, in `base.py`): `Invitation.objects.valid()` / `is_valid()`
 - Created in the Django admin (needs `users.add_invitation`). The add form (`InvitationAdminForm`) refuses addresses with an account or a pending invitation. Saving queues `send_invitation_email_task` on commit; the *Resend invitation* action calls `renew()` (new key, expiry restarts) and sends again. `get_link()` builds the link from `SITE_URL`
-- The link `/accounts/invite/<key>/` stores the key in the session (`Invitation.SESSION_KEY`) and stashes the address as verified, then redirects to signup. While signup is closed, it opens signup for that address only: the signup form refuses other addresses, and a GitHub signup needs the address among GitHub's verified emails. allauth's `user_signed_up` signal marks it used (`users/models.py`)
+- The link `/accounts/invite/<key>/` stores the key in the session (`Invitation.SESSION_KEY`) and stashes the address as verified, then redirects to signup. While signup is closed, it opens signup for that address only: the signup form shows the address read-only (`InvitedSignupForm` in `users/forms.py`, set in `ACCOUNT_FORMS`) and refuses other addresses, and a GitHub signup needs the address among GitHub's verified emails. allauth's `user_signed_up` signal marks it used (`users/models.py`)
 
 ## URL Structure
 

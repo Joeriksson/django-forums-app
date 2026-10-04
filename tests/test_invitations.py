@@ -9,6 +9,7 @@ from django.utils import timezone
 from pytest_django.asserts import (
     assertContains,
     assertFormError,
+    assertNotContains,
     assertRedirects,
     assertTemplateUsed,
 )
@@ -80,6 +81,37 @@ def test_valid_link_opens_signup_with_invited_email(client, invitation):
     signup = client.get(reverse('account_signup'))
     assertTemplateUsed(signup, 'account/signup.html')
     assert signup.context['form']['email'].value() == 'anna@example.com'
+
+
+def test_invited_email_cannot_be_edited_on_the_signup_form(client, invitation):
+    client.get(accept_url(invitation))
+
+    signup = client.get(reverse('account_signup'))
+
+    # Only the invited address is accepted, so the field doesn't offer to change it
+    assert signup.context['form']['email'].field.widget.attrs.get('readonly')
+    assertContains(signup, 'readonly')
+    assertContains(signup, 'Your invitation is for this address.')
+
+
+def test_invited_email_stays_read_only_when_the_form_comes_back(client, invitation):
+    client.get(accept_url(invitation))
+
+    resp = client.post(reverse('account_signup'), {'email': 'anna@example.com', 'password1': '1'})
+
+    assert resp.status_code == 200
+    assert resp.context['form']['email'].field.widget.attrs.get('readonly')
+
+
+def test_email_can_be_edited_when_signup_is_open(client, invitation, settings):
+    settings.SIGNUP_OPEN = True
+    client.get(accept_url(invitation))
+
+    signup = client.get(reverse('account_signup'))
+
+    # Open signup takes any address, invited or not
+    assert 'readonly' not in signup.context['form']['email'].field.widget.attrs
+    assertNotContains(signup, 'Your invitation is for this address.')
 
 
 @pytest.mark.django_db
