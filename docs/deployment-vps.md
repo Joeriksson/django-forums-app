@@ -19,7 +19,13 @@ No container runs its service as root: `web` and `celery` run as an unprivileged
 
 ## 1. Reverse proxy (Caddy)
 
-`docker-compose-prod.yml` creates the `forum_proxy` network. Caddy runs in its own compose stack, outside this repo. In that stack's compose file, declare `forum_proxy` as external and add it to the Caddy service's networks:
+The forum's stack and the proxy meet on the Docker network `forum_proxy`. Neither stack creates it: both declare it as external, so create it once on the server, before either stack starts:
+
+```bash
+docker network create forum_proxy
+```
+
+Caddy runs in its own compose stack, outside this repo. In that stack's compose file, declare `forum_proxy` as external and add it to the Caddy service's networks:
 
 ```yaml
 # Caddy's own compose file (not docker-compose-prod.yml)
@@ -98,13 +104,14 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 ```bash
 git clone <repo-url> forum && cd forum
 cp .env.example .env   # then fill it in as above
+docker network create forum_proxy   # once, if section 1 didn't already
 docker compose -f docker-compose-prod.yml up -d --build
 docker compose -f docker-compose-prod.yml exec web python manage.py createsuperuser
 ```
 
 The `web` container applies the database migrations each time it starts, before it serves anything, so wait for it before `createsuperuser`: `docker compose -f docker-compose-prod.yml logs web` shows the migrations and then gunicorn's `Listening at`.
 
-The first `up` creates the `forum_proxy` network. Start (or restart) the Caddy stack only after that, with its own `docker compose up -d`, since Caddy can't join a network that doesn't exist yet.
+The forum's stack and the Caddy stack can start in either order, since the network exists before both. Without it, `up` stops with `network forum_proxy declared as external, but could not be found`.
 
 Then:
 
@@ -122,7 +129,7 @@ docker compose -f docker-compose-prod.yml up -d --build --remove-orphans
 docker compose -f docker-compose-prod.yml logs web   # the migrations, then gunicorn
 ```
 
-`--remove-orphans` removes the container of a service that is no longer in the compose file. Use `up`, not `down` followed by `up`. `down` tries to remove `forum_proxy`, which fails with "network has active endpoints" while Caddy is attached. If you do need `down`, stop Caddy first.
+`--remove-orphans` removes the container of a service that is no longer in the compose file. `up` replaces the containers that changed; there is no need for `down` first. `down` leaves the `forum_proxy` network in place, since the stack didn't create it.
 
 Migrations run automatically: the new `web` container applies them when it starts, before gunicorn. So **back up the database before `up`** ([section 5](#5-backups)); some migrations change data. For example, `forums.0015` deletes duplicate upvotes and subscriptions, and that can't be undone. If a migration fails, `web` exits and restarts, and the site is down until that is fixed: see [Troubleshooting](#troubleshooting).
 
@@ -273,11 +280,11 @@ After the first deployment with this setup, check that lines arrive: `journalctl
 | Links in notification emails point to the wrong address | `DJANGO_SITE_URL` in `.env` is wrong; fix it and restart |
 | Invitation links point to the wrong address | `DJANGO_SITE_URL` is wrong; fix it, restart, and use *Resend invitation* |
 | Containers exit with `ImproperlyConfigured: Set DJANGO_SITE_URL` | It's missing, or isn't an `https` address without a path |
-| **502 Bad Gateway** from Caddy | `web` isn't running, or Caddy isn't on `forum_proxy` (it was started before the network existed: restart the Caddy stack) |
+| **502 Bad Gateway** from Caddy | `web` isn't running, or Caddy isn't on `forum_proxy` (check the `networks` lines in its compose file, then restart the Caddy stack) |
 | Containers fail to start with `failed to initialize logging driver` | The host has no systemd journal: remove the `logging` lines from `docker-compose-prod.yml` |
 | Part of a page doesn't load or isn't styled, and the browser console says `Refused to load ...` or `violates the following Content Security Policy directive` | The page loads something the policy doesn't allow, usually a file from another site. Add the source to `_CSP` in `project/settings/base.py`; until that is deployed, `DJANGO_CSP_REPORT_ONLY=true` switches the blocking off |
 | After an update `web` keeps restarting and the proxy answers 502 | A migration failed: `docker compose -f docker-compose-prod.yml logs web` shows the error. Fix it and run `up -d --build` again, or check out the previous version and do the same (restore the backup if the migration had already changed data) |
-| `network forum_proxy ... has active endpoints` on `down` | Caddy is still attached; see [Updating](#4-updating) |
+| `network forum_proxy declared as external, but could not be found` on `up` | The network was never created on this machine: `docker network create forum_proxy` |
 
 Logs: `docker compose -f docker-compose-prod.yml logs -f web celery` (see [Logs and the security log](#9-logs-and-the-security-log))
 
@@ -286,6 +293,7 @@ Logs: `docker compose -f docker-compose-prod.yml logs -f web celery` (see [Logs 
 The stack can be started locally to check that it comes up, but not browsed: the production settings redirect HTTP to HTTPS and use secure cookies, and no port is published. In `.env`, set `DJANGO_ALLOWED_HOSTS=localhost`, `DJANGO_SITE_URL=https://localhost` and `DJANGO_EMAIL_CONSOLE=true`, then:
 
 ```bash
+docker network create forum_proxy   # the stack expects it to exist
 docker compose -f docker-compose-prod.yml up -d --build
 docker compose -f docker-compose-prod.yml ps                  # all four services running
 docker compose -f docker-compose-prod.yml exec web python manage.py check --deploy
@@ -299,4 +307,4 @@ To fetch a page from inside the container, send the headers the proxy would add:
 docker compose -f docker-compose-prod.yml exec web python -c "import urllib.request as u; r = u.urlopen(u.Request('http://localhost:8000/', headers={'Host': 'localhost', 'X-Forwarded-Proto': 'https'})); print(r.status)"
 ```
 
-`docker compose -f docker-compose-prod.yml down -v` removes everything again, including the local database volume.
+`docker compose -f docker-compose-prod.yml down -v` removes everything again, including the local database volume, except the network: `docker network rm forum_proxy`.

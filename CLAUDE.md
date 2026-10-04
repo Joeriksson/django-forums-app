@@ -27,7 +27,7 @@ Server runs at `http://127.0.0.1:8000`
 
 ## Production Deployment
 
-Production runs `docker-compose-prod.yml` on a VPS behind a reverse proxy container (Caddy). The stack publishes no ports: only `web` joins the shared `forum_proxy` network, where the proxy reaches it as `forum-web:8000`. See `docs/deployment-vps.md` for the proxy config, the `.env` checklist, first deploy, updates, backups and troubleshooting.
+Production runs `docker-compose-prod.yml` on a VPS behind a reverse proxy container (Caddy). The stack publishes no ports: only `web` joins the shared `forum_proxy` network, where the proxy reaches it as `forum-web:8000`. The network is external: created once on the server (`docker network create forum_proxy`), and by CI before its compose step. See `docs/deployment-vps.md` for the proxy config, the `.env` checklist, first deploy, updates, backups and troubleshooting.
 
 The `Dockerfile` installs only runtime dependencies by default (`ARG UV_SYNC_FLAGS=--no-dev`); `docker-compose-dev.yml` passes an empty value so dev images also get the dev group (pytest etc.). `.dockerignore` keeps `.env`, `.git` and `.venv` out of the image; compose passes `.env` in at runtime via `env_file`.
 
