@@ -89,6 +89,8 @@ services:
 networks:
   # Shared with the reverse proxy. Only web is on it, so the proxy can't reach db or redis.
   # Fixed name, so it doesn't depend on the directory the repo is cloned into.
+  # External: this stack doesn't create or remove it. Create it once on the server
+  # (docker network create forum_proxy), before this stack or the proxy's starts.
   proxy:
     name: forum_proxy
     external: true

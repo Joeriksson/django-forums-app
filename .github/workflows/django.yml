@@ -158,6 +158,8 @@ jobs:
         POSTGRES_APP_PASSWORD=ci-app
         REDIS_PASSWORD=ci-redis
         ENV
+        # External in the compose file: on the server it is created once by hand
+        docker network create forum_proxy
         docker compose -f docker-compose-prod.yml up -d --build --wait
     # A page needs the migrated database, so a 200 means the migrations ran and gunicorn serves.
     # The headers are the ones the reverse proxy would add
