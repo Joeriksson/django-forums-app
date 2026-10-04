@@ -68,6 +68,7 @@ class ForumDetail(LoginRequiredMixin, DetailView):
         add_last_repliers(announcements + page.object_list)
         context['announcements'] = announcements
         context['threads'] = page
+        context['can_start_thread'] = self.object.can_start_thread(self.request.user)
         return context
 
 
@@ -116,6 +117,7 @@ class ThreadDetail(LoginRequiredMixin, DetailView):
         page = self.request.GET.get('page')
         # get_page() shows the first or last page for a page number that doesn't exist
         context['posts'] = paginator.get_page(paginator.num_pages if page == 'last' else page)
+        context['can_reply'] = self.object.forum.can_reply(self.request.user)
 
         if self.request.user.is_authenticated:
             # The posts on this page that the reader upvoted
@@ -175,13 +177,36 @@ class PostingLimitMixin:
         return super().form_valid(form)
 
 
+class ClosedForumMixin:
+    """Refuse a new thread or post that the forum's posting setting doesn't allow."""
+
+    def may_post(self):
+        raise NotImplementedError
+
+    def dispatch(self, request, *args, **kwargs):
+        # After LoginRequiredMixin, so a visitor is sent to the login page. Before the
+        # form, so a refused post doesn't count against the posting limit.
+        if not self.may_post():
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+
 class ThreadCreate(
-    LoginRequiredMixin, PostingLimitMixin, AnnouncementFieldMixin, SuccessMessageMixin, CreateView
+    LoginRequiredMixin,
+    ClosedForumMixin,
+    PostingLimitMixin,
+    AnnouncementFieldMixin,
+    SuccessMessageMixin,
+    CreateView,
 ):
     model = Thread
     context_object_name = 'thread'
     fields = ['title', 'text']
     success_message = "Thread was created successfullty"
+
+    def may_post(self):
+        forum = get_object_or_404(Forum, pk=self.kwargs['pk'])
+        return forum.can_start_thread(self.request.user)
 
     def get_context_data(self, **kwargs):
         # Call the base implementation
@@ -229,10 +254,16 @@ class ThreadDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return reverse_lazy('forum_detail', kwargs={'pk': self.kwargs['fpk']})
 
 
-class PostCreate(LoginRequiredMixin, PostingLimitMixin, SuccessMessageMixin, CreateView):
+class PostCreate(
+    LoginRequiredMixin, ClosedForumMixin, PostingLimitMixin, SuccessMessageMixin, CreateView
+):
     model = Post
     fields = ['text']
     success_message = "Post was created successfully!"
+
+    def may_post(self):
+        thread = get_object_or_404(Thread.objects.select_related('forum'), pk=self.kwargs['pk'])
+        return thread.forum.can_reply(self.request.user)
 
     def get_context_data(self, **kwargs):
         # Call the base implementation

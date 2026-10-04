@@ -854,6 +854,11 @@ textarea {
     font-weight: 600;
 }
 
+/* Who can post in a closed forum, or that a thread takes no replies */
+.closed-note {
+    color: var(--quiet);
+}
+
 .thread-row__latest {
     display: flex;
     flex-wrap: wrap;

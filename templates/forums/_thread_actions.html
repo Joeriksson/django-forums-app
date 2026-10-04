@@ -1,9 +1,14 @@
 {% comment %}
 Reply and Subscribe, under the opening post and again at the end of the thread. Pass
-"thread", "subscribed" and "page" (the page of replies, for coming back to it).
+"thread", "subscribed", "page" (the page of replies, for coming back to it) and "can_reply"
+(false for a member in a forum where only moderators post).
 {% endcomment %}
 <div class="thread-actions">
-    <a class="button" href="{% url 'post_add' thread.id %}">Reply</a>
+    {% if can_reply %}
+        <a class="button" href="{% url 'post_add' thread.id %}">Reply</a>
+    {% else %}
+        <span class="closed-note">This forum is closed for replies.</span>
+    {% endif %}
     <form method="post" action="{% url 'thread_notification' thread.id %}">
         {% csrf_token %}
         <input type="hidden" name="page" value="{{ page.number }}">
