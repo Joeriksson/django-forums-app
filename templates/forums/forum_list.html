@@ -40,6 +40,7 @@
                     <li class="row forum-row">
                         <div class="forum-row__main">
                             <a class="row__title" href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a>
+                            {% if forum.is_closed %}<span class="tag">Closed</span>{% endif %}
                             <p class="row__text">{{ forum.description }}</p>
                             {% if forum.top_threads %}
                                 {# Announcements first, then the threads with the newest activity #}

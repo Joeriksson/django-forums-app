@@ -6,12 +6,17 @@
     {% include 'forums/_trail.html' only %}
     <div class="page-head">
         <div>
-            <p class="kicker">Forum</p>
+            <p class="kicker">Forum{% if forum.is_closed %} · Closed{% endif %}</p>
             <h1>{{ forum.title }}</h1>
         </div>
-        <a class="button" href="{% url 'thread_add' forum.id %}">New thread</a>
+        {% if can_start_thread %}
+            <a class="button" href="{% url 'thread_add' forum.id %}">New thread</a>
+        {% endif %}
     </div>
     <p class="lead">{{ forum.description }}</p>
+    {% if forum.is_closed %}
+        <p class="closed-note">{{ forum.posting_note }}</p>
+    {% endif %}
     {% if perms.forums.change_forum %}
         <p><a href="{% url 'forum_update' forum.id %}">Edit this forum</a></p>
     {% endif %}
@@ -39,6 +44,6 @@
         </div>
         {% include 'forums/_pages.html' with request=request page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
     {% else %}
-        <p class="empty">No threads here yet. <a href="{% url 'thread_add' forum.id %}">Start the first one</a>.</p>
+        <p class="empty">No threads here yet.{% if can_start_thread %} <a href="{% url 'thread_add' forum.id %}">Start the first one</a>.{% endif %}</p>
     {% endif %}
 {% endblock %}

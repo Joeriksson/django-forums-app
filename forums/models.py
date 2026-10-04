@@ -50,6 +50,14 @@ class Forum(models.Model):
     def is_closed(self):
         return self.posting != Posting.OPEN
 
+    @property
+    def posting_note(self):
+        """What a closed forum tells its readers."""
+        return {
+            Posting.MODERATORS_START: 'Only moderators can start threads here. Everyone can reply.',
+            Posting.MODERATORS_ONLY: 'Only moderators can post here.',
+        }.get(self.posting, '')
+
     def can_start_thread(self, user):
         return self.posting == Posting.OPEN or user.has_perm('forums.change_thread')
 
