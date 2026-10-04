@@ -37,4 +37,4 @@ def test_production_command_leaves_the_numbers_to_the_config_file():
     compose = (CONFIG.parent / 'docker-compose-prod.yml').read_text()
 
     # Flags on the command line would win over gunicorn.conf.py and WEB_CONCURRENCY
-    assert 'command: gunicorn project.wsgi\n' in compose
+    assert 'exec gunicorn project.wsgi"\n' in compose

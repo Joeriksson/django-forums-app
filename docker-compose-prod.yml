@@ -20,8 +20,9 @@ x-logging: &journald
 services:
   web:
     build: .
-    # Address, workers and threads: gunicorn.conf.py
-    command: gunicorn project.wsgi
+    # Applies new migrations, then starts gunicorn; if a migration fails, the container
+    # exits. Only web migrates: celery doesn't. Address, workers and threads: gunicorn.conf.py
+    command: sh -c "python manage.py migrate --noinput && exec gunicorn project.wsgi"
     env_file:
       - .env
     environment: *app-environment
@@ -32,8 +33,10 @@ services:
         aliases:
           - forum-web
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     logging: *journald
     restart: unless-stopped
   db:
@@ -46,6 +49,13 @@ services:
       - postgres_data:/var/lib/postgresql/data/
       # Creates the app's role and database when the volume is first created
       - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+    # Over TCP: while the volume is being set up, Postgres answers on its socket only,
+    # before the app's role exists
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "forum", "-d", "forum"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
     logging: *journald
     restart: unless-stopped
   redis:
