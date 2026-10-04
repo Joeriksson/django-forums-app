@@ -133,6 +133,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ### Forum
 - `title` (CharField, max 200)
 - `description` (CharField, max 500)
+- `posting` (`Posting` choices, default `open`): who may add to the forum. `open`: every member; `moderators_start`: only moderators start threads, members reply; `moderators_only`: members read. A moderator is anyone with `forums.change_thread`, as for announcements. Set on the forum's add and edit forms and in the admin. The rule is `Forum.can_start_thread(user)` and `Forum.can_reply(user)`; `is_closed` tells whether it isn't open. **Not enforced yet**: the views and the API still let every member post (issue #141, next PRs). Tests: `tests/forums/test_closed_forums.py`
 - Ordered by `title`
 
 ### Thread
