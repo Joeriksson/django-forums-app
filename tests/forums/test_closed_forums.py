@@ -304,3 +304,138 @@ def test_member_still_edits_and_deletes_own_thread_in_a_closed_forum(
     delete = member_client.post(reverse('thread_delete', args=[forum.pk, own.pk]))
     assert delete.status_code == 302
     assert not Thread.objects.filter(pk=own.pk).exists()
+
+
+# The API: the same rule on create, and the setting on the forum
+
+
+def api_thread(client, forum, title='Mine'):
+    return client.post(
+        reverse('thread-list'), {'title': title, 'text': 'Hello', 'forum': forum.pk}, format='json'
+    )
+
+
+def api_post(client, thread, text='I will come'):
+    return client.post(reverse('post-list'), {'text': text, 'thread': thread.pk}, format='json')
+
+
+@pytest.mark.parametrize('posting', CLOSED)
+def test_api_refuses_a_members_thread_in_a_closed_forum(get_user_client, member, forum, posting):
+    close(forum, posting)
+
+    resp = api_thread(get_user_client(member), forum)
+
+    assert resp.status_code == 400
+    assert resp.json() == {'forum': ['Only moderators can start threads in this forum.']}
+    assert not Thread.objects.filter(title='Mine').exists()
+
+
+@pytest.mark.parametrize('posting', Posting.values)
+def test_api_lets_a_moderator_start_a_thread(get_user_client, moderator, forum, posting):
+    close(forum, posting)
+
+    resp = api_thread(get_user_client(moderator), forum, 'Notice')
+
+    assert resp.status_code == 201
+    assert Thread.objects.filter(title='Notice', forum=forum).exists()
+
+
+def test_api_lets_a_member_start_a_thread_in_an_open_forum(get_user_client, member, forum):
+    assert api_thread(get_user_client(member), forum).status_code == 201
+
+
+def test_api_refuses_a_members_post_in_a_moderators_only_forum(
+    get_user_client, member, forum, thread
+):
+    close(forum, Posting.MODERATORS_ONLY)
+
+    resp = api_post(get_user_client(member), thread)
+
+    assert resp.status_code == 400
+    assert resp.json() == {'thread': ['Only moderators can reply in this forum.']}
+    assert not Post.objects.filter(thread=thread).exists()
+
+
+@pytest.mark.parametrize('posting', [Posting.OPEN, Posting.MODERATORS_START])
+def test_api_lets_a_member_reply_where_members_may(get_user_client, member, forum, thread, posting):
+    close(forum, posting)
+
+    assert api_post(get_user_client(member), thread).status_code == 201
+
+
+def test_api_lets_a_moderator_reply_in_a_moderators_only_forum(
+    get_user_client, moderator, forum, thread
+):
+    close(forum, Posting.MODERATORS_ONLY)
+
+    assert api_post(get_user_client(moderator), thread, 'Moved').status_code == 201
+
+
+@pytest.mark.parametrize('posting', CLOSED)
+def test_api_member_still_edits_own_thread_and_post_in_a_closed_forum(
+    get_user_client, member, forum, add_thread, add_post, posting
+):
+    own = add_thread('Mine', 'From before', forum, member)
+    reply = add_post('Also mine', own, member)
+    close(forum, posting)
+    client = get_user_client(member)
+
+    # PUT sends the forum and the thread again, unchanged
+    thread_resp = client.put(
+        reverse('thread-detail', args=[own.pk]),
+        {'title': 'Mine, edited', 'text': 'From before', 'forum': forum.pk},
+        format='json',
+    )
+    post_resp = client.put(
+        reverse('post-detail', args=[reply.pk]),
+        {'text': 'Edited', 'thread': own.pk},
+        format='json',
+    )
+
+    assert thread_resp.status_code == 200
+    assert post_resp.status_code == 200
+
+
+def test_api_shows_the_setting(get_user_client, member, forum):
+    close(forum, Posting.MODERATORS_START)
+
+    resp = get_user_client(member).get(reverse('forum-detail', args=[forum.pk]))
+
+    assert resp.json()['posting'] == 'moderators_start'
+
+
+def test_api_forum_is_open_unless_told_otherwise(admin_client):
+    resp = admin_client.post(
+        reverse('forum-list'), {'title': 'Rules', 'description': 'Read first'}, format='json'
+    )
+
+    assert resp.status_code == 201
+    assert resp.json()['posting'] == 'open'
+
+
+def test_api_lets_an_admin_close_a_forum(admin_client, forum):
+    resp = admin_client.patch(
+        reverse('forum-detail', args=[forum.pk]), {'posting': 'moderators_only'}, format='json'
+    )
+
+    assert resp.status_code == 200
+    forum.refresh_from_db()
+    assert forum.posting == Posting.MODERATORS_ONLY
+
+
+def test_api_refuses_an_unknown_setting(admin_client, forum):
+    resp = admin_client.patch(
+        reverse('forum-detail', args=[forum.pk]), {'posting': 'nobody'}, format='json'
+    )
+
+    assert resp.status_code == 400
+
+
+def test_api_moderator_cannot_change_the_setting(get_user_client, moderator, forum):
+    resp = get_user_client(moderator).patch(
+        reverse('forum-detail', args=[forum.pk]), {'posting': 'moderators_only'}, format='json'
+    )
+
+    assert resp.status_code == 403
+    forum.refresh_from_db()
+    assert forum.posting == Posting.OPEN

@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 
 from api.serializers import (
@@ -6,6 +8,11 @@ from api.serializers import (
     UserSerializer,
     PostSerializer,
 )
+
+
+def as_user(user):
+    """The context the views give a serializer: who can post depends on the user."""
+    return {'request': SimpleNamespace(user=user)}
 
 
 def test_valid_forum_serializer():
@@ -41,7 +48,7 @@ def test_valid_thread_serializer(add_forum, add_user):
         'text': 'A General Forum',
         'user': user.id,
     }
-    serializer = ThreadSerializer(data=valid_serializer_data)
+    serializer = ThreadSerializer(data=valid_serializer_data, context=as_user(user))
     assert serializer.is_valid()
     # user is read-only, so it's dropped from the validated data
     valid_serializer_data.pop('user')
@@ -58,7 +65,7 @@ def test_invalid_thread_serializer(add_forum, add_user):
         'title': 'General Forum',
         'user': user.id,
     }
-    serializer = ThreadSerializer(data=invalid_serializer_data)
+    serializer = ThreadSerializer(data=invalid_serializer_data, context=as_user(user))
 
     assert not serializer.is_valid()
     assert serializer.validated_data == {}
@@ -75,7 +82,9 @@ def test_valid_post_serializer(add_thread, add_forum, add_user):
     thread = add_thread(
         title='A new thread', text='text in the thread', forum=forum, user=user
     )
-    serializer = PostSerializer(data={'text': 'A reply', 'thread': thread.id})
+    serializer = PostSerializer(
+        data={'text': 'A reply', 'thread': thread.id}, context=as_user(user)
+    )
 
     assert serializer.is_valid(), serializer.errors
     assert serializer.validated_data == {'text': 'A reply', 'thread': thread}
