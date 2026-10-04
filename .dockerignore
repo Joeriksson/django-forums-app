@@ -9,6 +9,12 @@
 .idea
 .vscode
 
+# Documentation and compose files: nothing in the image reads them, and leaving them
+# out means a change to them alone doesn't rebuild the image or restart the containers
+docs
+*.md
+docker-compose*.yml
+
 # Local Python environment, caches and test output (the image builds its own venv in /opt/venv)
 .venv
 **/__pycache__
