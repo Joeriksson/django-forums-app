@@ -24,12 +24,37 @@ THREAD_SEARCH_VECTOR = SearchVector('title', weight='A', config=SEARCH_CONFIG) +
 POST_SEARCH_VECTOR = SearchVector('text', weight='B', config=SEARCH_CONFIG)
 
 
+class Posting(models.TextChoices):
+    """Who may add to a forum. A moderator is anyone with forums.change_thread."""
+
+    OPEN = 'open', 'Open: every member can start threads and reply'
+    MODERATORS_START = 'moderators_start', 'Moderators start threads; members can reply'
+    MODERATORS_ONLY = 'moderators_only', 'Moderators only: members can read'
+
+
 class Forum(models.Model):
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=500)
+    posting = models.CharField(
+        'Who can post',
+        max_length=20,
+        choices=Posting.choices,
+        default=Posting.OPEN,
+        help_text='Closing a forum stops new threads or replies. What is already there stays.',
+    )
 
     def __str__(self):
         return f'Forum: {self.title}'
+
+    @property
+    def is_closed(self):
+        return self.posting != Posting.OPEN
+
+    def can_start_thread(self, user):
+        return self.posting == Posting.OPEN or user.has_perm('forums.change_thread')
+
+    def can_reply(self, user):
+        return self.posting != Posting.MODERATORS_ONLY or user.has_perm('forums.change_thread')
 
     class Meta:
         ordering = ['title']
