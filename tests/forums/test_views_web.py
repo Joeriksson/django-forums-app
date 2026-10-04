@@ -91,7 +91,7 @@ def test_forum_create(client, author, add_totp):
     client.force_login(author)
 
     resp = client.post(
-        reverse('forum_add'), {'title': 'New Forum', 'description': 'Desc'}
+        reverse('forum_add'), {'title': 'New Forum', 'description': 'Desc', 'posting': 'open'}
     )
 
     assertRedirects(resp, reverse('home'))
