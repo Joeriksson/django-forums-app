@@ -107,7 +107,7 @@ jobs:
         forums-prod
     - name: Run the deployment checks
       run: docker exec prod python manage.py check --deploy --fail-level WARNING
-    # The image's own command only keeps the container alive, so nothing else starts gunicorn
+    # The image's own command only keeps this container alive: gunicorn starts in the compose step below
     - name: Check that gunicorn can load its settings and the app
       run: docker exec prod gunicorn --check-config project.wsgi
     - name: Check that the container does not run as root
@@ -143,3 +143,36 @@ jobs:
         "import re; from django.templatetags.static import static;
         url = static('css/base.css'); print(url);
         assert re.fullmatch(r'/static/css/base\.[0-9a-f]{12}\.css', url)"
+    # The steps above start the image by hand. This one starts the whole stack the way the
+    # server does: web's command (migrate, then gunicorn), the wait for a healthy db, Redis
+    # with its password file and the Celery worker. Fake values only.
+    - name: Start the production compose stack
+      run: |
+        cat > .env <<'ENV'
+        SECRET_KEY=ci-only-placeholder-secret-key-not-used-anywhere-else-0123456789
+        DJANGO_MFA_ENCRYPTION_KEY=Y2ktb25seS1wbGFjZWhvbGRlci1tZmEta2V5LTAwMDE=
+        DJANGO_ALLOWED_HOSTS=localhost
+        DJANGO_SITE_URL=https://localhost
+        DJANGO_EMAIL_CONSOLE=true
+        POSTGRES_PASSWORD=ci-superuser
+        POSTGRES_APP_PASSWORD=ci-app
+        REDIS_PASSWORD=ci-redis
+        ENV
+        docker compose -f docker-compose-prod.yml up -d --build --wait
+    # A page needs the migrated database, so a 200 means the migrations ran and gunicorn serves.
+    # The headers are the ones the reverse proxy would add
+    - name: Check that the stack serves the home page
+      run: |
+        fetch="import urllib.request as u; r = u.urlopen(u.Request('http://localhost:8000/', headers={'Host': 'localhost', 'X-Forwarded-Proto': 'https'})); print(r.status)"
+        for i in $(seq 30); do
+          docker compose -f docker-compose-prod.yml exec -T web python -c "$fetch" 2>/dev/null && exit 0
+          sleep 2
+        done
+        exit 1
+    - name: Check that the Celery worker reached Redis
+      run: docker compose -f docker-compose-prod.yml exec -T celery celery -A project inspect ping --timeout 10
+    - name: Show the stack's logs if it failed
+      if: failure()
+      run: |
+        docker compose -f docker-compose-prod.yml ps -a
+        docker compose -f docker-compose-prod.yml logs
