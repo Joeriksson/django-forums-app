@@ -16,6 +16,9 @@ class PostSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'A post cannot be moved to another thread.'
             )
+        # A closed forum stops new posts only, as on the website (Forum.posting)
+        if self.instance is None and not value.forum.can_reply(self.context['request'].user):
+            raise serializers.ValidationError('Only moderators can reply in this forum.')
         return value
 
 
@@ -43,6 +46,9 @@ class ThreadSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'A thread cannot be moved to another forum.'
             )
+        # A closed forum stops new threads only, as on the website (Forum.posting)
+        if self.instance is None and not value.can_start_thread(self.context['request'].user):
+            raise serializers.ValidationError('Only moderators can start threads in this forum.')
         return value
 
 
@@ -52,7 +58,7 @@ class ForumSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Forum
-        fields = ('id', 'title', 'description', 'thread_count')
+        fields = ('id', 'title', 'description', 'posting', 'thread_count')
 
 
 class UserSerializer(serializers.ModelSerializer):

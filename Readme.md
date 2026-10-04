@@ -8,7 +8,7 @@ A private discussion forum built with Django. Members read and write in forums, 
 
 - **Forums and threads**: Markdown replies with an editor and preview, announcements, upvotes, recent activity, full-text search with filters, email notifications for subscribed threads
 - **Members**: sign in with email or GitHub, invitations, confirmed email addresses, optional two-factor authentication (required for staff and moderators), profile names shown instead of usernames
-- **Moderation**: a Moderators group that can edit and delete others' threads and posts, and a security log
+- **Moderation**: a Moderators group that can edit and delete others' threads and posts, forums that can be closed so only moderators start threads or post, and a security log
 - **Site**: hand-written CSS with light and dark palettes, self-hosted fonts, a strict Content Security Policy, nothing loaded from a CDN, an optional REST API
 
 ## Tech stack
