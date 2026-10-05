@@ -237,6 +237,19 @@ textarea {
     border-radius: var(--radius);
 }
 
+/* iOS Safari draws a date field as its own control: wider than its column, taller, the date
+   centred. Without that look an empty one collapses, hence the height of the other fields */
+input[type='date'] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    min-height: calc(1.5em + 2 * var(--space-2) + 2px);
+}
+
+input[type='date']::-webkit-date-and-time-value {
+    text-align: left;
+}
+
 /* A value that can't be changed, e.g. the invited address on the signup form */
 input[readonly] {
     background: var(--ground);
