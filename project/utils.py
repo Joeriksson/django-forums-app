@@ -1,9 +1,16 @@
 import logging
+import time
 
 from django.core.mail import EmailMultiAlternatives
 from kombu.exceptions import OperationalError
 
 logger = logging.getLogger(__name__)
+
+
+class UTCFormatter(logging.Formatter):
+    """Log timestamps in UTC, whatever TIME_ZONE the pages show."""
+
+    converter = time.gmtime
 
 
 def send_mail(subject, from_email, bcc, text_content):

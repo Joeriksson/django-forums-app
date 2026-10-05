@@ -1,4 +1,5 @@
 import logging
+import time
 
 from django.core import mail
 from django.utils.log import AdminEmailHandler
@@ -46,3 +47,15 @@ def test_send_mail_logs_the_number_of_recipients_only(caplog, capsys):
     assert len(mail.outbox) == 1
     assert [record.getMessage() for record in caplog.records] == ['Mail sent to 2 recipients']
     assert 'email sent' not in capsys.readouterr().out
+
+
+def test_log_timestamps_are_in_utc_while_pages_use_the_sites_time_zone(settings):
+    # Django moves the process's clock along with the setting
+    settings.TIME_ZONE = 'Europe/Paris'
+    formatter = console_handlers(logging.getLogger())[0].formatter
+    # 12:00 UTC on a summer day, 14:00 in Paris
+    record = logging.LogRecord('security', logging.INFO, '', 0, 'login', None, None)
+    record.created = 1782129600
+
+    assert time.strftime('%H', time.localtime(record.created)) == '14'
+    assert formatter.formatTime(record).startswith('2026-06-22 12:00:00')

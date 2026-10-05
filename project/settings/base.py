@@ -167,7 +167,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# The zone that dates and times are shown in, the same for every member; the database
+# stores them in UTC
+TIME_ZONE = os.environ.get('DJANGO_TIME_ZONE', '').strip() or 'UTC'
 
 USE_I18N = True
 
@@ -236,6 +238,8 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'timestamped': {
+            # In UTC: Django sets the process's clock to TIME_ZONE
+            '()': 'project.utils.UTCFormatter',
             'format': '{asctime} {levelname} {name} {message}',
             'style': '{',
         },

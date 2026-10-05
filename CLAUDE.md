@@ -277,7 +277,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
 
 ## Logging
 
-`LOGGING` in `base.py` sends everything from INFO up to stdout with a timestamp (container clock, UTC); errors are still mailed to `DJANGO_ADMINS`. In production the containers log to the host's journal (`logging: *journald` in `docker-compose-prod.yml`), so logs survive container recreation; retention is set in the server's `journald.conf` (see `docs/deployment-vps.md`).
+`LOGGING` in `base.py` sends everything from INFO up to stdout with a timestamp in UTC (`project.utils.UTCFormatter`: the pages' `TIME_ZONE` would otherwise move the log's clock too); errors are still mailed to `DJANGO_ADMINS`. In production the containers log to the host's journal (`logging: *journald` in `docker-compose-prod.yml`), so logs survive container recreation; retention is set in the server's `journald.conf` (see `docs/deployment-vps.md`).
 
 The **security log** is the `security` logger: one line per event, `event key=value ...`, with user ids and the client address (the one allauth's rate limits use). Write to it with `users.audit.log_event(event, request, **fields)`; pass text a visitor typed through `quoted()`. Never log passwords, codes, tokens, invitation keys or email addresses of accounts (only the address typed at a failed login).
 
@@ -318,6 +318,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | `POSTGRES_APP_PASSWORD` | `docker-compose-prod.yml` only (required): password of the app's database role `forum`; used to build `DATABASE_URL`. Use URL-safe characters |
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
+| `DJANGO_TIME_ZONE` | The zone dates and times are shown in, for every member: a tz database name such as `Europe/Paris` (`settings.TIME_ZONE`; default `UTC`). An unknown name stops the app at start. Logs stay in UTC |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
 | `DJANGO_CSP_REPORT_ONLY` | `true` makes the Content Security Policy report-only (browsers log violations instead of blocking). Default `false`: enforced everywhere, development and tests included |
 | `DJANGO_API_ENABLED` | `true` mounts the REST API under `/api/` (`settings.API_ENABLED`, read by `project/urls.py`). Off by default, so production has no API unless asked for: every `/api/` path is a 404. `development.py` defaults to on and `test.py` sets it on. The `api` app, DRF and the token table stay installed either way, and the website's posting, search and preview limits (DRF throttles) don't depend on it |
@@ -413,6 +414,7 @@ The pages use hand-written CSS: no Bootstrap, no jQuery, no icon font, nothing f
 
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
 - `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` — integer PKs (not BigAutoField)
+- `TIME_ZONE` comes from `DJANGO_TIME_ZONE` (default `UTC`): dates and times on the pages, in the admin and in emails are shown in that one zone for every member, summer time included; the database stores UTC (`USE_TZ`). `test.py` fixes it to `UTC`, so the tests don't follow the developer's `.env`; a test of another zone sets `settings.TIME_ZONE`
 - `SITE_ID = 1` — required by `django.contrib.sites`. Its display name follows `SiteSettings.title` (saved there, never edited in *Sites*); its domain is set in *Sites*. Our own email links use `SITE_URL`, not the *Sites* domain
 - CORS: `development.py` allows `localhost:3000` / `127.0.0.1:3000` (for a local frontend client); production allows no other origin
 - Admin URL is configurable via `ADMIN_URL` env var (defaults to `nimda`) as a security measure

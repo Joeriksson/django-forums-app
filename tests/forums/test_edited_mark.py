@@ -86,12 +86,14 @@ def test_announcement_mark_is_not_an_edit(thread):
     assert Thread.objects.get(pk=thread.pk).edited is None
 
 
-def test_page_shows_date_and_time_of_the_edit(client, thread, post):
+def test_page_shows_date_and_time_of_the_edit(client, thread, post, settings):
+    settings.TIME_ZONE = 'Europe/Paris'
     edited = datetime(2026, 10, 5, 14, 32, tzinfo=timezone.utc)
     Post.objects.filter(pk=post.pk).update(edited=edited)
     content = page(client, thread)
     assert content.count('post__edited') == 1
-    assert 'Edited <time datetime="2026-10-05T14:32:00+00:00">5 Oct 2026, 14:32</time>' in content
+    # In the site's time zone, here two hours ahead of UTC in the summer
+    assert 'Edited <time datetime="2026-10-05T16:32:00+02:00">5 Oct 2026, 16:32</time>' in content
 
 
 def test_api_edit_marks_the_reply(post, reader, get_user_client):
