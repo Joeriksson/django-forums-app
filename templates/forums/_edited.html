@@ -1,7 +1,8 @@
 {% comment %}
 The line under a text that was changed after it was posted. Pass "edited", the time of
-the last change; empty for a text that was never changed.
+the last change (empty for a text that was never changed), and "by_moderator": whether
+someone other than the author made it.
 {% endcomment %}
 {% if edited %}
-    <p class="post__edited">Edited <time datetime="{{ edited|date:'c' }}">{{ edited|date:'j M Y, H:i' }}</time></p>
+    <p class="post__edited">Edited <time datetime="{{ edited|date:'c' }}">{{ edited|date:'j M Y, H:i' }}</time>{% if by_moderator %} by a moderator{% endif %}</p>
 {% endif %}

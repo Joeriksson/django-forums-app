@@ -34,7 +34,8 @@ class ModerationLogMixin:
     """Record edits and deletions of other users' threads and posts in the security log."""
 
     def perform_update(self, serializer):
-        super().perform_update(serializer)
+        # The editor is for the "Edited" line on the thread page
+        serializer.save(editor=self.request.user)
         log_moderation(self.request, 'change', serializer.instance)
 
     def perform_destroy(self, instance):

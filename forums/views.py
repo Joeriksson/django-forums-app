@@ -157,6 +157,7 @@ class ThreadUpdate(LoginRequiredMixin, UserPassesTestMixin, AnnouncementFieldMix
         return obj.user == self.request.user
 
     def form_valid(self, form):
+        form.instance.editor = self.request.user
         response = super().form_valid(form)
         log_moderation(self.request, 'change', self.object)
         return response
@@ -304,6 +305,7 @@ class PostUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return obj.user == self.request.user
 
     def form_valid(self, form):
+        form.instance.editor = self.request.user
         response = super().form_valid(form)
         log_moderation(self.request, 'change', self.object)
         return response
