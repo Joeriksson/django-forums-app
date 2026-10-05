@@ -8,6 +8,9 @@ STORAGES = {**STORAGES, 'staticfiles': {'BACKEND': 'django.contrib.staticfiles.s
 
 DEBUG = False
 
+# Not the developer's DJANGO_TIME_ZONE: tests that show times expect this zone
+TIME_ZONE = 'UTC'
+
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
