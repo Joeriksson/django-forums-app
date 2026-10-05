@@ -285,6 +285,40 @@ class PostCreate(
         return thread_page_url(self.kwargs['pk'], 'last')
 
 
+class PostUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    fields = ['text']
+    template_name_suffix = '_update_form'
+
+    def get_queryset(self):
+        # Only as a reply of the thread in the address
+        return Post.objects.filter(thread_id=self.kwargs['tpk']).select_related('thread__forum')
+
+    def test_func(self):
+        """
+        User must be author to update
+        """
+        if self.request.user.has_perm('forums.change_post'):
+            return True
+        obj = self.get_object()
+        return obj.user == self.request.user
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        log_moderation(self.request, 'change', self.object)
+        return response
+
+    def get_success_url(self):
+        # Back to the reply, on its page of the thread
+        post = self.object
+        earlier = Post.objects.filter(thread_id=post.thread_id).filter(
+            Q(added__lt=post.added) | Q(added=post.added, id__lt=post.id)
+        )
+        per_page = SiteSettings.for_request(self.request).posts_per_page
+        page = earlier.count() // per_page + 1
+        return f'{thread_page_url(post.thread_id, page)}#post-{post.id}'
+
+
 class PostDelete(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name_suffix = '_delete_form'

@@ -14,6 +14,7 @@ SECTIONS = {
         'thread_update',
         'thread_delete',
         'post_add',
+        'post_update',
         'post_delete',
     },
     'latest': {'latest'},

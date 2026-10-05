@@ -157,6 +157,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ### Edited mark
 - `Thread.edited` and `Post.edited` are empty until the text (or a thread's title) changes: the `mark_edited` lifecycle hook (BEFORE_UPDATE) sets the time, so the website, the API and the admin behave alike. Other saves don't count (a moderator's announcement mark), nor does a form saved unchanged. A `queryset.update()` skips the hook, and so does `save(update_fields=...)` without `edited`
 - The thread page shows *Edited 5 Oct 2026, 14:32* under the text (`templates/forums/_edited.html`), for the opening post and for replies. The API gives `edited` as `null` for a text never changed. Migration `forums/0022` cleared the times that were set at creation. Tests: `tests/forums/test_edited_mark.py`
+- Members change their own replies with *Edit* on the thread page (`PostUpdate`), also in a closed forum; an edit doesn't count against the posting limit and sends no notification. Tests: `tests/forums/test_post_edit.py`
 
 ### UserProfile
 - One-to-one with AUTH_USER_MODEL
@@ -219,6 +220,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 /forums/thread/<pk>/update/→ ThreadUpdate (owner or forums.change_thread)
 /forums/thread/<pk>/notify → ThreadNotification (toggle subscription)
 /forums/thread/<pk>/post   → PostCreate (then the thread's last page)
+/forums/thread/<tpk>/post/<pk>/update/ → PostUpdate (owner or forums.change_post; then back to the reply on its page)
 /forums/thread/<tpk>/post/<pk>/delete  → PostDelete
 /forums/thread/<tpk>/post/<pk>/upvote  → PostUpvote
 /forums/search/            → redirect to /search/, keeping the query string
@@ -268,8 +270,8 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
   - `python manage.py remove_mfa <email>` deletes a user's authenticators (lost phone); the user then logs in with the password alone and sets it up again. Switching `DJANGO_STAFF_REQUIRE_MFA` off doesn't help there: login still asks for the code
   - The admin's user form (`CustomUserChangeForm.clean`) refuses staff status, superuser status, a group or a permission for an account without an authenticator app: whoever logs in to such an account gets to set one up, so rights must come after it. The user list has a *Two-factor* column. `createsuperuser` bypasses the form: set that account up right away
   - Tests: privileged users need the `add_totp` fixture (root `conftest.py`) to use the site; `get_user_client` gives them a session instead of a token. A test that submits an authenticator code gets it from the `totp_code` fixture, which holds allauth's clock still: with the real clock the code can expire between making and checking it
-- Permission checks: Django model permissions for forum creation and editing; `UserPassesTestMixin` for thread edit/delete and post delete (owner, or a user with `forums.change_thread` / `forums.delete_thread` / `forums.delete_post`)
-- **Moderators group**: created by migration `forums/0016_moderators_group` with exactly `change_thread`, `delete_thread` and `delete_post`, so members can edit and delete other users' threads and delete their posts, on the website and through the API. Add users to it in the Django admin, once they have an authenticator app
+- Permission checks: Django model permissions for forum creation and editing; `UserPassesTestMixin` for thread edit/delete and post edit/delete (owner, or a user with `forums.change_thread` / `forums.delete_thread` / `forums.change_post` / `forums.delete_post`)
+- **Moderators group**: created by migration `forums/0016_moderators_group` with exactly `change_thread`, `delete_thread` and `delete_post`, so members can edit and delete other users' threads and delete their posts, on the website and through the API. They can't rewrite someone else's reply: that needs `forums.change_post`, which the group doesn't have. Add users to it in the Django admin, once they have an authenticator app
 - Custom API permission: `IsOwnerOrModeratorOrReadOnly`, always combined with `IsAuthenticated` — safe methods allowed for any member; write allowed for the owner (`obj.user == request.user`) or a user with the matching model permission (`change_<model>` for PUT/PATCH, `delete_<model>` for DELETE), same as the web views
 
 ## Logging
@@ -279,7 +281,7 @@ The Redis cache (`CACHES` in `base.py`) is still used by allauth's rate limits a
 The **security log** is the `security` logger: one line per event, `event key=value ...`, with user ids and the client address (the one allauth's rate limits use). Write to it with `users.audit.log_event(event, request, **fields)`; pass text a visitor typed through `quoted()`. Never log passwords, codes, tokens, invitation keys or email addresses of accounts (only the address typed at a failed login).
 
 - `users/audit.py`: signal receivers for login, logout, failed login, signup, password and email changes, two-factor changes and wrong codes; `DeniedRequestLogMiddleware` logs every 401, 403 and 429 response; `log_moderation(request, action, obj)` logs a change to a thread or post by someone other than its author
-- Moderation is logged by `ThreadUpdate`, `ThreadDelete`, `PostDelete` (`forums/views.py`) and `ModerationLogMixin` (`api/views.py`): a new view that edits or deletes other users' content must call `log_moderation` too
+- Moderation is logged by `ThreadUpdate`, `ThreadDelete`, `PostUpdate`, `PostDelete` (`forums/views.py`) and `ModerationLogMixin` (`api/views.py`): a new view that edits or deletes other users' content must call `log_moderation` too
 - Invitations: created and resent (`users/admin.py`), used (`users/models.py`), invalid link (`users/views.py`)
 - `remove_mfa` logs itself; other changes in the Django admin are only in the admin's history
 - Tests: the `security_log` fixture (root `conftest.py`) returns the lines written during the test

@@ -11,6 +11,7 @@ from .views import (
     ThreadUpdate,
     ThreadNotification,
     PostCreate,
+    PostUpdate,
     PostDelete,
     PostUpvote,
     MarkdownPreview,
@@ -33,6 +34,11 @@ urlpatterns = [
     path('<int:pk>/add/', ThreadCreate.as_view(), name='thread_add'),
     path('<int:fpk>/delete/<int:pk>', ThreadDelete.as_view(), name='thread_delete'),
     path('thread/<int:pk>/post', PostCreate.as_view(), name='post_add'),
+    path(
+        'thread/<int:tpk>/post/<int:pk>/update/',
+        PostUpdate.as_view(),
+        name='post_update',
+    ),
     path(
         'thread/<int:tpk>/post/<int:pk>/delete',
         PostDelete.as_view(),

@@ -101,6 +101,7 @@
     margin: 0;
 }
 
+.post__edit,
 .post__delete {
     color: var(--quiet);
 }
