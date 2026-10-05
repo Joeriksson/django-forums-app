@@ -22,7 +22,7 @@
         </header>
         <div class="post__body">
             <div class="prose">{{ thread.text|render_markdown }}</div>
-            {% include 'forums/_edited.html' with edited=thread.edited only %}
+            {% include 'forums/_edited.html' with edited=thread.edited by_moderator=thread.edited_by_moderator only %}
             {% include 'forums/_signature.html' with profile=thread.user.profile only %}
         </div>
     </article>
@@ -51,7 +51,7 @@
                     </header>
                     <div class="post__body">
                         <div class="prose">{{ post.text|render_markdown }}</div>
-                        {% include 'forums/_edited.html' with edited=post.edited only %}
+                        {% include 'forums/_edited.html' with edited=post.edited by_moderator=post.edited_by_moderator only %}
                         {% include 'forums/_signature.html' with profile=post.user.profile only %}
                         <div class="post__foot">
                             {% if post.upvotes %}<span class="votes">{{ post.upvotes }} upvote{{ post.upvotes|pluralize }}</span>{% endif %}

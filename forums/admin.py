@@ -4,7 +4,15 @@ from django.db import models
 from .models import Forum, Thread, Post, UserProfile, UpVote, Notification
 
 
-class PostAdmin(admin.ModelAdmin):
+class EditorAdminMixin:
+    """A text changed here is marked as edited by the admin user, as on the website."""
+
+    def save_model(self, request, obj, form, change):
+        obj.editor = request.user
+        super().save_model(request, obj, form, change)
+
+
+class PostAdmin(EditorAdminMixin, admin.ModelAdmin):
     search_fields = ('user__username',)
     list_display = ('thread', 'added', 'edited', 'user', 'upvotes')
     list_filter = (
@@ -20,7 +28,7 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ('thread', 'user')
 
 
-class ThreadAdmin(admin.ModelAdmin):
+class ThreadAdmin(EditorAdminMixin, admin.ModelAdmin):
     search_fields = ('user__username',)
     list_display = ('title', 'forum', 'added', 'edited', 'user')
     list_filter = (

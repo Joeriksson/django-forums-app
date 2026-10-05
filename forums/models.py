@@ -69,12 +69,35 @@ class Forum(models.Model):
         ordering = ['title']
 
 
-class Thread(LifecycleModelMixin, models.Model):
+class EditMark:
+    """For Thread and Post: who is changing the text, and whether to say so on the page."""
+
+    # Set by the code that saves a change (the edit pages, the API, the admin), not stored:
+    # mark_edited copies it to edited_by when the text really changed
+    editor = None
+
+    @property
+    def edited_by_moderator(self):
+        """The last change of the text was made by someone other than the author."""
+        return self.edited_by_id is not None and self.edited_by_id != self.user_id
+
+
+class Thread(EditMark, LifecycleModelMixin, models.Model):
     title = models.CharField(max_length=300)
     text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     added = models.DateTimeField(auto_now_add=True)
     # Empty until the title or the text is changed (mark_edited)
     edited = models.DateTimeField(null=True, blank=True, editable=False)
+    # Who made that change, when the saving code says so (editor); shown only as
+    # "by a moderator", and only when it isn't the author
+    edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
     # Set by moderators (forums.change_thread)
     announcement = models.BooleanField(
@@ -98,14 +121,25 @@ class Thread(LifecycleModelMixin, models.Model):
         # Not for other changes, such as a moderator's announcement mark
         if self.has_changed('title') or self.has_changed('text'):
             self.edited = timezone.now()
+            self.edited_by = self.editor
 
 
-class Post(LifecycleModelMixin, models.Model):
+class Post(EditMark, LifecycleModelMixin, models.Model):
     text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
     # Empty until the text is changed (mark_edited)
     edited = models.DateTimeField(null=True, blank=True, editable=False)
+    # Who made that change, when the saving code says so (editor); shown only as
+    # "by a moderator", and only when it isn't the author
+    edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
     thread = models.ForeignKey(Thread, related_name='posts', on_delete=models.CASCADE)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -123,6 +157,7 @@ class Post(LifecycleModelMixin, models.Model):
     def mark_edited(self):
         if self.has_changed('text'):
             self.edited = timezone.now()
+            self.edited_by = self.editor
 
     @hook(AFTER_CREATE, on_commit=True)
     def notify_subscribers(self):
