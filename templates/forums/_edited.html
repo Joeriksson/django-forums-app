@@ -1,0 +1,7 @@
+{% comment %}
+The line under a text that was changed after it was posted. Pass "edited", the time of
+the last change; empty for a text that was never changed.
+{% endcomment %}
+{% if edited %}
+    <p class="post__edited">Edited <time datetime="{{ edited|date:'c' }}">{{ edited|date:'j M Y, H:i' }}</time></p>
+{% endif %}

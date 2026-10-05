@@ -5,7 +5,8 @@ from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector
 from django.db import models
 from django.urls import reverse
-from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE
+from django.utils import timezone
+from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE, BEFORE_UPDATE
 
 from forums.tasks import send_notifications_task
 from project.utils import queue_task
@@ -68,11 +69,12 @@ class Forum(models.Model):
         ordering = ['title']
 
 
-class Thread(models.Model):
+class Thread(LifecycleModelMixin, models.Model):
     title = models.CharField(max_length=300)
     text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     added = models.DateTimeField(auto_now_add=True)
-    edited = models.DateTimeField(auto_now=True)
+    # Empty until the title or the text is changed (mark_edited)
+    edited = models.DateTimeField(null=True, blank=True, editable=False)
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
     # Set by moderators (forums.change_thread)
     announcement = models.BooleanField(
@@ -91,12 +93,19 @@ class Thread(models.Model):
         ordering = ['-added']
         indexes = [GinIndex(THREAD_SEARCH_VECTOR, name='thread_search')]
 
+    @hook(BEFORE_UPDATE)
+    def mark_edited(self):
+        # Not for other changes, such as a moderator's announcement mark
+        if self.has_changed('title') or self.has_changed('text'):
+            self.edited = timezone.now()
+
 
 class Post(LifecycleModelMixin, models.Model):
     text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
-    edited = models.DateTimeField(auto_now=True)
+    # Empty until the text is changed (mark_edited)
+    edited = models.DateTimeField(null=True, blank=True, editable=False)
     thread = models.ForeignKey(Thread, related_name='posts', on_delete=models.CASCADE)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -109,6 +118,11 @@ class Post(LifecycleModelMixin, models.Model):
     class Meta:
         ordering = ['added']
         indexes = [GinIndex(POST_SEARCH_VECTOR, name='post_search')]
+
+    @hook(BEFORE_UPDATE)
+    def mark_edited(self):
+        if self.has_changed('text'):
+            self.edited = timezone.now()
 
     @hook(AFTER_CREATE, on_commit=True)
     def notify_subscribers(self):

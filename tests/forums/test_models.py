@@ -22,7 +22,7 @@ def test_thread_model(add_forum, add_user, add_thread):
     assert thread.forum == forum
     assert thread.user == user
     assert thread.added
-    assert thread.edited
+    assert thread.edited is None
     assert str(thread) == f'Thread: {thread.title} - (started by {thread.user})'
 
 
