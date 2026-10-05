@@ -81,6 +81,12 @@
     background: var(--ground);
 }
 
+.post__edited {
+    margin: var(--space-3) 0 0;
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
 .post__foot {
     display: flex;
     flex-wrap: wrap;

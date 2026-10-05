@@ -139,7 +139,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ### Thread
 - `title` (CharField, max 300)
 - `text` (TextField — Markdown, max 20 000 characters)
-- `added`, `edited` (DateTimeField)
+- `added` (DateTimeField); `edited` (DateTimeField, empty until the title or text is changed, see *Edited mark*)
 - `forum` (ForeignKey → Forum)
 - `user` (ForeignKey → AUTH_USER_MODEL)
 - Ordered by `-added`
@@ -147,12 +147,16 @@ static/            # Static file sources (our CSS and JS, fonts, icons, the favi
 ### Post
 - `text` (TextField — Markdown, max 20 000 characters)
 - `upvotes` (IntegerField, default 0)
-- `added`, `edited` (DateTimeField)
+- `added` (DateTimeField); `edited` (DateTimeField, empty until the text is changed, see *Edited mark*)
 - `thread` (ForeignKey → Thread)
 - `user` (ForeignKey → AUTH_USER_MODEL)
 - Ordered by `added`
 - **Lifecycle hooks**:
   - `notify_subscribers` (AFTER_CREATE, after the commit): queues `send_notifications_task` via Celery (skipped in CI). Only active subscribers whose address is verified (allauth's `EmailAddress`) get the mail, so test subscribers need `verify_email`. Tests need `django_capture_on_commit_callbacks(execute=True)` to see it run
+
+### Edited mark
+- `Thread.edited` and `Post.edited` are empty until the text (or a thread's title) changes: the `mark_edited` lifecycle hook (BEFORE_UPDATE) sets the time, so the website, the API and the admin behave alike. Other saves don't count (a moderator's announcement mark), nor does a form saved unchanged. A `queryset.update()` skips the hook, and so does `save(update_fields=...)` without `edited`
+- The thread page shows *Edited 5 Oct 2026, 14:32* under the text (`templates/forums/_edited.html`), for the opening post and for replies. The API gives `edited` as `null` for a text never changed. Migration `forums/0022` cleared the times that were set at creation. Tests: `tests/forums/test_edited_mark.py`
 
 ### UserProfile
 - One-to-one with AUTH_USER_MODEL

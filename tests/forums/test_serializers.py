@@ -52,7 +52,8 @@ def test_valid_thread_serializer(add_forum, add_user):
     assert serializer.is_valid()
     # user is read-only, so it's dropped from the validated data
     valid_serializer_data.pop('user')
-    assert serializer.data == valid_serializer_data
+    # A thread that was never changed has no time of an edit
+    assert serializer.data == {**valid_serializer_data, 'edited': None}
     assert serializer.errors == {}
 
 
