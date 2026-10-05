@@ -64,6 +64,9 @@
                                     <button class="button button--quiet button--small" type="submit">+1</button>
                                 </form>
                             {% endif %}
+                            {% if post.user == user or perms.forums.change_post %}
+                                <a class="post__edit" href="{% url 'post_update' thread.id post.id %}">Edit</a>
+                            {% endif %}
                             {% if post.user == user or perms.forums.delete_post %}
                                 <a class="post__delete" href="{% url 'post_delete' thread.id post.id %}">Delete</a>
                             {% endif %}

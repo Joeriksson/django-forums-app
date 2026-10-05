@@ -102,6 +102,12 @@ def test_reply_delete_trail(member_client, forum, thread, post):
     assert trail_links(resp) == [forums(), forum_page(forum), thread_page(thread)]
 
 
+def test_reply_edit_trail(member_client, forum, thread, post):
+    resp = member_client.get(reverse('post_update', args=[thread.id, post.id]))
+
+    assert trail_links(resp) == [forums(), forum_page(forum), thread_page(thread)]
+
+
 def test_forum_edit_trail(staff_client, forum):
     resp = staff_client.get(reverse('forum_update', args=[forum.id]))
 
