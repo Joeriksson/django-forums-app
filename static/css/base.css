@@ -1034,6 +1034,12 @@ mark {
     font-size: var(--size-small);
 }
 
+/* One height for the selects and the date fields, which each browser sizes its own way */
+.search-form__filters select,
+.search-form__filters input[type='date'] {
+    height: calc(1.5em + 2 * var(--space-2) + 2px);
+}
+
 .search-count {
     margin: 0;
     color: var(--quiet);
