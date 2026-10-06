@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'project.middleware.ContentSecurityPolicyMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'project.middleware.SiteLanguageMiddleware',
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -165,7 +166,18 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# The languages the interface exists in, and the one a visitor gets who hasn't chosen
+# another (the choice is a cookie, read by project.middleware.SiteLanguageMiddleware)
+LANGUAGES = [
+    ('en', 'English'),
+    ('sv', 'Svenska'),
+]
+LANGUAGE_CODE = os.environ.get('DJANGO_LANGUAGE', '').strip() or 'en'
+if LANGUAGE_CODE not in dict(LANGUAGES):
+    raise ImproperlyConfigured(
+        f'DJANGO_LANGUAGE is {LANGUAGE_CODE!r}: it must be one of {", ".join(dict(LANGUAGES))}.'
+    )
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 
 # The zone that dates and times are shown in, the same for every member; the database
 # stores them in UTC

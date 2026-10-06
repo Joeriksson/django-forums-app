@@ -96,7 +96,7 @@ project/           # Django project settings and configuration
   celery.py        # Celery app definition
   urls.py          # Root URL configuration
   utils.py         # send_mail helper (BCC via the configured email backend)
-  middleware.py    # ContentSecurityPolicyMiddleware: the CSP header from SECURE_CSP
+  middleware.py    # ContentSecurityPolicyMiddleware: the CSP header from SECURE_CSP; SiteLanguageMiddleware: the page's language
 
 forums/            # Core app — Forum, Thread, Post, UpVote, Notification, UserProfile models
   models.py        # All core models; a django-lifecycle hook on Post sends the notifications
@@ -319,6 +319,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | `REDIS_PASSWORD` | `docker-compose-prod.yml` only (required): Redis password; also used to build `REDIS_URL`. Use URL-safe characters |
 | `ADMIN_URL` | Custom admin path (default: `nimda`) |
 | `DJANGO_TIME_ZONE` | The zone dates and times are shown in, for every member: a tz database name such as `Europe/Paris` (`settings.TIME_ZONE`; default `UTC`). An unknown name stops the app at start. Logs stay in UTC |
+| `DJANGO_LANGUAGE` | The interface's language for visitors who haven't chosen another: `en` (default) or `sv` (`settings.LANGUAGE_CODE`). Another value stops the app at start (`ImproperlyConfigured`). See *Languages* |
 | `DJANGO_SIGNUP_OPEN` | `true` lets anyone sign up (email or GitHub). Closed by default; `development.py` and `test.py` open it. `users/adapters.py` decides: signup is open if this is true or the session holds a valid invitation, which then limits signup to the invited address (`AccountAdapter.clean_email` on the signup pages, `SocialAccountAdapter.is_open_for_signup` for GitHub). The navbar hides the link via `{% signup_is_open %}` (`users/templatetags/signup.py`) |
 | `DJANGO_CSP_REPORT_ONLY` | `true` makes the Content Security Policy report-only (browsers log violations instead of blocking). Default `false`: enforced everywhere, development and tests included |
 | `DJANGO_API_ENABLED` | `true` mounts the REST API under `/api/` (`settings.API_ENABLED`, read by `project/urls.py`). Off by default, so production has no API unless asked for: every `/api/` path is a 404. `development.py` defaults to on and `test.py` sets it on. The `api` app, DRF and the token table stay installed either way, and the website's posting, search and preview limits (DRF throttles) don't depend on it |
@@ -415,6 +416,7 @@ The pages use hand-written CSS: no Bootstrap, no jQuery, no icon font, nothing f
 - `AUTH_USER_MODEL = 'users.CustomUser'` — always reference `settings.AUTH_USER_MODEL` in ForeignKey, not the model directly
 - `DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'` — integer PKs (not BigAutoField)
 - `TIME_ZONE` comes from `DJANGO_TIME_ZONE` (default `UTC`): dates and times on the pages, in the admin and in emails are shown in that one zone for every member, summer time included; the database stores UTC (`USE_TZ`). `test.py` fixes it to `UTC`, so the tests don't follow the developer's `.env`; a test of another zone sets `settings.TIME_ZONE`
+- **Languages**: `LANGUAGES` in `base.py` lists the interface's languages (`en`, `sv`); `LANGUAGE_CODE` (`DJANGO_LANGUAGE`) is the site's. `project.middleware.SiteLanguageMiddleware` activates the one in Django's language cookie if it is in the list, otherwise the site's; unlike Django's `LocaleMiddleware` it ignores the browser's `Accept-Language`, and it deactivates the language after the response. The admin (every address under `reverse('admin:index')`) is always English, also on a Swedish site: its login is allauth's page, which follows the visitor. No language prefixes in URLs. Code without a request (Celery tasks, so the notification, welcome and invitation mails) uses the site's language. `test.py` fixes `en`. Work in progress: our own texts are not marked for translation yet, there is no `locale/` catalog and no switcher, so `sv` only changes Django's, the admin's and allauth's own texts. Tests: `tests/test_language.py`
 - `SITE_ID = 1` — required by `django.contrib.sites`. Its display name follows `SiteSettings.title` (saved there, never edited in *Sites*); its domain is set in *Sites*. Our own email links use `SITE_URL`, not the *Sites* domain
 - CORS: `development.py` allows `localhost:3000` / `127.0.0.1:3000` (for a local frontend client); production allows no other origin
 - Admin URL is configurable via `ADMIN_URL` env var (defaults to `nimda`) as a security measure
