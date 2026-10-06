@@ -1,0 +1,951 @@
+# Swedish texts of the forum.
+# The compiled django.mo next to this file is committed too: run make compile_messages after a change.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: django-forums-app\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-06 17:31+0000\n"
+"PO-Revision-Date: 2026-10-06 17:30+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: sv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: forums/forms.py
+msgid "Words"
+msgstr "Ord"
+
+#: forums/forms.py
+msgid "Use \"quotes\" for a phrase and -word to leave a word out."
+msgstr "Använd \"citattecken\" för en fras och -ord för att utesluta ett ord."
+
+#: forums/forms.py templates/forums/forum_detail.html
+#: templates/forums/forum_list.html
+msgid "Forum"
+msgstr "Forum"
+
+#: forums/forms.py
+msgid "All forums"
+msgstr "Alla forum"
+
+#: forums/forms.py
+msgid "Author"
+msgstr "Författare"
+
+#: forums/forms.py
+msgid "From"
+msgstr "Från"
+
+#: forums/forms.py
+msgid "To"
+msgstr "Till"
+
+#: forums/forms.py
+msgid "Search in"
+msgstr "Sök i"
+
+#: forums/forms.py
+msgid "Threads and replies"
+msgstr "Trådar och svar"
+
+#: forums/forms.py templates/forums/forum_detail.html
+msgid "Threads"
+msgstr "Trådar"
+
+#: forums/forms.py templates/forums/_thread_head.html
+msgid "Replies"
+msgstr "Svar"
+
+#: forums/forms.py
+msgid "Sort by"
+msgstr "Sortera efter"
+
+#: forums/forms.py
+msgid "Best match"
+msgstr "Bästa träff"
+
+#: forums/forms.py
+msgid "Newest first"
+msgstr "Nyast först"
+
+#: forums/forms.py
+msgid "Anyone"
+msgstr "Vem som helst"
+
+#: forums/forms.py
+msgid "The end date is before the start date."
+msgstr "Slutdatumet ligger före startdatumet."
+
+#: forums/forms.py
+#, python-format
+msgid "Type at least %(count)s characters."
+msgstr "Skriv minst %(count)s tecken."
+
+#: forums/forms.py
+#, python-format
+msgid "Type at least %(count)s characters, or choose a filter."
+msgstr "Skriv minst %(count)s tecken, eller välj ett filter."
+
+#: forums/forms.py
+#, python-format
+msgid "%(name)s (member %(id)s)"
+msgstr "%(name)s (medlem %(id)s)"
+
+#: forums/models.py
+msgid ""
+"You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and "
+"tables."
+msgstr ""
+"Du kan använda Markdown: **fet**, *kursiv*, `kod`, > citat, listor, länkar "
+"och tabeller."
+
+#: forums/models.py
+msgid "Open: every member can start threads and reply"
+msgstr "Öppet: alla medlemmar kan starta trådar och svara"
+
+#: forums/models.py
+msgid "Moderators start threads; members can reply"
+msgstr "Moderatorer startar trådar; medlemmar kan svara"
+
+#: forums/models.py
+msgid "Moderators only: members can read"
+msgstr "Endast moderatorer: medlemmar kan läsa"
+
+#: forums/models.py
+msgid "title"
+msgstr "rubrik"
+
+#: forums/models.py
+msgid "description"
+msgstr "beskrivning"
+
+#: forums/models.py
+msgid "Who can post"
+msgstr "Vem som kan skriva"
+
+#: forums/models.py
+msgid ""
+"Closing a forum stops new threads or replies. What is already there stays."
+msgstr ""
+"Ett stängt forum tar inte emot nya trådar eller svar. Det som redan finns "
+"står kvar."
+
+#: forums/models.py
+msgid "Only moderators can start threads here. Everyone can reply."
+msgstr "Bara moderatorer kan starta trådar här. Alla kan svara."
+
+#: forums/models.py
+msgid "Only moderators can post here."
+msgstr "Bara moderatorer kan skriva här."
+
+#: forums/models.py
+msgid "text"
+msgstr "text"
+
+#: forums/models.py
+msgid "announcement"
+msgstr "anslag"
+
+#: forums/models.py
+msgid "Keep this thread at the top of its forum, above the others."
+msgstr "Håll den här tråden överst i sitt forum, ovanför de andra."
+
+#: forums/models.py
+msgid "NotProvided"
+msgstr "Inte angivet"
+
+#: forums/models.py
+msgid "Male"
+msgstr "Man"
+
+#: forums/models.py
+msgid "Female"
+msgstr "Kvinna"
+
+#: forums/models.py
+msgid "Other"
+msgstr "Annat"
+
+#: forums/models.py
+msgid "first name"
+msgstr "förnamn"
+
+#: forums/models.py
+msgid "last name"
+msgstr "efternamn"
+
+#: forums/models.py
+msgid "bio"
+msgstr "presentation"
+
+#: forums/models.py
+msgid "location"
+msgstr "ort"
+
+#: forums/models.py
+msgid "gender"
+msgstr "kön"
+
+#: forums/models.py
+msgid "web site"
+msgstr "webbplats"
+
+#: forums/models.py
+msgid "github url"
+msgstr "GitHub-adress"
+
+#: forums/models.py
+msgid "signature"
+msgstr "signatur"
+
+#: forums/tasks.py
+#, python-format
+msgid "New post added by %(name)s"
+msgstr "Nytt inlägg av %(name)s"
+
+#: forums/tasks.py
+#, python-format
+msgid "A new post was added to thread \"%(title)s\""
+msgstr "Ett nytt inlägg har skrivits i tråden \"%(title)s\""
+
+#: forums/tasks.py
+#, python-format
+msgid "Url: %(url)s"
+msgstr "Länk: %(url)s"
+
+#: forums/templatetags/when.py
+msgid "just now"
+msgstr "nyss"
+
+#: forums/templatetags/when.py
+#, python-format
+msgid "%(count)s minute ago"
+msgid_plural "%(count)s minutes ago"
+msgstr[0] "för %(count)s minut sedan"
+msgstr[1] "för %(count)s minuter sedan"
+
+#: forums/templatetags/when.py
+#, python-format
+msgid "%(count)s hour ago"
+msgid_plural "%(count)s hours ago"
+msgstr[0] "för %(count)s timme sedan"
+msgstr[1] "för %(count)s timmar sedan"
+
+#: forums/templatetags/when.py
+msgid "yesterday"
+msgstr "i går"
+
+#: forums/templatetags/when.py
+#, python-format
+msgid "%(count)s day ago"
+msgid_plural "%(count)s days ago"
+msgstr[0] "för %(count)s dag sedan"
+msgstr[1] "för %(count)s dagar sedan"
+
+#: forums/views.py
+msgid "You are posting too fast. Wait a while and try again."
+msgstr "Du skriver för snabbt. Vänta en stund och försök igen."
+
+#: forums/views.py
+msgid "Thread was created successfully"
+msgstr "Tråden har skapats"
+
+#: forums/views.py
+msgid "Post was created successfully!"
+msgstr "Inlägget har skapats!"
+
+#: forums/views.py
+msgid "Too many previews. Wait a moment and try again."
+msgstr "För många förhandsgranskningar. Vänta en stund och försök igen."
+
+#: forums/views.py
+msgid "The text is too long."
+msgstr "Texten är för lång."
+
+#: templates/403.html
+msgid "Not allowed"
+msgstr "Inte tillåtet"
+
+#: templates/403.html
+msgid "Your account doesn't have the rights to open this page."
+msgstr "Ditt konto har inte rätt att öppna den här sidan."
+
+#: templates/403.html templates/404.html templates/500.html
+msgid "Back to the start"
+msgstr "Tillbaka till startsidan"
+
+#: templates/404.html
+msgid "Page not found"
+msgstr "Sidan finns inte"
+
+#: templates/404.html
+msgid "The address may be mistyped, or what was here has been deleted."
+msgstr ""
+"Adressen kan vara felskriven, eller så har det som fanns här tagits bort."
+
+#: templates/500.html
+msgid "Something went wrong"
+msgstr "Något gick fel"
+
+#: templates/500.html
+msgid "The site ran into an error. Try again in a moment."
+msgstr "Ett fel uppstod på webbplatsen. Försök igen om en stund."
+
+#: templates/_base.html
+msgid "Main"
+msgstr "Huvudmeny"
+
+#: templates/_base.html templates/forums/_trail.html
+#: templates/forums/forum_list.html
+msgid "Forums"
+msgstr "Forum"
+
+#: templates/_base.html templates/forums/forum_list.html
+msgid "Latest"
+msgstr "Senaste"
+
+#: templates/_base.html templates/forums/_search.html
+#: templates/forums/search.html
+msgid "Search"
+msgstr "Sök"
+
+#: templates/_base.html
+msgid "Admin"
+msgstr "Admin"
+
+#: templates/_base.html
+#, python-format
+msgid "Signed in as %(email)s"
+msgstr "Inloggad som %(email)s"
+
+#: templates/_base.html
+msgid "Edit profile"
+msgstr "Redigera profil"
+
+#: templates/_base.html
+msgid "Change password"
+msgstr "Byt lösenord"
+
+#: templates/_base.html
+msgid "Two-factor authentication"
+msgstr "Tvåfaktorsautentisering"
+
+#: templates/_base.html
+msgid "Sign out"
+msgstr "Logga ut"
+
+#: templates/_base.html templates/home.html
+msgid "Sign in"
+msgstr "Logga in"
+
+#: templates/_base.html templates/home.html
+msgid "Sign up"
+msgstr "Registrera dig"
+
+#: templates/_base.html
+msgid "Dark colours"
+msgstr "Mörka färger"
+
+#: templates/account/email/email_confirmation_message.txt
+#, python-format
+msgid ""
+"Hi from %(site_name)s!\n"
+"\n"
+"You're receiving this e-mail because user %(user_display)s has given yours "
+"as an e-mail address to connect their account.\n"
+"\n"
+"To confirm this is correct, go to %(activate_url)s\n"
+msgstr ""
+"Hej från %(site_name)s!\n"
+"\n"
+"Du får det här mejlet eftersom användaren %(user_display)s har angett din e-"
+"postadress för sitt konto.\n"
+"\n"
+"Bekräfta att det stämmer genom att gå till %(activate_url)s\n"
+
+#: templates/account/email/email_confirmation_message.txt
+#, python-format
+msgid ""
+"Thank you from %(site_name)s!\n"
+"%(site_domain)s"
+msgstr ""
+"Tack från %(site_name)s!\n"
+"%(site_domain)s"
+
+#: templates/account/email/email_confirmation_subject.txt
+msgid ""
+"\n"
+"Confirm Your Sign Up\n"
+msgstr ""
+"\n"
+"Bekräfta din registrering\n"
+
+#: templates/account/invitation_invalid.html
+msgid "Invitation not valid"
+msgstr "Inbjudan gäller inte"
+
+#: templates/account/invitation_invalid.html
+msgid ""
+"This invitation link doesn't work: it has expired or has already been used. "
+"Ask the person who invited you for a new one."
+msgstr ""
+"Den här inbjudningslänken fungerar inte: den har gått ut eller har redan "
+"använts. Be den som bjöd in dig om en ny."
+
+#: templates/account/invitation_invalid.html
+#: templates/account/signup_closed.html
+#, python-format
+msgid "If you already have an account, <a href=\"%(login_url)s\">sign in</a>."
+msgstr "Om du redan har ett konto, <a href=\"%(login_url)s\">logga in</a>."
+
+#: templates/account/signup_closed.html
+msgid "Sign up closed"
+msgstr "Registreringen är stängd"
+
+#: templates/account/signup_closed.html
+#, python-format
+msgid ""
+"Your invitation is for <strong>%(invited)s</strong>, but your GitHub account "
+"doesn't have that address as a verified email."
+msgstr ""
+"Din inbjudan gäller <strong>%(invited)s</strong>, men ditt GitHub-konto har "
+"inte den adressen som verifierad e-postadress."
+
+#: templates/account/signup_closed.html
+#, python-format
+msgid "Sign up with %(invited)s and a password"
+msgstr "Registrera dig med %(invited)s och ett lösenord"
+
+#: templates/account/signup_closed.html
+msgid "Sign up is closed at the moment: this forum is by invitation."
+msgstr ""
+"Registreringen är stängd just nu: det här forumet är bara för inbjudna."
+
+#: templates/allauth/elements/provider.html
+#, python-format
+msgid "Continue with %(name)s"
+msgstr "Fortsätt med %(name)s"
+
+#: templates/allauth/layouts/manage.html
+msgid "Account"
+msgstr "Konto"
+
+#: templates/allauth/layouts/manage.html
+msgid "Email"
+msgstr "E-post"
+
+#: templates/allauth/layouts/manage.html
+msgid "Password"
+msgstr "Lösenord"
+
+#: templates/allauth/layouts/manage.html
+msgid "Two-factor"
+msgstr "Tvåfaktor"
+
+#: templates/forums/_edited.html
+#, python-format
+msgid "Edited <time datetime=\"%(iso)s\">%(shown)s</time> by a moderator"
+msgstr "Redigerad <time datetime=\"%(iso)s\">%(shown)s</time> av en moderator"
+
+#: templates/forums/_edited.html
+#, python-format
+msgid "Edited <time datetime=\"%(iso)s\">%(shown)s</time>"
+msgstr "Redigerad <time datetime=\"%(iso)s\">%(shown)s</time>"
+
+#: templates/forums/_editor.html
+msgid "Bold"
+msgstr "Fet"
+
+#: templates/forums/_editor.html
+msgid "Italic"
+msgstr "Kursiv"
+
+#: templates/forums/_editor.html
+msgid "Strikethrough"
+msgstr "Genomstruken"
+
+#: templates/forums/_editor.html
+msgid "Heading"
+msgstr "Rubrik"
+
+#: templates/forums/_editor.html
+msgid "Quote"
+msgstr "Citat"
+
+#: templates/forums/_editor.html
+msgid "Code"
+msgstr "Kod"
+
+#: templates/forums/_editor.html
+msgid "Bulleted list"
+msgstr "Punktlista"
+
+#: templates/forums/_editor.html
+msgid "Numbered list"
+msgstr "Numrerad lista"
+
+#: templates/forums/_editor.html
+msgid "Link"
+msgstr "Länk"
+
+#: templates/forums/_editor.html
+msgid "Table"
+msgstr "Tabell"
+
+#: templates/forums/_editor.html
+msgid "Preview"
+msgstr "Förhandsgranska"
+
+#: templates/forums/_editor.html
+msgid "Loading preview…"
+msgstr "Hämtar förhandsgranskning…"
+
+#: templates/forums/_editor.html
+msgid "The preview could not be loaded."
+msgstr "Förhandsgranskningen kunde inte hämtas."
+
+#: templates/forums/_pages.html
+#, python-format
+msgid "Page %(number)s of %(total)s"
+msgstr "Sida %(number)s av %(total)s"
+
+#: templates/forums/_posting_as.html
+#, python-format
+msgid ""
+"You are posting as <strong>%(name)s</strong>. Set a name in <a "
+"href=\"%(profile_url)s\">your profile</a>."
+msgstr ""
+"Du skriver som <strong>%(name)s</strong>. Ange ett namn i <a "
+"href=\"%(profile_url)s\">din profil</a>."
+
+#: templates/forums/_search.html
+msgid "Search threads and posts"
+msgstr "Sök i trådar och inlägg"
+
+#: templates/forums/_thread_actions.html templates/forums/post_form.html
+msgid "Reply"
+msgstr "Svara"
+
+#: templates/forums/_thread_actions.html
+msgid "This forum is closed for replies."
+msgstr "Det här forumet är stängt för svar."
+
+#: templates/forums/_thread_actions.html
+msgid "You get an email for each new reply. Click to stop."
+msgstr "Du får ett mejl för varje nytt svar. Klicka för att sluta."
+
+#: templates/forums/_thread_actions.html
+msgid "Subscribed"
+msgstr "Bevakar"
+
+#: templates/forums/_thread_actions.html
+msgid "Get an email for each new reply"
+msgstr "Få ett mejl för varje nytt svar"
+
+#: templates/forums/_thread_actions.html
+msgid "Subscribe"
+msgstr "Bevaka"
+
+#: templates/forums/_thread_head.html templates/forums/_thread_row.html
+msgid "Last reply"
+msgstr "Senaste svar"
+
+#: templates/forums/_thread_row.html
+#, python-format
+msgid "in <a href=\"%(forum_url)s\">%(forum)s</a>, started %(added)s"
+msgstr "i <a href=\"%(forum_url)s\">%(forum)s</a>, startad %(added)s"
+
+#: templates/forums/_thread_row.html
+#, python-format
+msgid "started %(added)s"
+msgstr "startad %(added)s"
+
+#: templates/forums/_thread_row.html templates/forums/thread_detail.html
+msgid "Edit"
+msgstr "Redigera"
+
+#: templates/forums/_thread_row.html templates/forums/thread_detail.html
+msgid "Delete"
+msgstr "Ta bort"
+
+#: templates/forums/_thread_row.html templates/forums/forum_list.html
+#, python-format
+msgid "<strong>%(counter)s</strong> reply"
+msgid_plural "<strong>%(counter)s</strong> replies"
+msgstr[0] "<strong>%(counter)s</strong> svar"
+msgstr[1] "<strong>%(counter)s</strong> svar"
+
+#: templates/forums/_thread_row.html templates/forums/thread_detail.html
+msgid "No replies yet"
+msgstr "Inga svar än"
+
+#: templates/forums/_trail.html
+msgid "You are here"
+msgstr "Du är här"
+
+#: templates/forums/forum_detail.html templates/forums/forum_list.html
+msgid "Closed"
+msgstr "Stängt"
+
+#: templates/forums/forum_detail.html templates/forums/thread_form.html
+msgid "New thread"
+msgstr "Ny tråd"
+
+#: templates/forums/forum_detail.html
+msgid "Edit this forum"
+msgstr "Redigera det här forumet"
+
+#: templates/forums/forum_detail.html
+msgid "Announcements"
+msgstr "Anslag"
+
+#: templates/forums/forum_detail.html
+msgid "Pages of threads"
+msgstr "Sidor med trådar"
+
+#: templates/forums/forum_detail.html
+msgid "Newer threads"
+msgstr "Nyare trådar"
+
+#: templates/forums/forum_detail.html
+msgid "Older threads"
+msgstr "Äldre trådar"
+
+#: templates/forums/forum_detail.html
+msgid "No threads here yet."
+msgstr "Inga trådar här än."
+
+#: templates/forums/forum_detail.html
+msgid "Start the first one"
+msgstr "Starta den första"
+
+#: templates/forums/forum_form.html templates/forums/forum_list.html
+msgid "New forum"
+msgstr "Nytt forum"
+
+#: templates/forums/forum_form.html
+msgid "Add forum"
+msgstr "Lägg till forum"
+
+#: templates/forums/forum_form.html templates/forums/forum_update_form.html
+#: templates/forums/post_delete_form.html templates/forums/post_form.html
+#: templates/forums/post_update_form.html
+#: templates/forums/thread_delete_form.html templates/forums/thread_form.html
+#: templates/forums/thread_update_form.html
+#: templates/forums/userprofile_form.html
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: templates/forums/forum_list.html
+msgid "Recent activity"
+msgstr "Senaste aktivitet"
+
+#: templates/forums/forum_list.html
+msgid "All latest →"
+msgstr "Alla senaste →"
+
+#: templates/forums/forum_list.html
+#, python-format
+msgid "in %(forum)s · %(name)s, %(active)s"
+msgstr "i %(forum)s · %(name)s, %(active)s"
+
+#: templates/forums/forum_list.html
+msgid "Threads · replies"
+msgstr "Trådar · svar"
+
+#: templates/forums/forum_list.html templates/forums/search.html
+#: templates/forums/thread_detail.html
+msgid "Announcement"
+msgstr "Anslag"
+
+#: templates/forums/forum_list.html
+msgid "No threads yet"
+msgstr "Inga trådar än"
+
+#: templates/forums/forum_list.html
+#, python-format
+msgid "<strong>%(counter)s</strong> thread"
+msgid_plural "<strong>%(counter)s</strong> threads"
+msgstr[0] "<strong>%(counter)s</strong> tråd"
+msgstr[1] "<strong>%(counter)s</strong> trådar"
+
+#: templates/forums/forum_list.html
+msgid "There are no forums yet."
+msgstr "Det finns inga forum än."
+
+#: templates/forums/forum_list.html
+msgid "Add the first one"
+msgstr "Lägg till det första"
+
+#: templates/forums/forum_update_form.html
+#: templates/forums/thread_update_form.html
+#, python-format
+msgid "Edit %(title)s"
+msgstr "Redigera %(title)s"
+
+#: templates/forums/forum_update_form.html
+msgid "Edit forum"
+msgstr "Redigera forum"
+
+#: templates/forums/forum_update_form.html
+#: templates/forums/post_update_form.html
+#: templates/forums/thread_update_form.html
+msgid "Save"
+msgstr "Spara"
+
+#: templates/forums/latest.html
+msgid "Latest conversations"
+msgstr "Senaste samtalen"
+
+#: templates/forums/latest.html
+msgid "Conversations"
+msgstr "Samtal"
+
+#: templates/forums/latest.html
+#, python-format
+msgid ""
+"No conversations yet. Pick a <a href=\"%(home_url)s\">forum</a> and start "
+"one."
+msgstr ""
+"Inga samtal än. Välj ett <a href=\"%(home_url)s\">forum</a> och starta ett."
+
+#: templates/forums/post_delete_form.html
+msgid "Delete reply"
+msgstr "Ta bort svar"
+
+#: templates/forums/post_delete_form.html
+msgid "Delete this reply?"
+msgstr "Ta bort det här svaret?"
+
+#: templates/forums/post_delete_form.html
+msgid "It can't be brought back."
+msgstr "Det går inte att få tillbaka."
+
+#: templates/forums/post_form.html
+#, python-format
+msgid "Reply to %(title)s"
+msgstr "Svara på %(title)s"
+
+#: templates/forums/post_form.html
+msgid "Post reply"
+msgstr "Skicka svar"
+
+#: templates/forums/post_update_form.html
+#, python-format
+msgid "Edit reply in %(title)s"
+msgstr "Redigera svar i %(title)s"
+
+#: templates/forums/post_update_form.html
+msgid "Edit reply"
+msgstr "Redigera svar"
+
+#: templates/forums/search.html
+#, python-format
+msgid "Filters (%(filter_count)s)"
+msgstr "Filter (%(filter_count)s)"
+
+#: templates/forums/search.html
+msgid "Filters"
+msgstr "Filter"
+
+#: templates/forums/search.html
+msgid "Too many searches. Wait a minute and try again."
+msgstr "För många sökningar. Vänta en minut och försök igen."
+
+#: templates/forums/search.html
+#, python-format
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
+msgstr[0] "%(counter)s träff"
+msgstr[1] "%(counter)s träffar"
+
+#: templates/forums/search.html
+msgid "Pages of results"
+msgstr "Sidor med träffar"
+
+#: templates/forums/search.html
+msgid "Previous"
+msgstr "Föregående"
+
+#: templates/forums/search.html
+msgid "Next"
+msgstr "Nästa"
+
+#: templates/forums/search.html
+#, python-format
+msgid "Reply #%(number)s in"
+msgstr "Svar #%(number)s i"
+
+#: templates/forums/search.html
+#, python-format
+msgid "in <a href=\"%(forum_url)s\">%(forum)s</a>, %(added)s"
+msgstr "i <a href=\"%(forum_url)s\">%(forum)s</a>, %(added)s"
+
+#: templates/forums/search.html templates/forums/thread_detail.html
+msgid "Thread"
+msgstr "Tråd"
+
+#: templates/forums/search.html
+msgid "Nothing found. Try other words, or fewer filters."
+msgstr "Inga träffar. Pröva andra ord, eller färre filter."
+
+#: templates/forums/thread_delete_form.html
+msgid "Delete thread"
+msgstr "Ta bort tråd"
+
+#: templates/forums/thread_delete_form.html
+msgid "Delete this thread?"
+msgstr "Ta bort den här tråden?"
+
+#: templates/forums/thread_delete_form.html
+msgid "The thread and all its replies are deleted. They can't be brought back."
+msgstr "Tråden och alla dess svar tas bort. De går inte att få tillbaka."
+
+#: templates/forums/thread_detail.html
+msgid "Opening post"
+msgstr "Första inlägget"
+
+#: templates/forums/thread_detail.html
+#, python-format
+msgid "%(counter)s reply"
+msgid_plural "%(counter)s replies"
+msgstr[0] "%(counter)s svar"
+msgstr[1] "%(counter)s svar"
+
+#: templates/forums/thread_detail.html
+msgid "Pages of replies"
+msgstr "Sidor med svar"
+
+#: templates/forums/thread_detail.html
+msgid "Earlier replies"
+msgstr "Tidigare svar"
+
+#: templates/forums/thread_detail.html
+msgid "Later replies"
+msgstr "Senare svar"
+
+#: templates/forums/thread_detail.html
+#, python-format
+msgid "%(counter)s upvote"
+msgid_plural "%(counter)s upvotes"
+msgstr[0] "%(counter)s röst"
+msgstr[1] "%(counter)s röster"
+
+#: templates/forums/thread_detail.html
+msgid "You upvoted"
+msgstr "Du har röstat"
+
+#: templates/forums/thread_detail.html
+#, python-format
+msgid "Back to %(forum)s"
+msgstr "Tillbaka till %(forum)s"
+
+#: templates/forums/thread_detail.html
+msgid "Copy"
+msgstr "Kopiera"
+
+#: templates/forums/thread_detail.html
+msgid "Copied"
+msgstr "Kopierat"
+
+#: templates/forums/thread_detail.html
+msgid "Not copied"
+msgstr "Inte kopierat"
+
+#: templates/forums/thread_form.html
+#, python-format
+msgid "New thread in %(title)s"
+msgstr "Ny tråd i %(title)s"
+
+#: templates/forums/thread_form.html
+msgid "Start thread"
+msgstr "Starta tråd"
+
+#: templates/forums/thread_update_form.html
+msgid "Edit thread"
+msgstr "Redigera tråd"
+
+#: templates/forums/userprofile_form.html
+msgid "Your profile"
+msgstr "Din profil"
+
+#: templates/forums/userprofile_form.html
+msgid "Others see your first and last name next to what you write."
+msgstr "Andra ser ditt för- och efternamn bredvid det du skriver."
+
+#: templates/forums/userprofile_form.html
+#, python-format
+msgid ""
+"Others see your first and last name next to what you write; without them you "
+"are shown as %(name)s."
+msgstr ""
+"Andra ser ditt för- och efternamn bredvid det du skriver; utan dem visas du "
+"som %(name)s."
+
+#: templates/forums/userprofile_form.html
+msgid "Save profile"
+msgstr "Spara profil"
+
+#: templates/users/invitation_email_message.txt
+msgid "Hello,"
+msgstr "Hej,"
+
+#: templates/users/invitation_email_message.txt
+#, python-format
+msgid "You're invited to join %(title)s. Use this link to create your account:"
+msgstr ""
+"Du är inbjuden till %(title)s. Använd den här länken för att skapa ditt "
+"konto:"
+
+#: templates/users/invitation_email_message.txt
+#, python-format
+msgid "The link works once, for this email address only, until %(date)s."
+msgstr ""
+"Länken fungerar en gång, bara för den här e-postadressen, till och med "
+"%(date)s."
+
+#: templates/users/invitation_email_message.txt
+msgid "If you weren't expecting this invitation, you can ignore this email."
+msgstr ""
+"Om du inte väntade dig den här inbjudan kan du bortse från det här mejlet."
+
+#: templates/users/invitation_email_subject.txt
+#, python-format
+msgid "You're invited to %(title)s"
+msgstr "Du är inbjuden till %(title)s"
+
+#: users/adapters.py
+#, python-format
+msgid "Sign up with the invited address: %(email)s"
+msgstr "Registrera dig med den inbjudna adressen: %(email)s"
+
+#: users/forms.py
+msgid "Your invitation is for this address."
+msgstr "Din inbjudan gäller den här adressen."
+
+#: users/models.py
+#, python-format
+msgid "Member %(id)s"
+msgstr "Medlem %(id)s"
+
+#: users/security.py
+msgid ""
+"Staff and moderator accounts need two-factor authentication. Set up an "
+"authenticator app to continue."
+msgstr ""
+"Konton för personal och moderatorer måste ha tvåfaktorsautentisering. Lägg "
+"till en autentiseringsapp för att fortsätta."
+
+#: users/tasks.py
+#, python-format
+msgid "Welcome to %(title)s"
+msgstr "Välkommen till %(title)s"
+
+#: users/tasks.py
+#, python-format
+msgid "Thank you for registering at %(title)s"
+msgstr "Tack för att du registrerade dig på %(title)s"

@@ -41,6 +41,18 @@ prod_down:
 # Add them as: AUDIT_IGNORE += --ignore-vuln <ID>   (with a comment on which upgrade fixes it)
 AUDIT_IGNORE =
 
+# Translations; both run on the host with uv and need gettext (xgettext, msgfmt) there.
+# messages: collect the texts marked for translation into locale/sv/LC_MESSAGES/django.po
+messages:
+	@uv run python manage.py makemessages --locale sv --add-location file \
+		--ignore '.venv/*' --ignore 'staticfiles/*' --ignore 'docs/*' --ignore 'tests/*' \
+		--settings=project.settings.test
+
+# compile_messages: make django.mo, which Django reads, from django.po; commit both
+compile_messages:
+	@uv run python manage.py compilemessages --locale sv --ignore .venv \
+		--settings=project.settings.test
+
 # Check the locked dependencies (incl. dev) for known vulnerabilities; runs on the host with uv
 audit:
 	@uv export --frozen --no-emit-project --format requirements-txt \

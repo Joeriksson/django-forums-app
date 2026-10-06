@@ -20,7 +20,10 @@ class SearchForm(forms.Form):
         help_text=_('Use "quotes" for a phrase and -word to leave a word out.'),
     )
     forum = forms.ModelChoiceField(
-        queryset=Forum.objects.order_by('title', 'id'), required=False, empty_label=_('All forums')
+        label=_('Forum'),
+        queryset=Forum.objects.order_by('title', 'id'),
+        required=False,
+        empty_label=_('All forums'),
     )
     author = forms.TypedChoiceField(label=_('Author'), required=False, coerce=int, empty_value=None)
     since = forms.DateField(label=_('From'), required=False, widget=forms.DateInput(attrs={'type': 'date'}))

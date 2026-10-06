@@ -91,6 +91,7 @@ Copy `.env.example` to `.env` next to `docker-compose-prod.yml` (`cp .env.exampl
 | `WEB_CONCURRENCY` | `2` | Number of gunicorn worker processes; each handles 4 requests at a time (`gunicorn.conf.py`). Raise it on a server with more CPU cores and memory: each worker is a copy of the app in memory |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | `false` | See [HSTS](#6-raising-hsts) |
 | `ADMIN_URL` | `nimda` | Path of the Django admin |
+| `DJANGO_LANGUAGE` | `en` | The language of the pages and the mails: `en` or `sv`. The app won't start with another value. The admin stays in English |
 | `DJANGO_TIME_ZONE` | `UTC` | The time zone that dates and times are shown in, the same for every member: a tz database name such as `Europe/Paris`. The app won't start with a name it doesn't know. Logs stay in UTC |
 | `DJANGO_SIGNUP_OPEN` | `false` | `true` lets anyone create an account, by email or GitHub. While it's closed, the signup page says so and the navbar hides its link; existing users can still log in. Create accounts in the admin meanwhile |
 | `DJANGO_STAFF_REQUIRE_MFA` | `true` | Staff and moderators need two-factor authentication to use the site. Leave it on; see [Two-factor authentication for staff and moderators](#8-two-factor-authentication-for-staff-and-moderators) |
