@@ -1,7 +1,11 @@
+{% load i18n %}
 {# Above the new thread and new post forms: a member without a profile name posts under a number #}
 {% if not user.has_profile_name %}
     <p class="note">
-        You are posting as <strong>{{ user.display_name }}</strong>.
-        Set a name in <a href="{% url 'user_profile_edit' user.profile.id %}">your profile</a>.
+        {% url 'user_profile_edit' user.profile.id as profile_url %}
+        {% blocktranslate trimmed with name=user.display_name %}
+            You are posting as <strong>{{ name }}</strong>.
+            Set a name in <a href="{{ profile_url }}">your profile</a>.
+        {% endblocktranslate %}
     </p>
 {% endif %}

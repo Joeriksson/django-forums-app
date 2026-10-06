@@ -1,18 +1,19 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
-{% block title %}New forum{% endblock title %}
+{% block title %}{% translate 'New forum' %}{% endblock title %}
 
 {% block content %}
     {% include 'forums/_trail.html' only %}
     <div class="page-head">
-        <h1>New forum</h1>
+        <h1>{% translate 'New forum' %}</h1>
     </div>
     <form class="form" method="post">
         {% csrf_token %}
         {{ form }}
         <div class="form__actions">
-            <button class="button" type="submit">Add forum</button>
-            <a class="button button--quiet" href="{% url 'home' %}">Cancel</a>
+            <button class="button" type="submit">{% translate 'Add forum' %}</button>
+            <a class="button button--quiet" href="{% url 'home' %}">{% translate 'Cancel' %}</a>
         </div>
     </form>
 {% endblock content %}

@@ -1,18 +1,19 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
-{% block title %}Edit {{ thread.title }}{% endblock title %}
+{% block title %}{% blocktranslate with title=thread.title %}Edit {{ title }}{% endblocktranslate %}{% endblock title %}
 
 {% block content %}
     {% include 'forums/_trail.html' with forum=thread.forum thread=thread only %}
     <div class="page-head">
-        <h1>Edit thread</h1>
+        <h1>{% translate 'Edit thread' %}</h1>
     </div>
     <form class="form form--wide" method="post">
         {% csrf_token %}
         {{ form }}
         <div class="form__actions">
-            <button class="button" type="submit">Save</button>
-            <a class="button button--quiet" href="{% url 'thread_detail' thread.id %}">Cancel</a>
+            <button class="button" type="submit">{% translate 'Save' %}</button>
+            <a class="button button--quiet" href="{% url 'thread_detail' thread.id %}">{% translate 'Cancel' %}</a>
         </div>
     </form>
     {% include 'forums/_editor.html' %}

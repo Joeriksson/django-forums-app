@@ -1,4 +1,5 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
 {% block title %}{{ forum.title }}{% endblock title %}
 
@@ -6,11 +7,11 @@
     {% include 'forums/_trail.html' only %}
     <div class="page-head">
         <div>
-            <p class="kicker">Forum{% if forum.is_closed %} · Closed{% endif %}</p>
+            <p class="kicker">{% translate 'Forum' %}{% if forum.is_closed %} · {% translate 'Closed' %}{% endif %}</p>
             <h1>{{ forum.title }}</h1>
         </div>
         {% if can_start_thread %}
-            <a class="button" href="{% url 'thread_add' forum.id %}">New thread</a>
+            <a class="button" href="{% url 'thread_add' forum.id %}">{% translate 'New thread' %}</a>
         {% endif %}
     </div>
     <p class="lead">{{ forum.description }}</p>
@@ -18,13 +19,14 @@
         <p class="closed-note">{{ forum.posting_note }}</p>
     {% endif %}
     {% if perms.forums.change_forum %}
-        <p><a href="{% url 'forum_update' forum.id %}">Edit this forum</a></p>
+        <p><a href="{% url 'forum_update' forum.id %}">{% translate 'Edit this forum' %}</a></p>
     {% endif %}
 
     {% if announcements %}
         <div class="panel">
-            {% include 'forums/_thread_head.html' with name='Announcements' only %}
-            <ul class="rows" aria-label="Announcements">
+            {% translate 'Announcements' as announcements_label %}
+            {% include 'forums/_thread_head.html' with name=announcements_label only %}
+            <ul class="rows" aria-label="{{ announcements_label }}">
                 {% for thread in announcements %}
                     {% include 'forums/_thread_row.html' with show_actions=True %}
                 {% endfor %}
@@ -33,17 +35,21 @@
     {% endif %}
 
     {% if threads %}
-        {% include 'forums/_pages.html' with request=request page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
+        {% translate 'Threads' as threads_label %}
+        {% translate 'Pages of threads' as pages_label %}
+        {% translate 'Newer threads' as newer_label %}
+        {% translate 'Older threads' as older_label %}
+        {% include 'forums/_pages.html' with request=request page=threads label=pages_label previous=newer_label next=older_label only %}
         <div class="panel">
-            {% include 'forums/_thread_head.html' with name='Threads' only %}
-            <ul class="rows" aria-label="Threads">
+            {% include 'forums/_thread_head.html' with name=threads_label only %}
+            <ul class="rows" aria-label="{{ threads_label }}">
                 {% for thread in threads %}
                     {% include 'forums/_thread_row.html' with show_actions=True %}
                 {% endfor %}
             </ul>
         </div>
-        {% include 'forums/_pages.html' with request=request page=threads label='Pages of threads' previous='Newer threads' next='Older threads' only %}
+        {% include 'forums/_pages.html' with request=request page=threads label=pages_label previous=newer_label next=older_label only %}
     {% else %}
-        <p class="empty">No threads here yet.{% if can_start_thread %} <a href="{% url 'thread_add' forum.id %}">Start the first one</a>.{% endif %}</p>
+        <p class="empty">{% translate 'No threads here yet.' %}{% if can_start_thread %} <a href="{% url 'thread_add' forum.id %}">{% translate 'Start the first one' %}</a>.{% endif %}</p>
     {% endif %}
 {% endblock %}

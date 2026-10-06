@@ -1,20 +1,27 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
-{% block title %}Your profile{% endblock title %}
+{% block title %}{% translate 'Your profile' %}{% endblock title %}
 
 {% block content %}
     <div class="page-head">
-        <h1>Your profile</h1>
+        <h1>{% translate 'Your profile' %}</h1>
     </div>
     <p class="lead">
-        Others see your first and last name next to what you write{% if not user.has_profile_name %}; without them you are shown as {{ user.display_name }}{% endif %}.
+        {% if user.has_profile_name %}
+            {% translate 'Others see your first and last name next to what you write.' %}
+        {% else %}
+            {% blocktranslate trimmed with name=user.display_name %}
+                Others see your first and last name next to what you write; without them you are shown as {{ name }}.
+            {% endblocktranslate %}
+        {% endif %}
     </p>
     <form class="form" method="post">
         {% csrf_token %}
         {{ form }}
         <div class="form__actions">
-            <button class="button" type="submit">Save profile</button>
-            <a class="button button--quiet" href="{% url 'home' %}">Cancel</a>
+            <button class="button" type="submit">{% translate 'Save profile' %}</button>
+            <a class="button button--quiet" href="{% url 'home' %}">{% translate 'Cancel' %}</a>
         </div>
     </form>
 {% endblock content %}

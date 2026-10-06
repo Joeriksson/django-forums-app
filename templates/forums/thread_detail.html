@@ -1,5 +1,5 @@
 {% extends '_base.html' %}
-{% load static markdown when %}
+{% load static markdown when i18n %}
 
 {% block title %}{{ thread.title }}{% endblock title %}
 
@@ -10,14 +10,14 @@
 
 {% block content %}
     {% include 'forums/_trail.html' with forum=thread.forum only %}
-    <p class="kicker">{% if thread.announcement %}Announcement{% else %}Thread{% endif %}</p>
+    <p class="kicker">{% if thread.announcement %}{% translate 'Announcement' %}{% else %}{% translate 'Thread' %}{% endif %}</p>
     <h1 class="thread-title">{{ thread.title }}</h1>
 
     <article class="post post--opening" id="opening">
         <header class="post__head">
             {% include 'forums/_person.html' with person=thread.user %}
             <time datetime="{{ thread.added|date:'c' }}" title="{{ thread.added }}">{{ thread.added|when }}</time>
-            <span class="post__tag">Opening post</span>
+            <span class="post__tag">{% translate 'Opening post' %}</span>
             <a class="post__number" href="#opening">#1</a>
         </header>
         <div class="post__body">
@@ -32,13 +32,16 @@
     <section class="replies" aria-labelledby="replies-heading">
         <h2 class="replies__heading" id="replies-heading">
             {% if posts.paginator.count %}
-                {{ posts.paginator.count }} repl{{ posts.paginator.count|pluralize:"y,ies" }}
+                {% blocktranslate count counter=posts.paginator.count %}{{ counter }} reply{% plural %}{{ counter }} replies{% endblocktranslate %}
             {% else %}
-                No replies yet
+                {% translate 'No replies yet' %}
             {% endif %}
         </h2>
 
-        {% include 'forums/_pages.html' with request=request page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
+        {% translate 'Pages of replies' as pages_label %}
+        {% translate 'Earlier replies' as earlier_label %}
+        {% translate 'Later replies' as later_label %}
+        {% include 'forums/_pages.html' with request=request page=posts label=pages_label previous=earlier_label next=later_label only %}
 
         {% for post in posts %}
             {# Numbered on from the opening post (#1), across pages #}
@@ -54,9 +57,9 @@
                         {% include 'forums/_edited.html' with edited=post.edited by_moderator=post.edited_by_moderator only %}
                         {% include 'forums/_signature.html' with profile=post.user.profile only %}
                         <div class="post__foot">
-                            {% if post.upvotes %}<span class="votes">{{ post.upvotes }} upvote{{ post.upvotes|pluralize }}</span>{% endif %}
+                            {% if post.upvotes %}<span class="votes">{% blocktranslate count counter=post.upvotes %}{{ counter }} upvote{% plural %}{{ counter }} upvotes{% endblocktranslate %}</span>{% endif %}
                             {% if post.id in voted %}
-                                <span class="votes__mine">You upvoted</span>
+                                <span class="votes__mine">{% translate 'You upvoted' %}</span>
                             {% elif post.user != user %}
                                 <form method="post" action="{% url 'post_upvote' thread.id post.id %}">
                                     {% csrf_token %}
@@ -65,10 +68,10 @@
                                 </form>
                             {% endif %}
                             {% if post.user == user or perms.forums.change_post %}
-                                <a class="post__edit" href="{% url 'post_update' thread.id post.id %}">Edit</a>
+                                <a class="post__edit" href="{% url 'post_update' thread.id post.id %}">{% translate 'Edit' %}</a>
                             {% endif %}
                             {% if post.user == user or perms.forums.delete_post %}
-                                <a class="post__delete" href="{% url 'post_delete' thread.id post.id %}">Delete</a>
+                                <a class="post__delete" href="{% url 'post_delete' thread.id post.id %}">{% translate 'Delete' %}</a>
                             {% endif %}
                         </div>
                     </div>
@@ -76,14 +79,14 @@
             {% endwith %}
         {% endfor %}
 
-        {% include 'forums/_pages.html' with request=request page=posts label='Pages of replies' previous='Earlier replies' next='Later replies' only %}
+        {% include 'forums/_pages.html' with request=request page=posts label=pages_label previous=earlier_label next=later_label only %}
     </section>
 
     {% if posts.paginator.count %}
         {% include 'forums/_thread_actions.html' with page=posts %}
     {% endif %}
 
-    <p class="thread-back"><a href="{% url 'forum_detail' thread.forum_id %}">Back to {{ thread.forum.title }}</a></p>
+    <p class="thread-back"><a href="{% url 'forum_detail' thread.forum_id %}">{% blocktranslate with forum=thread.forum.title %}Back to {{ forum }}{% endblocktranslate %}</a></p>
 {% endblock content %}
 
 {% block javascripts %}

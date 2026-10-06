@@ -1,12 +1,12 @@
 {% extends '_base.html' %}
-{% load markdown when %}
+{% load markdown when i18n %}
 
-{% block title %}Delete reply{% endblock title %}
+{% block title %}{% translate 'Delete reply' %}{% endblock title %}
 
 {% block content %}
     {% include 'forums/_trail.html' with forum=post.thread.forum thread=post.thread only %}
     <div class="page-head">
-        <h1>Delete this reply?</h1>
+        <h1>{% translate 'Delete this reply?' %}</h1>
     </div>
     <blockquote class="excerpt">
         <p class="row__meta">
@@ -17,10 +17,10 @@
     </blockquote>
     <form class="form" method="post">
         {% csrf_token %}
-        <p>It can't be brought back.</p>
+        <p>{% translate "It can't be brought back." %}</p>
         <div class="form__actions">
-            <button class="button button--danger" type="submit">Delete reply</button>
-            <a class="button button--quiet" href="{% url 'thread_detail' post.thread_id %}">Cancel</a>
+            <button class="button button--danger" type="submit">{% translate 'Delete reply' %}</button>
+            <a class="button button--quiet" href="{% url 'thread_detail' post.thread_id %}">{% translate 'Cancel' %}</a>
         </div>
     </form>
 {% endblock content %}
