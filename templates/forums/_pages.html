@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Links to the neighbouring pages of a list, shown only when there is more than one page.
 The links keep the rest of the address (a search's words and filters).
@@ -11,7 +12,7 @@ link texts).
         {% else %}
             <span></span>
         {% endif %}
-        <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+        <span>{% blocktranslate with number=page.number total=page.paginator.num_pages %}Page {{ number }} of {{ total }}{% endblocktranslate %}</span>
         {% if page.has_next %}
             <a href="{% querystring page=page.next_page_number %}">{{ next }}</a>
         {% else %}

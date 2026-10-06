@@ -1,12 +1,12 @@
 {% extends '_base.html' %}
-{% load when %}
+{% load when i18n %}
 
-{% block title %}Delete thread{% endblock title %}
+{% block title %}{% translate 'Delete thread' %}{% endblock title %}
 
 {% block content %}
     {% include 'forums/_trail.html' with forum=thread.forum thread=thread only %}
     <div class="page-head">
-        <h1>Delete this thread?</h1>
+        <h1>{% translate 'Delete this thread?' %}</h1>
     </div>
     <blockquote class="excerpt">
         <p class="excerpt__title">{{ thread.title }}</p>
@@ -17,10 +17,10 @@
     </blockquote>
     <form class="form" method="post">
         {% csrf_token %}
-        <p>The thread and all its replies are deleted. They can't be brought back.</p>
+        <p>{% translate "The thread and all its replies are deleted. They can't be brought back." %}</p>
         <div class="form__actions">
-            <button class="button button--danger" type="submit">Delete thread</button>
-            <a class="button button--quiet" href="{% url 'forum_detail' thread.forum_id %}">Cancel</a>
+            <button class="button button--danger" type="submit">{% translate 'Delete thread' %}</button>
+            <a class="button button--quiet" href="{% url 'forum_detail' thread.forum_id %}">{% translate 'Cancel' %}</a>
         </div>
     </form>
 {% endblock content %}

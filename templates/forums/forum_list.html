@@ -1,13 +1,13 @@
 {% extends '_base.html' %}
-{% load when %}
+{% load when i18n %}
 
-{% block title %}Forums{% endblock title %}
+{% block title %}{% translate 'Forums' %}{% endblock title %}
 
 {% block content %}
     <div class="page-head">
-        <h1>Forums</h1>
+        <h1>{% translate 'Forums' %}</h1>
         {% if perms.forums.add_forum %}
-            <a class="button button--quiet" href="{% url 'forum_add' %}">New forum</a>
+            <a class="button button--quiet" href="{% url 'forum_add' %}">{% translate 'New forum' %}</a>
         {% endif %}
     </div>
 
@@ -16,13 +16,13 @@
     {% if recent_threads %}
         <section class="recent" aria-labelledby="recent-title">
             <div class="recent__head">
-                <h2 class="recent__title" id="recent-title">Recent activity</h2>
-                <a href="{% url 'latest' %}">All latest →</a>
+                <h2 class="recent__title" id="recent-title">{% translate 'Recent activity' %}</h2>
+                <a href="{% url 'latest' %}">{% translate 'All latest →' %}</a>
             </div>
             <ul class="forum-row__threads recent__threads">
                 {% for thread in recent_threads %}
                     {% with who=thread.last_replier|default:thread.user %}
-                        <li><a href="{% url 'thread_detail' thread.id %}?page=last">{{ thread.title }}</a><span class="forum-row__who">in {{ thread.forum.title }} · {{ who.display_name }}, {{ thread.last_activity|when }}</span></li>
+                        <li><a href="{% url 'thread_detail' thread.id %}?page=last">{{ thread.title }}</a><span class="forum-row__who">{% blocktranslate with forum=thread.forum.title name=who.display_name active=thread.last_activity|when %}in {{ forum }} · {{ name }}, {{ active }}{% endblocktranslate %}</span></li>
                     {% endwith %}
                 {% endfor %}
             </ul>
@@ -32,41 +32,41 @@
     {% if forum_list %}
         <div class="panel">
             <div class="panel__head forum-row" aria-hidden="true">
-                <span>Forum</span>
-                <span>Threads · replies</span>
+                <span>{% translate 'Forum' %}</span>
+                <span>{% translate 'Threads · replies' %}</span>
             </div>
             <ul class="rows">
                 {% for forum in forum_list %}
                     <li class="row forum-row">
                         <div class="forum-row__main">
                             <a class="row__title" href="{% url 'forum_detail' forum.id %}">{{ forum.title }}</a>
-                            {% if forum.is_closed %}<span class="tag">Closed</span>{% endif %}
+                            {% if forum.is_closed %}<span class="tag">{% translate 'Closed' %}</span>{% endif %}
                             <p class="row__text">{{ forum.description }}</p>
                             {% if forum.top_threads %}
                                 {# Announcements first, then the threads with the newest activity #}
                                 <div class="forum-row__recent">
-                                    <p class="forum-row__label">Latest</p>
+                                    <p class="forum-row__label">{% translate 'Latest' %}</p>
                                     <ul class="forum-row__threads">
                                         {% for thread in forum.top_threads %}
                                             {% with who=thread.last_replier|default:thread.user %}
-                                                <li>{% if thread.announcement %}<span class="tag">Announcement</span>{% endif %}<a href="{% url 'thread_detail' thread.id %}?page=last">{{ thread.title }}</a><span class="forum-row__who">{{ who.display_name }}, {{ thread.last_activity|when }}</span></li>
+                                                <li>{% if thread.announcement %}<span class="tag">{% translate 'Announcement' %}</span>{% endif %}<a href="{% url 'thread_detail' thread.id %}?page=last">{{ thread.title }}</a><span class="forum-row__who">{{ who.display_name }}, {{ thread.last_activity|when }}</span></li>
                                             {% endwith %}
                                         {% endfor %}
                                     </ul>
                                 </div>
                             {% else %}
-                                <p class="forum-row__empty">No threads yet</p>
+                                <p class="forum-row__empty">{% translate 'No threads yet' %}</p>
                             {% endif %}
                         </div>
                         <p class="forum-row__counts">
-                            <span><strong>{{ forum.thread_count }}</strong> thread{{ forum.thread_count|pluralize }}</span>
-                            <span><strong>{{ forum.reply_count }}</strong> repl{{ forum.reply_count|pluralize:"y,ies" }}</span>
+                            <span>{% blocktranslate count counter=forum.thread_count %}<strong>{{ counter }}</strong> thread{% plural %}<strong>{{ counter }}</strong> threads{% endblocktranslate %}</span>
+                            <span>{% blocktranslate count counter=forum.reply_count %}<strong>{{ counter }}</strong> reply{% plural %}<strong>{{ counter }}</strong> replies{% endblocktranslate %}</span>
                         </p>
                     </li>
                 {% endfor %}
             </ul>
         </div>
     {% else %}
-        <p class="empty">There are no forums yet.{% if perms.forums.add_forum %} <a href="{% url 'forum_add' %}">Add the first one</a>.{% endif %}</p>
+        <p class="empty">{% translate 'There are no forums yet.' %}{% if perms.forums.add_forum %} <a href="{% url 'forum_add' %}">{% translate 'Add the first one' %}</a>.{% endif %}</p>
     {% endif %}
 {% endblock %}

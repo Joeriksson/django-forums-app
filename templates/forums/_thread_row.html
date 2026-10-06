@@ -1,4 +1,4 @@
-{% load when %}
+{% load when i18n %}
 {% comment %}
 One thread in a list: the title and who started it, the number of replies, and the latest
 reply. Pass "thread" from forums.activity (post_count, last_activity, last_replier);
@@ -11,31 +11,37 @@ thread's author and for moderators.
         <p class="row__meta">
             {% include 'forums/_person.html' with person=thread.user %}
             <span>
-                {% if show_forum %}in <a href="{% url 'forum_detail' thread.forum_id %}">{{ thread.forum.title }}</a>,{% endif %}
-                started {{ thread.added|when }}
+                {% if show_forum %}
+                    {% url 'forum_detail' thread.forum_id as forum_url %}
+                    {% blocktranslate trimmed with forum=thread.forum.title added=thread.added|when %}
+                        in <a href="{{ forum_url }}">{{ forum }}</a>, started {{ added }}
+                    {% endblocktranslate %}
+                {% else %}
+                    {% blocktranslate with added=thread.added|when %}started {{ added }}{% endblocktranslate %}
+                {% endif %}
             </span>
         </p>
         {% if show_actions %}
             {% if thread.user == user or perms.forums.change_thread or perms.forums.delete_thread %}
                 <p class="row__actions">
                     {% if thread.user == user or perms.forums.change_thread %}
-                        <a href="{% url 'thread_update' thread.id %}">Edit</a>
+                        <a href="{% url 'thread_update' thread.id %}">{% translate 'Edit' %}</a>
                     {% endif %}
                     {% if thread.user == user or perms.forums.delete_thread %}
-                        <a href="{% url 'thread_delete' thread.forum_id thread.id %}">Delete</a>
+                        <a href="{% url 'thread_delete' thread.forum_id thread.id %}">{% translate 'Delete' %}</a>
                     {% endif %}
                 </p>
             {% endif %}
         {% endif %}
     </div>
-    <p class="thread-row__count"><strong>{{ thread.post_count }}</strong> repl{{ thread.post_count|pluralize:"y,ies" }}</p>
+    <p class="thread-row__count">{% blocktranslate count counter=thread.post_count %}<strong>{{ counter }}</strong> reply{% plural %}<strong>{{ counter }}</strong> replies{% endblocktranslate %}</p>
     <p class="thread-row__latest">
         {% if thread.last_replier %}
-            <span class="row-label">Last reply</span>
+            <span class="row-label">{% translate 'Last reply' %}</span>
             {% include 'forums/_person.html' with person=thread.last_replier %}
             <a class="thread-row__when" href="{% url 'thread_detail' thread.id %}?page=last">{{ thread.last_activity|when }}</a>
         {% else %}
-            <span class="quiet">No replies yet</span>
+            <span class="quiet">{% translate 'No replies yet' %}</span>
         {% endif %}
     </p>
 </li>

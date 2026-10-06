@@ -1,19 +1,20 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
-{% block title %}New thread in {{ forum.title }}{% endblock title %}
+{% block title %}{% blocktranslate with title=forum.title %}New thread in {{ title }}{% endblocktranslate %}{% endblock title %}
 
 {% block content %}
     {% include 'forums/_trail.html' with forum=forum only %}
     <div class="page-head">
-        <h1>New thread</h1>
+        <h1>{% translate 'New thread' %}</h1>
     </div>
     {% include 'forums/_posting_as.html' %}
     <form class="form form--wide" method="post">
         {% csrf_token %}
         {{ form }}
         <div class="form__actions">
-            <button class="button" type="submit">Start thread</button>
-            <a class="button button--quiet" href="{% url 'forum_detail' forum.id %}">Cancel</a>
+            <button class="button" type="submit">{% translate 'Start thread' %}</button>
+            <a class="button button--quiet" href="{% url 'forum_detail' forum.id %}">{% translate 'Cancel' %}</a>
         </div>
     </form>
     {% include 'forums/_editor.html' %}

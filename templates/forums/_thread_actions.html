@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Reply and Subscribe, under the opening post and again at the end of the thread. Pass
 "thread", "subscribed", "page" (the page of replies, for coming back to it) and "can_reply"
@@ -5,17 +6,17 @@ Reply and Subscribe, under the opening post and again at the end of the thread. 
 {% endcomment %}
 <div class="thread-actions">
     {% if can_reply %}
-        <a class="button" href="{% url 'post_add' thread.id %}">Reply</a>
+        <a class="button" href="{% url 'post_add' thread.id %}">{% translate 'Reply' %}</a>
     {% else %}
-        <span class="closed-note">This forum is closed for replies.</span>
+        <span class="closed-note">{% translate 'This forum is closed for replies.' %}</span>
     {% endif %}
     <form method="post" action="{% url 'thread_notification' thread.id %}">
         {% csrf_token %}
         <input type="hidden" name="page" value="{{ page.number }}">
         {% if subscribed %}
-            <button class="button button--quiet" type="submit" aria-pressed="true" title="You get an email for each new reply. Click to stop.">Subscribed</button>
+            <button class="button button--quiet" type="submit" aria-pressed="true" title="{% translate 'You get an email for each new reply. Click to stop.' %}">{% translate 'Subscribed' %}</button>
         {% else %}
-            <button class="button button--quiet" type="submit" aria-pressed="false" title="Get an email for each new reply">Subscribe</button>
+            <button class="button button--quiet" type="submit" aria-pressed="false" title="{% translate 'Get an email for each new reply' %}">{% translate 'Subscribe' %}</button>
         {% endif %}
     </form>
 </div>

@@ -1,11 +1,11 @@
 {% extends '_base.html' %}
-{% load static when %}
+{% load static when i18n %}
 
-{% block title %}Search{% endblock title %}
+{% block title %}{% translate 'Search' %}{% endblock title %}
 
 {% block content %}
     <div class="page-head">
-        <h1>Search</h1>
+        <h1>{% translate 'Search' %}</h1>
     </div>
 
     <form class="search-form" method="get" role="search">
@@ -14,7 +14,7 @@
             {{ form.q.label_tag }}
             <div class="search__row">
                 {{ form.q }}
-                <button class="button" type="submit">Search</button>
+                <button class="button" type="submit">{% translate 'Search' %}</button>
             </div>
             <p class="helptext">{{ form.q.help_text }}</p>
             {{ form.q.errors }}
@@ -23,7 +23,7 @@
         Folded on small screens unless a filter is in use; js/search.js opens it on wider ones
         {% endcomment %}
         <details class="search-form__more"{% if filter_count %} open{% endif %}>
-            <summary>Filters{% if filter_count %} ({{ filter_count }}){% endif %}</summary>
+            <summary>{% if filter_count %}{% blocktranslate %}Filters ({{ filter_count }}){% endblocktranslate %}{% else %}{% translate 'Filters' %}{% endif %}</summary>
             <div class="search-form__filters">
                 {% for field in form %}
                     {% if field.name != 'q' %}
@@ -39,39 +39,44 @@
     </form>
 
     {% if throttled %}
-        <p class="empty">Too many searches. Wait a minute and try again.</p>
+        <p class="empty">{% translate 'Too many searches. Wait a minute and try again.' %}</p>
     {% elif results is not None %}
         {% if results %}
-            <p class="search-count">{{ page.paginator.count }} result{{ page.paginator.count|pluralize }}</p>
-            {% include 'forums/_pages.html' with request=request page=page label='Pages of results' previous='Previous' next='Next' only %}
+            <p class="search-count">{% blocktranslate count counter=page.paginator.count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %}</p>
+            {% translate 'Pages of results' as pages_label %}
+            {% translate 'Previous' as previous_label %}
+            {% translate 'Next' as next_label %}
+            {% include 'forums/_pages.html' with request=request page=page label=pages_label previous=previous_label next=next_label only %}
             <div class="panel">
                 <ul class="rows">
                     {% for result in results %}
                         <li class="row result">
                             {% if result.thread_id %}
-                                <p class="result__kind">Reply #{{ result.number }} in</p>
+                                <p class="result__kind">{% blocktranslate with number=result.number %}Reply #{{ number }} in{% endblocktranslate %}</p>
                                 <a class="row__title" href="{% url 'thread_detail' result.thread_id %}?page={{ result.thread_page }}#post-{{ result.id }}">{{ result.thread.title }}</a>
                                 <p class="row__text">{{ result.excerpt }}</p>
                                 <p class="row__meta">
                                     {% include 'forums/_person.html' with person=result.user %}
-                                    <span>in <a href="{% url 'forum_detail' result.thread.forum_id %}">{{ result.thread.forum.title }}</a>, {{ result.added|when }}</span>
+                                    {% url 'forum_detail' result.thread.forum_id as forum_url %}
+                                    <span>{% blocktranslate with forum=result.thread.forum.title added=result.added|when %}in <a href="{{ forum_url }}">{{ forum }}</a>, {{ added }}{% endblocktranslate %}</span>
                                 </p>
                             {% else %}
-                                <p class="result__kind">{% if result.announcement %}Announcement{% else %}Thread{% endif %}</p>
+                                <p class="result__kind">{% if result.announcement %}{% translate 'Announcement' %}{% else %}{% translate 'Thread' %}{% endif %}</p>
                                 <a class="row__title" href="{% url 'thread_detail' result.id %}">{{ result.title }}</a>
                                 <p class="row__text">{{ result.excerpt }}</p>
                                 <p class="row__meta">
                                     {% include 'forums/_person.html' with person=result.user %}
-                                    <span>in <a href="{% url 'forum_detail' result.forum_id %}">{{ result.forum.title }}</a>, {{ result.added|when }}</span>
+                                    {% url 'forum_detail' result.forum_id as forum_url %}
+                                    <span>{% blocktranslate with forum=result.forum.title added=result.added|when %}in <a href="{{ forum_url }}">{{ forum }}</a>, {{ added }}{% endblocktranslate %}</span>
                                 </p>
                             {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
             </div>
-            {% include 'forums/_pages.html' with request=request page=page label='Pages of results' previous='Previous' next='Next' only %}
+            {% include 'forums/_pages.html' with request=request page=page label=pages_label previous=previous_label next=next_label only %}
         {% else %}
-            <p class="empty">Nothing found. Try other words, or fewer filters.</p>
+            <p class="empty">{% translate 'Nothing found. Try other words, or fewer filters.' %}</p>
         {% endif %}
     {% endif %}
 {% endblock content %}
