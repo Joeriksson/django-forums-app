@@ -345,7 +345,8 @@ def test_marked_excerpt_is_escaped(client, anna, house, add_thread):
 def test_markup_kept_in_an_excerpt_is_escaped(client, anna, house, add_thread):
     add_thread('Pelicans', 'A pelican &lt;img src=x onerror=alert(1)&gt; and 1 < 2', house, anna)
 
-    content = search(client, q='pelican').content.decode()
+    # The page's own part: the header's language menu has flag images
+    content = search(client, q='pelican').content.decode().split('<main', 1)[1]
 
     assert '<img' not in content
     assert '<mark>pelican</mark>' in content

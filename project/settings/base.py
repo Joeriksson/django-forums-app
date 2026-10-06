@@ -178,6 +178,10 @@ if LANGUAGE_CODE not in dict(LANGUAGES):
         f'DJANGO_LANGUAGE is {LANGUAGE_CODE!r}: it must be one of {", ".join(dict(LANGUAGES))}.'
     )
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
+# The choice made in the header's language menu is kept for a year, in this browser
+LANGUAGE_COOKIE_AGE = 60 * 60 * 24 * 365
+LANGUAGE_COOKIE_HTTPONLY = True
+LANGUAGE_COOKIE_SAMESITE = 'Lax'
 
 # The zone that dates and times are shown in, the same for every member; the database
 # stores them in UTC

@@ -48,6 +48,26 @@
             {% endif %}
             {% comment %}Light or dark colours; js/theme.js shows it, since it needs JavaScript{% endcomment %}
             <button class="button button--quiet theme-toggle" type="button" aria-label="{% translate 'Dark colours' %}" aria-pressed="false" hidden></button>
+            {% comment %}
+            The language of the pages: each choice posts to Django's set_language view, which
+            keeps it in a cookie (project.middleware.SiteLanguageMiddleware reads it)
+            {% endcomment %}
+            {% get_available_languages as languages %}
+            <details class="menu language-menu">
+                <summary aria-label="{% translate 'Language' %}" title="{% translate 'Language' %}">
+                    <img class="flag" src="{% static 'flags/'|add:language|add:'.svg' %}" alt="" width="20" height="15">
+                </summary>
+                <form class="menu__items" method="post" action="{% url 'set_language' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    {% for code, name in languages %}
+                        {% get_language_info for code as info %}
+                        <button class="button language-menu__choice" type="submit" name="language" value="{{ code }}" lang="{{ code }}"{% if code == language %} aria-current="true"{% endif %}>
+                            <img class="flag" src="{% static 'flags/'|add:code|add:'.svg' %}" alt="" width="20" height="15">{{ info.name_local|capfirst }}
+                        </button>
+                    {% endfor %}
+                </form>
+            </details>
         </nav>
     </div>
 </header>
