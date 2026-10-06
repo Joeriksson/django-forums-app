@@ -43,7 +43,9 @@ def test_signup_page(client):
 def test_signup_form_asks_only_for_email_and_one_password(client):
     resp = client.get(reverse('account_signup'))
 
-    fields = set(re.findall(r'<input[^>]*name="([^"]+)"', resp.content.decode()))
+    # The page's own part: the header has the language menu's form
+    main = resp.content.decode().split('<main', 1)[1]
+    fields = set(re.findall(r'<input[^>]*name="([^"]+)"', main))
     assert fields - {'csrfmiddlewaretoken'} == {'email', 'password1'}
 
 

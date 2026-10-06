@@ -90,6 +90,7 @@ SILENCED_SYSTEM_CHECKS = ['security.W005', 'security.W021']
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+LANGUAGE_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # One reverse proxy in front of the app: allauth takes the visitor's address from the last
 # X-Forwarded-For entry, the one that proxy added. Without this its rate limits (failed

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 17:31+0000\n"
+"POT-Creation-Date: 2026-10-06 17:44+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -349,6 +349,10 @@ msgstr "Registrera dig"
 #: templates/_base.html
 msgid "Dark colours"
 msgstr "Mörka färger"
+
+#: templates/_base.html
+msgid "Language"
+msgstr "Språk"
 
 #: templates/account/email/email_confirmation_message.txt
 #, python-format

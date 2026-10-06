@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from django.views.i18n import set_language
 
 from users import views as user_views
 from users.security import API_PATH
@@ -32,6 +33,8 @@ urlpatterns = [
         views.UserProfileUpdate.as_view(),
         name='user_profile_edit',
     ),
+    # The language menu in the header posts here: the choice goes into a cookie
+    path('language/', set_language, name='set_language'),
     # local apps
     path('', include('pages.urls')),
     path('forums/', include('forums.urls')),

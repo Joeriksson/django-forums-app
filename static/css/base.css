@@ -550,6 +550,69 @@ textarea {
     overflow-wrap: anywhere;
 }
 
+/* The language menu: the flag of the page's language; each choice is a button in a form */
+
+.language-menu {
+    align-self: center;
+}
+
+.language-menu > summary {
+    display: flex;
+    align-items: center;
+}
+
+.language-menu .menu__items {
+    min-width: 10rem;
+}
+
+/* On a phone the header wraps, and the flag may end up anywhere on its line: there the
+   choices open at the left edge of the navigation, under the flag's line */
+@media (max-width: 40rem) {
+    .site-nav {
+        position: relative;
+    }
+
+    .language-menu {
+        position: static;
+    }
+
+    .language-menu .menu__items {
+        right: auto;
+        left: 0;
+    }
+}
+
+.flag {
+    display: block;
+    width: 1.25rem;
+    height: auto;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+}
+
+.language-menu__choice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--ink);
+    font-weight: 400;
+    text-align: left;
+}
+
+.language-menu__choice:hover {
+    background: var(--ground);
+    color: var(--ink);
+}
+
+.language-menu__choice[aria-current='true'] {
+    font-weight: 600;
+}
+
 /* Messages from the site (saved, logged in, refused) */
 
 .notices {
