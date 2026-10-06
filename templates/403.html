@@ -1,11 +1,12 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
-{% block title %}Not allowed{% endblock title %}
+{% block title %}{% translate 'Not allowed' %}{% endblock title %}
 
 {% block content %}
 <div class="page-head">
-    <h1>Not allowed</h1>
+    <h1>{% translate 'Not allowed' %}</h1>
 </div>
-<p class="lead">Your account doesn't have the rights to open this page.</p>
-<p><a class="button" href="{% url 'home' %}">Back to the start</a></p>
+<p class="lead">{% translate "Your account doesn't have the rights to open this page." %}</p>
+<p><a class="button" href="{% url 'home' %}">{% translate 'Back to the start' %}</a></p>
 {% endblock content %}

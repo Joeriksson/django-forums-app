@@ -1,5 +1,5 @@
 {% extends '_base.html' %}
-{% load signup %}
+{% load i18n signup %}
 
 {% block title %}{{ site_settings.title }}{% endblock title %}
 
@@ -13,10 +13,10 @@ The home page for visitors: the name and the way in. Members get the forum list 
             <h1 class="door__name">{{ site_settings.title }}</h1>
             <p class="door__text">{{ site_settings.tagline }}</p>
             <p>
-                <a class="button" href="{% url 'account_login' %}">Sign in</a>
+                <a class="button" href="{% url 'account_login' %}">{% translate 'Sign in' %}</a>
                 {% signup_is_open as signup_open %}
                 {% if signup_open %}
-                    <a class="button button--quiet" href="{% url 'account_signup' %}">Sign up</a>
+                    <a class="button button--quiet" href="{% url 'account_signup' %}">{% translate 'Sign up' %}</a>
                 {% endif %}
             </p>
             {% if not signup_open %}

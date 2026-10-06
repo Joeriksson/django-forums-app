@@ -1,20 +1,21 @@
 {% extends 'account/base_entrance.html' %}
-{% load signup %}
+{% load i18n signup %}
 {% comment %}
 Replaces allauth's page: signup is open only with an invitation (users/adapters.py), and a
 GitHub signup needs the invited address among the GitHub account's verified emails.
 {% endcomment %}
 
-{% block head_title %}Sign up closed{% endblock head_title %}
+{% block head_title %}{% translate 'Sign up closed' %}{% endblock head_title %}
 
 {% block content %}
-    <h1>Sign up closed</h1>
+    <h1>{% translate 'Sign up closed' %}</h1>
     {% invited_email as invited %}
     {% if invited %}
-        <p>Your invitation is for <strong>{{ invited }}</strong>, but your GitHub account doesn't have that address as a verified email.</p>
-        <p><a class="button" href="{% url 'account_signup' %}">Sign up with {{ invited }} and a password</a></p>
+        <p>{% blocktranslate %}Your invitation is for <strong>{{ invited }}</strong>, but your GitHub account doesn't have that address as a verified email.{% endblocktranslate %}</p>
+        <p><a class="button" href="{% url 'account_signup' %}">{% blocktranslate %}Sign up with {{ invited }} and a password{% endblocktranslate %}</a></p>
     {% else %}
-        <p>Sign up is closed at the moment: this forum is by invitation.</p>
-        <p>If you already have an account, <a href="{% url 'account_login' %}">sign in</a>.</p>
+        <p>{% translate 'Sign up is closed at the moment: this forum is by invitation.' %}</p>
+        {% url 'account_login' as login_url %}
+        <p>{% blocktranslate %}If you already have an account, <a href="{{ login_url }}">sign in</a>.{% endblocktranslate %}</p>
     {% endif %}
 {% endblock content %}

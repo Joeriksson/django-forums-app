@@ -1,15 +1,16 @@
 {% extends 'allauth/layouts/base.html' %}
+{% load i18n %}
 {# The account's settings: links between them above the page #}
 
 {% block before_content %}
     {% url 'account_email' as email_url %}
     {% url 'account_change_password' as password_url %}
     {% url 'mfa_index' as mfa_url %}
-    <nav class="account-nav" aria-label="Account">
-        <a href="{{ email_url }}"{% if request.path == email_url %} aria-current="page"{% endif %}>Email</a>
+    <nav class="account-nav" aria-label="{% translate 'Account' %}">
+        <a href="{{ email_url }}"{% if request.path == email_url %} aria-current="page"{% endif %}>{% translate 'Email' %}</a>
         {% if not user.socialaccount_set.first %}
-            <a href="{{ password_url }}"{% if request.path == password_url %} aria-current="page"{% endif %}>Password</a>
+            <a href="{{ password_url }}"{% if request.path == password_url %} aria-current="page"{% endif %}>{% translate 'Password' %}</a>
         {% endif %}
-        <a href="{{ mfa_url }}"{% if mfa_url in request.path %} aria-current="page"{% endif %}>Two-factor</a>
+        <a href="{{ mfa_url }}"{% if mfa_url in request.path %} aria-current="page"{% endif %}>{% translate 'Two-factor' %}</a>
     </nav>
 {% endblock before_content %}
