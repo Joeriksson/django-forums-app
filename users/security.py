@@ -13,8 +13,9 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.utils.translation import gettext_lazy
 
-MFA_REQUIRED_MESSAGE = (
+MFA_REQUIRED_MESSAGE = gettext_lazy(
     'Staff and moderator accounts need two-factor authentication. '
     'Set up an authenticator app to continue.'
 )

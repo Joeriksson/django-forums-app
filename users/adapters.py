@@ -7,6 +7,7 @@ from copy import copy
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext
 
 from pages.models import SiteSettings
 
@@ -43,7 +44,9 @@ class AccountAdapter(DefaultAccountAdapter):
         email = super().clean_email(email)
         invitation = self._signup_invitation()
         if invitation and email.lower() != invitation.email.lower():
-            raise ValidationError(f'Sign up with the invited address: {invitation.email}')
+            raise ValidationError(
+                gettext('Sign up with the invited address: %(email)s') % {'email': invitation.email}
+            )
         return email
 
     def _signup_invitation(self):

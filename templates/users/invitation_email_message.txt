@@ -1,9 +1,9 @@
-{% autoescape off %}Hello,
+{% load i18n %}{% autoescape off %}{% translate "Hello," %}
 
-You're invited to join {{ title }}. Use this link to create your account:
+{% blocktranslate %}You're invited to join {{ title }}. Use this link to create your account:{% endblocktranslate %}
 
 {{ link }}
 
-The link works once, for this email address only, until {{ expires_at|date:"j F Y" }}.
+{% blocktranslate with date=expires_at|date:"j F Y" %}The link works once, for this email address only, until {{ date }}.{% endblocktranslate %}
 
-If you weren't expecting this invitation, you can ignore this email.{% endautoescape %}
+{% translate "If you weren't expecting this invitation, you can ignore this email." %}{% endautoescape %}

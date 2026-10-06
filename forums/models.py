@@ -10,7 +10,7 @@ from django.utils.translation import gettext, gettext_lazy as _
 from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE, BEFORE_UPDATE
 
 from forums.tasks import send_notifications_task
-from project.utils import queue_task
+from project.utils import queue_task, site_language
 
 MARKDOWN_HELP = _('You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and tables.')
 # Checked by the forms and the API, not by the database: texts are rendered on every page view
@@ -184,11 +184,14 @@ class Post(EditMark, LifecycleModelMixin, models.Model):
             if not email_addresses:
                 return
 
+            # The mail is for all subscribers: "Member <id>" in the site's language
+            with site_language():
+                author_name = self.user.display_name
             queue_task(
                 send_notifications_task,
                 self.thread_id,
                 self.thread.title,
-                self.user.display_name,
+                author_name,
                 full_url,
                 email_addresses,
             )

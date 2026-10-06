@@ -1,7 +1,8 @@
 from celery import shared_task
 from django.conf import settings
+from django.utils.translation import gettext
 
-from project.utils import send_mail
+from project.utils import send_mail, site_language
 
 
 @shared_task
@@ -16,12 +17,14 @@ def send_notifications_task(
     # TODO: Look into how to send multiple mails via header instead of BCC
 
     # Compose message to subscribers
-    subject, from_email = f'New post added by {user_name}', settings.DEFAULT_FROM_EMAIL
+    with site_language():
+        subject = gettext('New post added by %(name)s') % {'name': user_name}
+        added = gettext('A new post was added to thread "%(title)s"') % {'title': thread_title}
+        url = gettext('Url: %(url)s') % {'url': full_url}
+    from_email = settings.DEFAULT_FROM_EMAIL
 
     bcc = email_addresses
 
-    text_content = (
-        f'A new post was added to thread "{thread_title}" \n\nUrl: {full_url} \n\n'
-    )
+    text_content = f'{added} \n\n{url} \n\n'
 
     send_mail(subject, from_email, bcc, text_content)

@@ -4,6 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.utils.translation import gettext
 
 from .models import Invitation
 from .security import has_second_factor
@@ -83,4 +84,4 @@ class InvitedSignupForm(SignupForm):
         if request and not settings.SIGNUP_OPEN and Invitation.from_session(request):
             email = self.fields['email']
             email.widget.attrs['readonly'] = True
-            email.help_text = 'Your invitation is for this address.'
+            email.help_text = gettext('Your invitation is for this address.')
