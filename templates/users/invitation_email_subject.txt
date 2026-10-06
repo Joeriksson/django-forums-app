@@ -1,1 +1,1 @@
-{% autoescape off %}You're invited to {{ title }}{% endautoescape %}
+{% load i18n %}{% autoescape off %}{% blocktranslate %}You're invited to {{ title }}{% endblocktranslate %}{% endautoescape %}
