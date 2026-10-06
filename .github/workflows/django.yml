@@ -143,6 +143,13 @@ jobs:
         "import re; from django.templatetags.static import static;
         url = static('css/base.css'); print(url);
         assert re.fullmatch(r'/static/css/base\.[0-9a-f]{12}\.css', url)"
+    # locale/ must reach the image (.dockerignore): without it every text stays English
+    - name: Check that the Swedish texts are in the image
+      run: >-
+        docker exec prod python manage.py shell -c
+        "from django.utils import translation;
+        translation.activate('sv');
+        assert translation.gettext('Sign in') == 'Logga in'"
     # The steps above start the image by hand. This one starts the whole stack the way the
     # server does: web's command (migrate, then gunicorn), the wait for a healthy db, Redis
     # with its password file and the Celery worker. Fake values only.

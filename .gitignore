@@ -66,8 +66,9 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Translations
+# Translations: only our own compiled catalog is kept (make compile_messages)
 *.mo
+!locale/*/LC_MESSAGES/django.mo
 
 # Django stuff:
 db.sqlite3-journal
