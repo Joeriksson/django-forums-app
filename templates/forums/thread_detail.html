@@ -92,5 +92,8 @@
 {% block javascripts %}
     {{ block.super }}
     <script src="{% static 'js/highlight.min.js' %}"></script>
-    <script src="{% static 'js/thread.js' %}"></script>
+    <script src="{% static 'js/thread.js' %}"
+            data-copy="{% translate 'Copy' %}"
+            data-copied="{% translate 'Copied' %}"
+            data-not-copied="{% translate 'Not copied' %}"></script>
 {% endblock javascripts %}
