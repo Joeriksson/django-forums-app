@@ -1,6 +1,7 @@
 from django import template
 from django.utils import timezone
 from django.utils.formats import date_format
+from django.utils.translation import gettext, ngettext
 
 register = template.Library()
 
@@ -15,15 +16,16 @@ def when(value, now=None):
     if seconds < 60:
         # A clock that is a little off must not print a negative time
         if seconds > -60:
-            return 'just now'
+            return gettext('just now')
     elif seconds < 3600:
         minutes = int(seconds // 60)
-        return f'{minutes} minute{"" if minutes == 1 else "s"} ago'
+        return ngettext('%(count)s minute ago', '%(count)s minutes ago', minutes) % {'count': minutes}
     elif seconds < 86400:
         hours = int(seconds // 3600)
-        return f'{hours} hour{"" if hours == 1 else "s"} ago'
+        return ngettext('%(count)s hour ago', '%(count)s hours ago', hours) % {'count': hours}
     elif seconds < 2 * 86400:
-        return 'yesterday'
+        return gettext('yesterday')
     elif seconds < 7 * 86400:
-        return f'{int(seconds // 86400)} days ago'
+        days = int(seconds // 86400)
+        return ngettext('%(count)s day ago', '%(count)s days ago', days) % {'count': days}
     return date_format(timezone.localtime(value), 'j F Y')
