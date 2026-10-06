@@ -1,6 +1,7 @@
-{% load nav static signup %}
+{% load i18n nav static signup %}
+{% get_current_language as language %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language }}">
 <head>
     <meta charset="utf-8">
     <title>{% block title %}{{ site_settings.title|default:'Wildvasa' }}{% endblock title %}</title>
@@ -17,36 +18,36 @@
 <header class="site-header">
     <div class="wrap site-header__row">
         <a class="site-name" href="{% url 'home' %}">{{ site_settings.title|default:'Wildvasa' }}</a>
-        <nav class="site-nav" aria-label="Main">
+        <nav class="site-nav" aria-label="{% translate 'Main' %}">
             {% if user.is_authenticated %}
                 {% nav_section as section %}
-                <a href="{% url 'home' %}"{% if section == 'forums' %} aria-current="page"{% endif %}>Forums</a>
-                <a href="{% url 'latest' %}"{% if section == 'latest' %} aria-current="page"{% endif %}>Latest</a>
-                <a href="{% url 'search_results' %}"{% if section == 'search' %} aria-current="page"{% endif %}>Search</a>
+                <a href="{% url 'home' %}"{% if section == 'forums' %} aria-current="page"{% endif %}>{% translate 'Forums' %}</a>
+                <a href="{% url 'latest' %}"{% if section == 'latest' %} aria-current="page"{% endif %}>{% translate 'Latest' %}</a>
+                <a href="{% url 'search_results' %}"{% if section == 'search' %} aria-current="page"{% endif %}>{% translate 'Search' %}</a>
                 {% if user.is_staff %}
-                    <a href="{% url 'admin:index' %}">Admin</a>
+                    <a href="{% url 'admin:index' %}">{% translate 'Admin' %}</a>
                 {% endif %}
                 <details class="menu">
                     <summary>{{ user.display_name }}</summary>
                     <div class="menu__items">
-                        <div class="menu__who">Signed in as {{ user.email }}</div>
-                        <a href="{% url 'user_profile_edit' request.user.profile.id %}">Edit profile</a>
+                        <div class="menu__who">{% blocktranslate with email=user.email %}Signed in as {{ email }}{% endblocktranslate %}</div>
+                        <a href="{% url 'user_profile_edit' request.user.profile.id %}">{% translate 'Edit profile' %}</a>
                         {% if not user.socialaccount_set.first %}
-                            <a href="{% url 'account_change_password' %}">Change password</a>
+                            <a href="{% url 'account_change_password' %}">{% translate 'Change password' %}</a>
                         {% endif %}
-                        <a href="{% url 'mfa_index' %}">Two-factor authentication</a>
-                        <a href="{% url 'account_logout' %}">Sign out</a>
+                        <a href="{% url 'mfa_index' %}">{% translate 'Two-factor authentication' %}</a>
+                        <a href="{% url 'account_logout' %}">{% translate 'Sign out' %}</a>
                     </div>
                 </details>
             {% else %}
-                <a href="{% url 'account_login' %}">Sign in</a>
+                <a href="{% url 'account_login' %}">{% translate 'Sign in' %}</a>
                 {% signup_is_open as signup_open %}
                 {% if signup_open %}
-                    <a href="{% url 'account_signup' %}">Sign up</a>
+                    <a href="{% url 'account_signup' %}">{% translate 'Sign up' %}</a>
                 {% endif %}
             {% endif %}
             {% comment %}Light or dark colours; js/theme.js shows it, since it needs JavaScript{% endcomment %}
-            <button class="button button--quiet theme-toggle" type="button" aria-label="Dark colours" aria-pressed="false" hidden></button>
+            <button class="button button--quiet theme-toggle" type="button" aria-label="{% translate 'Dark colours' %}" aria-pressed="false" hidden></button>
         </nav>
     </div>
 </header>

@@ -1,11 +1,12 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
-{% block title %}Page not found{% endblock title %}
+{% block title %}{% translate 'Page not found' %}{% endblock title %}
 
 {% block content %}
 <div class="page-head">
-    <h1>Page not found</h1>
+    <h1>{% translate 'Page not found' %}</h1>
 </div>
-<p class="lead">The address may be mistyped, or what was here has been deleted.</p>
-<p><a class="button" href="{% url 'home' %}">Back to the start</a></p>
+<p class="lead">{% translate 'The address may be mistyped, or what was here has been deleted.' %}</p>
+<p><a class="button" href="{% url 'home' %}">{% translate 'Back to the start' %}</a></p>
 {% endblock content %}

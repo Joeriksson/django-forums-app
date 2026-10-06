@@ -1,11 +1,12 @@
 {% extends '_base.html' %}
+{% load i18n %}
 
-{% block title %}Something went wrong{% endblock title %}
+{% block title %}{% translate 'Something went wrong' %}{% endblock title %}
 
 {% block content %}
 <div class="page-head">
-    <h1>Something went wrong</h1>
+    <h1>{% translate 'Something went wrong' %}</h1>
 </div>
-<p class="lead">The site ran into an error. Try again in a moment.</p>
-<p><a class="button" href="{% url 'home' %}">Back to the start</a></p>
+<p class="lead">{% translate 'The site ran into an error. Try again in a moment.' %}</p>
+<p><a class="button" href="{% url 'home' %}">{% translate 'Back to the start' %}</a></p>
 {% endblock content %}
