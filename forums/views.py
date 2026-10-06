@@ -11,6 +11,7 @@ from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext, gettext_lazy
 from django.views.generic import (
     ListView,
     DetailView,
@@ -172,7 +173,7 @@ class PostingLimitMixin:
     def form_valid(self, form):
         # Checked here, so a form with errors doesn't count
         if not posting_allowed(self.request):
-            form.add_error(None, 'You are posting too fast. Wait a while and try again.')
+            form.add_error(None, gettext('You are posting too fast. Wait a while and try again.'))
             # The form comes back with the text, to send again later
             return self.render_to_response(self.get_context_data(form=form), status=429)
         return super().form_valid(form)
@@ -203,7 +204,7 @@ class ThreadCreate(
     model = Thread
     context_object_name = 'thread'
     fields = ['title', 'text']
-    success_message = "Thread was created successfullty"
+    success_message = gettext_lazy('Thread was created successfully')
 
     def may_post(self):
         forum = get_object_or_404(Forum, pk=self.kwargs['pk'])
@@ -260,7 +261,7 @@ class PostCreate(
 ):
     model = Post
     fields = ['text']
-    success_message = "Post was created successfully!"
+    success_message = gettext_lazy('Post was created successfully!')
 
     def may_post(self):
         thread = get_object_or_404(Thread.objects.select_related('forum'), pk=self.kwargs['pk'])
@@ -427,9 +428,9 @@ class MarkdownPreview(LoginRequiredMixin, View):
     def post(self, request):
         if not allowed(request, PreviewThrottle):
             # The editor shows "The preview could not be loaded."
-            return HttpResponse('Too many previews. Wait a moment and try again.', status=429)
+            return HttpResponse(gettext('Too many previews. Wait a moment and try again.'), status=429)
         text = request.POST.get('text', '')
         # Longer than a thread or post may be: it couldn't be saved either
         if len(text) > MAX_TEXT_LENGTH:
-            return HttpResponseBadRequest('The text is too long.')
+            return HttpResponseBadRequest(gettext('The text is too long.'))
         return HttpResponse(render_markdown(text))

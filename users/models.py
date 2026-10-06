@@ -9,6 +9,7 @@ from django.db.models.functions import Lower
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext
 
 from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook
 
@@ -48,7 +49,7 @@ class CustomUser(LifecycleModelMixin, AbstractUser):
         What other people see as this user's name. Never the username: allauth
         derives it from the email address, which is nobody else's business.
         """
-        return self.profile_name or f'Member {self.pk}'
+        return self.profile_name or gettext('Member %(id)s') % {'id': self.pk}
 
     @property
     def monogram(self):

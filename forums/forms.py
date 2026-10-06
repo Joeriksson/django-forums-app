@@ -3,6 +3,7 @@ from collections import Counter
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils.translation import gettext, gettext_lazy as _
 
 from .models import Forum, UserProfile
 
@@ -13,29 +14,29 @@ class SearchForm(forms.Form):
     min_words_length = 3
 
     q = forms.CharField(
-        label='Words',
+        label=_('Words'),
         required=False,
         max_length=200,
-        help_text='Use "quotes" for a phrase and -word to leave a word out.',
+        help_text=_('Use "quotes" for a phrase and -word to leave a word out.'),
     )
     forum = forms.ModelChoiceField(
-        queryset=Forum.objects.order_by('title', 'id'), required=False, empty_label='All forums'
+        queryset=Forum.objects.order_by('title', 'id'), required=False, empty_label=_('All forums')
     )
-    author = forms.TypedChoiceField(label='Author', required=False, coerce=int, empty_value=None)
-    since = forms.DateField(label='From', required=False, widget=forms.DateInput(attrs={'type': 'date'}))
-    until = forms.DateField(label='To', required=False, widget=forms.DateInput(attrs={'type': 'date'}))
+    author = forms.TypedChoiceField(label=_('Author'), required=False, coerce=int, empty_value=None)
+    since = forms.DateField(label=_('From'), required=False, widget=forms.DateInput(attrs={'type': 'date'}))
+    until = forms.DateField(label=_('To'), required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     kind = forms.ChoiceField(
-        label='Search in',
+        label=_('Search in'),
         required=False,
-        choices=[('all', 'Threads and replies'), ('threads', 'Threads'), ('replies', 'Replies')],
+        choices=[('all', _('Threads and replies')), ('threads', _('Threads')), ('replies', _('Replies'))],
     )
     sort = forms.ChoiceField(
-        label='Sort by', required=False, choices=[('best', 'Best match'), ('newest', 'Newest first')]
+        label=_('Sort by'), required=False, choices=[('best', _('Best match')), ('newest', _('Newest first'))]
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['author'].choices = [('', 'Anyone'), *author_choices()]
+        self.fields['author'].choices = [('', _('Anyone')), *author_choices()]
         # The forum's own title, not its __str__ ('Forum: ...')
         self.fields['forum'].label_from_instance = lambda forum: forum.title
 
@@ -50,12 +51,16 @@ class SearchForm(forms.Form):
         data = super().clean()
         since, until = data.get('since'), data.get('until')
         if since and until and until < since:
-            self.add_error('until', 'The end date is before the start date.')
+            self.add_error('until', gettext('The end date is before the start date.'))
         words = data.get('q', '')
         if words and len(words) < self.min_words_length:
-            self.add_error('q', f'Type at least {self.min_words_length} characters.')
+            self.add_error('q', gettext('Type at least %(count)s characters.') % {'count': self.min_words_length})
         elif not words and not self.has_filter():
-            self.add_error('q', f'Type at least {self.min_words_length} characters, or choose a filter.')
+            self.add_error(
+                'q',
+                gettext('Type at least %(count)s characters, or choose a filter.')
+                % {'count': self.min_words_length},
+            )
         return data
 
 
@@ -64,9 +69,10 @@ def author_choices():
     users = list(get_user_model().objects.filter(is_active=True).select_related('profile'))
     names = [user.display_name for user in users]
     counts = Counter(names)
+    numbered = gettext('%(name)s (member %(id)s)')
     return sorted(
         (
-            (user.pk, f'{name} (member {user.pk})' if counts[name] > 1 else name)
+            (user.pk, numbered % {'name': name, 'id': user.pk} if counts[name] > 1 else name)
             for user, name in zip(users, names)
         ),
         key=lambda choice: choice[1].casefold(),

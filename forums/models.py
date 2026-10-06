@@ -6,12 +6,13 @@ from django.contrib.postgres.search import SearchVector
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext, gettext_lazy as _
 from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE, BEFORE_UPDATE
 
 from forums.tasks import send_notifications_task
 from project.utils import queue_task
 
-MARKDOWN_HELP = 'You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and tables.'
+MARKDOWN_HELP = _('You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and tables.')
 # Checked by the forms and the API, not by the database: texts are rendered on every page view
 MAX_TEXT_LENGTH = 20_000
 MAX_SIGNATURE_LENGTH = 500
@@ -28,20 +29,20 @@ POST_SEARCH_VECTOR = SearchVector('text', weight='B', config=SEARCH_CONFIG)
 class Posting(models.TextChoices):
     """Who may add to a forum. A moderator is anyone with forums.change_thread."""
 
-    OPEN = 'open', 'Open: every member can start threads and reply'
-    MODERATORS_START = 'moderators_start', 'Moderators start threads; members can reply'
-    MODERATORS_ONLY = 'moderators_only', 'Moderators only: members can read'
+    OPEN = 'open', _('Open: every member can start threads and reply')
+    MODERATORS_START = 'moderators_start', _('Moderators start threads; members can reply')
+    MODERATORS_ONLY = 'moderators_only', _('Moderators only: members can read')
 
 
 class Forum(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.CharField(max_length=500)
+    title = models.CharField(_('title'), max_length=200)
+    description = models.CharField(_('description'), max_length=500)
     posting = models.CharField(
-        'Who can post',
+        _('Who can post'),
         max_length=20,
         choices=Posting.choices,
         default=Posting.OPEN,
-        help_text='Closing a forum stops new threads or replies. What is already there stays.',
+        help_text=_('Closing a forum stops new threads or replies. What is already there stays.'),
     )
 
     def __str__(self):
@@ -55,8 +56,8 @@ class Forum(models.Model):
     def posting_note(self):
         """What a closed forum tells its readers."""
         return {
-            Posting.MODERATORS_START: 'Only moderators can start threads here. Everyone can reply.',
-            Posting.MODERATORS_ONLY: 'Only moderators can post here.',
+            Posting.MODERATORS_START: gettext('Only moderators can start threads here. Everyone can reply.'),
+            Posting.MODERATORS_ONLY: gettext('Only moderators can post here.'),
         }.get(self.posting, '')
 
     def can_start_thread(self, user):
@@ -83,8 +84,8 @@ class EditMark:
 
 
 class Thread(EditMark, LifecycleModelMixin, models.Model):
-    title = models.CharField(max_length=300)
-    text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
+    title = models.CharField(_('title'), max_length=300)
+    text = models.TextField(_('text'), max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     added = models.DateTimeField(auto_now_add=True)
     # Empty until the title or the text is changed (mark_edited)
     edited = models.DateTimeField(null=True, blank=True, editable=False)
@@ -101,7 +102,9 @@ class Thread(EditMark, LifecycleModelMixin, models.Model):
     forum = models.ForeignKey(Forum, related_name='threads', on_delete=models.CASCADE)
     # Set by moderators (forums.change_thread)
     announcement = models.BooleanField(
-        default=False, help_text='Keep this thread at the top of its forum, above the others.'
+        _('announcement'),
+        default=False,
+        help_text=_('Keep this thread at the top of its forum, above the others.'),
     )
     # user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, )
     user = models.ForeignKey(
@@ -125,7 +128,7 @@ class Thread(EditMark, LifecycleModelMixin, models.Model):
 
 
 class Post(EditMark, LifecycleModelMixin, models.Model):
-    text = models.TextField(max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
+    text = models.TextField(_('text'), max_length=MAX_TEXT_LENGTH, help_text=MARKDOWN_HELP)
     upvotes = models.IntegerField(default=0)
     added = models.DateTimeField(auto_now_add=True)
     # Empty until the text is changed (mark_edited)
@@ -192,10 +195,10 @@ class Post(EditMark, LifecycleModelMixin, models.Model):
 
 
 class Gender(models.TextChoices):
-    NOTPROVIDED = 'N', 'NotProvided'
-    MALE = 'M', 'Male'
-    FEMALE = 'F', 'Female'
-    OTHER = 'O', 'Other'
+    NOTPROVIDED = 'N', _('NotProvided')
+    MALE = 'M', _('Male')
+    FEMALE = 'F', _('Female')
+    OTHER = 'O', _('Other')
 
 
 class UserProfile(models.Model):
@@ -214,16 +217,16 @@ class UserProfile(models.Model):
         related_name='profile',
         on_delete=models.CASCADE,
     )
-    first_name = models.CharField(max_length=100, blank=True)
-    last_name = models.CharField(max_length=100, blank=True)
-    bio = models.TextField(max_length=1000, blank=True)
-    location = models.CharField(max_length=50, blank=True)
+    first_name = models.CharField(_('first name'), max_length=100, blank=True)
+    last_name = models.CharField(_('last name'), max_length=100, blank=True)
+    bio = models.TextField(_('bio'), max_length=1000, blank=True)
+    location = models.CharField(_('location'), max_length=50, blank=True)
     gender = models.TextField(
-        max_length=1, choices=Gender.choices, default=Gender.NOTPROVIDED
+        _('gender'), max_length=1, choices=Gender.choices, default=Gender.NOTPROVIDED
     )
-    web_site = models.URLField(blank=True)
-    github_url = models.URLField(blank=True)
-    signature = models.TextField(max_length=MAX_SIGNATURE_LENGTH, blank=True)
+    web_site = models.URLField(_('web site'), blank=True)
+    github_url = models.URLField(_('github url'), blank=True)
+    signature = models.TextField(_('signature'), max_length=MAX_SIGNATURE_LENGTH, blank=True)
 
 
 class UpVote(models.Model):
