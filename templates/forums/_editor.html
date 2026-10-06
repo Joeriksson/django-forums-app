@@ -1,6 +1,21 @@
-{% load static %}
+{% load i18n static %}
 {# Markdown editor for the "text" field; without JavaScript the plain textarea still works #}
 <link rel="stylesheet" href="{% static 'css/easymde.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/editor.css' %}">
 <script src="{% static 'js/easymde.min.js' %}"></script>
-<script src="{% static 'js/editor.js' %}" data-preview-url="{% url 'markdown_preview' %}"></script>
+{% comment %}The editor's texts: button titles and the preview's messages{% endcomment %}
+<script src="{% static 'js/editor.js' %}"
+        data-preview-url="{% url 'markdown_preview' %}"
+        data-bold="{% translate 'Bold' %}"
+        data-italic="{% translate 'Italic' %}"
+        data-strikethrough="{% translate 'Strikethrough' %}"
+        data-heading="{% translate 'Heading' %}"
+        data-quote="{% translate 'Quote' %}"
+        data-code="{% translate 'Code' %}"
+        data-unordered-list="{% translate 'Bulleted list' %}"
+        data-ordered-list="{% translate 'Numbered list' %}"
+        data-link="{% translate 'Link' %}"
+        data-table="{% translate 'Table' %}"
+        data-preview="{% translate 'Preview' %}"
+        data-preview-loading="{% translate 'Loading preview…' %}"
+        data-preview-failed="{% translate 'The preview could not be loaded.' %}"></script>

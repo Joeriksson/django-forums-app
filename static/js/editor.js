@@ -1,6 +1,8 @@
 // Turns the "text" textarea of a thread or post form into a Markdown editor (EasyMDE).
 (function () {
-    var previewUrl = document.currentScript.dataset.previewUrl;
+    // The address of the preview and the texts, translated, come from the script tag (_editor.html)
+    var text = document.currentScript.dataset;
+    var previewUrl = text.previewUrl;
     var textarea = document.querySelector('textarea[name="text"]');
     if (!textarea || typeof EasyMDE === 'undefined') {
         return;
@@ -9,9 +11,9 @@
     var latestRequest = 0;
 
     // The preview is rendered by the server, so it shows exactly what the saved text will look like.
-    function renderPreview(text, preview) {
+    function renderPreview(markdown, preview) {
         var request = ++latestRequest;
-        var body = new URLSearchParams({text: text});
+        var body = new URLSearchParams({text: markdown});
         fetch(previewUrl, {
             method: 'POST',
             headers: {'X-CSRFToken': csrfToken},
@@ -29,10 +31,10 @@
             }
         }).catch(function () {
             if (request === latestRequest) {
-                preview.textContent = 'The preview could not be loaded.';
+                preview.textContent = text.previewFailed;
             }
         });
-        return 'Loading preview…';
+        return text.previewLoading;
     }
 
     // The editor hides the textarea, and a browser cannot show its "required" message on a
@@ -55,20 +57,20 @@
         status: false,
         previewRender: renderPreview,
         toolbar: [
-            button('bold', EasyMDE.toggleBold, 'Bold'),
-            button('italic', EasyMDE.toggleItalic, 'Italic'),
-            button('strikethrough', EasyMDE.toggleStrikethrough, 'Strikethrough'),
-            button('heading', EasyMDE.toggleHeadingSmaller, 'Heading'),
+            button('bold', EasyMDE.toggleBold, text.bold),
+            button('italic', EasyMDE.toggleItalic, text.italic),
+            button('strikethrough', EasyMDE.toggleStrikethrough, text.strikethrough),
+            button('heading', EasyMDE.toggleHeadingSmaller, text.heading),
             '|',
-            button('quote', EasyMDE.toggleBlockquote, 'Quote'),
-            button('code', EasyMDE.toggleCodeBlock, 'Code'),
-            button('unordered-list', EasyMDE.toggleUnorderedList, 'Bulleted list'),
-            button('ordered-list', EasyMDE.toggleOrderedList, 'Numbered list'),
+            button('quote', EasyMDE.toggleBlockquote, text.quote),
+            button('code', EasyMDE.toggleCodeBlock, text.code),
+            button('unordered-list', EasyMDE.toggleUnorderedList, text.unorderedList),
+            button('ordered-list', EasyMDE.toggleOrderedList, text.orderedList),
             '|',
-            button('link', EasyMDE.drawLink, 'Link'),
-            button('table', EasyMDE.drawTable, 'Table'),
+            button('link', EasyMDE.drawLink, text.link),
+            button('table', EasyMDE.drawTable, text.table),
             '|',
-            button('preview', EasyMDE.togglePreview, 'Preview', true)
+            button('preview', EasyMDE.togglePreview, text.preview, true)
         ]
     });
 
