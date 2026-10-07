@@ -148,7 +148,7 @@ msgstr "text"
 
 #: forums/models.py
 msgid "announcement"
-msgstr "anslag"
+msgstr "tillkännagivande"
 
 #: forums/models.py
 msgid "Keep this thread at the top of its forum, above the others."
