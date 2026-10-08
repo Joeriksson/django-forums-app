@@ -28,6 +28,7 @@ from .search import load, matches, search_query
 from .markdown import render as render_markdown
 from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Subscription
 from .throttling import PreviewThrottle, SearchThrottle, allowed, posting_allowed
+from notifications.events import thread_opened
 from pages.models import SiteSettings
 from users.audit import log_moderation
 
@@ -105,6 +106,11 @@ class ThreadDetail(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return super().get_queryset().select_related('forum', 'user__profile')
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        thread_opened(request.user, self.object)
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

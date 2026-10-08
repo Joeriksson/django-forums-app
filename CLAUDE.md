@@ -119,6 +119,10 @@ users/             # Custom user model (email-based auth)
   tasks.py         # Celery task send_welcome_email_task
 
 pages/             # Home (visitors: the name, a way in, an invitation note while signup is closed, a drawn landscape; members: the forum list), the latest conversations, and SiteSettings (models.py; context_processors.py)
+notifications/     # The notification center's rows: one Notification model for every kind of news (no pages yet)
+  models.py        # Notification
+  events.py        # reply_added(post), thread_opened(user, thread): the only code that writes the rows
+
 api/               # Django REST Framework API (mounted only with DJANGO_API_ENABLED)
   views.py         # ModelViewSet for Forum, Thread, Post, User
   serializers.py   # No nested lists: Forum has thread_count, Thread has post_count
@@ -187,7 +191,16 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 ### Subscription
 - `thread` (ForeignKey → Thread)
 - `user` (ForeignKey → AUTH_USER_MODEL)
-- Users subscribe to threads to receive email notifications on new posts (called `Notification` until migration `forums/0025`; the table is `forums_subscription`)
+- Users subscribe to threads to receive email notifications on new posts, and a row in the notification center (see *Notification*) (called `Notification` until migration `forums/0025`; the table is `forums_subscription`)
+
+### Notification (`notifications.Notification`)
+- News for one member, for the notification center (the bell and its page are not built yet): `user`, `kind` (only `reply` so far; direct messages will be another kind, not another table), `thread`, `post`, `count`, `read`, `updated`
+- Replies are one row per member and thread (unique), reused: `events.reply_added(post)` adds one to `count` on a row not yet read, and starts a row that was read or is missing over at this reply (`post`, `count` 1). So `post` is the first reply the member hasn't seen, and the table doesn't grow with the posts: no cleanup job. Four queries however many subscribers
+- Who: the thread's subscribers with an active account, except the reply's author. Unlike the mail it needs no confirmed address and also runs in CI. Called by the `add_notifications` lifecycle hook on `Post` (AFTER_CREATE, after the commit), so replies from the website, the API and the admin all count; `forums/models.py` imports `notifications.events` inside the hook, since that app imports `forums.models`
+- Read: `events.thread_opened(user, thread)`, called by `ThreadDetail.get`, marks the row read on any page of the thread (one more query on the thread page). Unsubscribing keeps the row
+- A deleted reply doesn't lower `count`; if it was the first unread one, `post` becomes empty (`SET_NULL`) and stays empty until the row starts over. Deleting the thread or the account deletes the rows
+- Two replies committed at the same moment for a member without a row may count as one
+- Tests: `tests/forums/test_reply_notifications.py`
 
 ### CustomUser (`users.CustomUser`)
 - Extends `AbstractUser`
@@ -220,7 +233,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 /forums/<pk>/update/       → ForumUpdate (requires forums.change_forum permission)
 /forums/<pk>/add/          → ThreadCreate (login required)
 /forums/<fpk>/delete/<pk>  → ThreadDelete (owner or forums.delete_thread)
-/forums/thread/<pk>        → ThreadDetail (posts oldest first, 25 per page by default (*Site settings*); ?page=<n> or ?page=last)
+/forums/thread/<pk>        → ThreadDetail (posts oldest first, 25 per page by default (*Site settings*); ?page=<n> or ?page=last; marks the reader's notification for the thread read)
 /forums/thread/<pk>/update/→ ThreadUpdate (owner or forums.change_thread)
 /forums/thread/<pk>/notify → ThreadSubscription (toggle subscription)
 /forums/thread/<pk>/post   → PostCreate (then the thread's last page)

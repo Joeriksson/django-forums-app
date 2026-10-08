@@ -196,6 +196,13 @@ class Post(EditMark, LifecycleModelMixin, models.Model):
                 email_addresses,
             )
 
+    @hook(AFTER_CREATE, on_commit=True)
+    def add_notifications(self):
+        # For the notification center; imported here since that app builds on this one
+        from notifications.events import reply_added
+
+        reply_added(self)
+
 
 class Gender(models.TextChoices):
     NOTPROVIDED = 'N', _('NotProvided')
