@@ -1,0 +1,39 @@
+{% extends '_base.html' %}
+{% load i18n when %}
+
+{% block title %}{% translate 'Notifications' %}{% endblock title %}
+
+{% block content %}
+    <div class="page-head">
+        <h1>{% translate 'Notifications' %}</h1>
+        {% if unread %}
+            <form method="post" action="{% url 'notifications_read' %}">
+                {% csrf_token %}
+                <button class="button button--quiet" type="submit">{% translate 'Mark all as read' %}</button>
+            </form>
+        {% endif %}
+    </div>
+    {% if notifications %}
+        <div class="panel">
+            <ul class="rows">
+                {% for notification in notifications %}
+                    <li class="row notification-row{% if notification.read %} notification-row--read{% endif %}">
+                        <a class="row__title" href="{{ notification.url }}">{{ notification.thread.title }}</a>
+                        <p class="row__meta">
+                            {% if notification.read %}
+                                <span>{% translate 'Read' %}</span>
+                            {% else %}
+                                <span class="notification-row__count">{% blocktranslate count counter=notification.count %}<strong>{{ counter }}</strong> new reply{% plural %}<strong>{{ counter }}</strong> new replies{% endblocktranslate %}</span>
+                            {% endif %}
+                            {% url 'forum_detail' notification.thread.forum_id as forum_url %}
+                            <span>{% blocktranslate with forum=notification.thread.forum.title %}in <a href="{{ forum_url }}">{{ forum }}</a>{% endblocktranslate %}</span>
+                            <span>{{ notification.updated|when }}</span>
+                        </p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p class="empty">{% translate 'Nothing new.' %}</p>
+    {% endif %}
+{% endblock content %}

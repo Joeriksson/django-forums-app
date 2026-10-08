@@ -948,6 +948,17 @@ textarea {
     color: inherit;
 }
 
+/* Notifications (notifications/notification_list.html): what is new stands out, what
+   was read steps back */
+.notification-row__count strong {
+    color: var(--ink);
+}
+
+.notification-row--read .row__title {
+    color: var(--quiet);
+    font-weight: 400;
+}
+
 /* On a narrow screen the columns' place no longer says what they are */
 .row-label {
     display: none;
