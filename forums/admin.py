@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db import models
 
-from .models import Forum, Thread, Post, UserProfile, UpVote, Notification
+from .models import Forum, Thread, Post, UserProfile, UpVote, Subscription
 
 
 class EditorAdminMixin:
@@ -22,7 +22,7 @@ class PostAdmin(EditorAdminMixin, admin.ModelAdmin):
     )
 
 
-class NotificationAdmin(admin.ModelAdmin):
+class SubscriptionAdmin(admin.ModelAdmin):
     search_fields = ('user__username',)
     list_filter = (('added', admin.DateFieldListFilter),)
     list_display = ('thread', 'user')
@@ -54,4 +54,4 @@ admin.site.register(Thread, ThreadAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(UpVote)
-admin.site.register(Notification, NotificationAdmin)
+admin.site.register(Subscription, SubscriptionAdmin)

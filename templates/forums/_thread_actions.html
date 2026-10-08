@@ -10,7 +10,7 @@ Reply and Subscribe, under the opening post and again at the end of the thread. 
     {% else %}
         <span class="closed-note">{% translate 'This forum is closed for replies.' %}</span>
     {% endif %}
-    <form method="post" action="{% url 'thread_notification' thread.id %}">
+    <form method="post" action="{% url 'thread_subscription' thread.id %}">
         {% csrf_token %}
         <input type="hidden" name="page" value="{{ page.number }}">
         {% if subscribed %}

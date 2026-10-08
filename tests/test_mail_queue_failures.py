@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from kombu.exceptions import OperationalError
 
-from forums.models import Forum, Notification, Post, Thread
+from forums.models import Forum, Subscription, Post, Thread
 from forums.tasks import send_notifications_task
 from project.utils import queue_task
 from users.models import Invitation
@@ -52,7 +52,7 @@ def thread_with_subscriber(db, verify_email):
     verify_email(subscriber)
     forum = Forum.objects.create(title='Forum', description='Description')
     thread = Thread.objects.create(title='Thread', text='Text', forum=forum, user=author)
-    Notification.objects.create(thread=thread, user=subscriber)
+    Subscription.objects.create(thread=thread, user=subscriber)
     return thread, author
 
 

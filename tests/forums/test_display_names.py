@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from pytest_django.asserts import assertContains, assertNotContains
 
-from forums.models import Forum, Notification, Post, Thread
+from forums.models import Forum, Subscription, Post, Thread
 
 User = get_user_model()
 
@@ -142,7 +142,7 @@ def test_notification_names_the_author_by_display_name(
     subscriber = verify_email(
         User.objects.create_user(username='sub', email='sub@example.com', password='x')
     )
-    Notification.objects.create(thread=thread, user=subscriber)
+    Subscription.objects.create(thread=thread, user=subscriber)
 
     with django_capture_on_commit_callbacks(execute=True):
         Post.objects.create(text='A reply', thread=thread, user=anna)

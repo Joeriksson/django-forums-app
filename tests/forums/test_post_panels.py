@@ -86,7 +86,7 @@ def test_actions_and_page_links_at_both_ends(client, thread, five_replies):
     content = page(client, thread, 2)
 
     assert content.count(f'href="{reverse("post_add", args=[thread.pk])}"') == 2
-    assert content.count(f'action="{reverse("thread_notification", args=[thread.pk])}"') == 2
+    assert content.count(f'action="{reverse("thread_subscription", args=[thread.pk])}"') == 2
     assert content.count('aria-label="Pages of replies"') == 2
 
 

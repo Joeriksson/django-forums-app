@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.utils import timezone, translation
 
-from forums.models import Notification, Post
+from forums.models import Subscription, Post
 from forums.tasks import send_notifications_task
 from users.models import Invitation
 from users.tasks import send_invitation_email_task, send_welcome_email_task
@@ -67,7 +67,7 @@ def test_notification_names_a_member_without_a_name_in_the_site_language(
     )
     forum = Forum.objects.create(title='General', description='Everything')
     thread = Thread.objects.create(title='A thread', text='Text', forum=forum, user=author)
-    Notification.objects.create(thread=thread, user=subscriber)
+    Subscription.objects.create(thread=thread, user=subscriber)
 
     with translation.override('sv'), django_capture_on_commit_callbacks(execute=True):
         Post.objects.create(text='A reply', thread=thread, user=author)

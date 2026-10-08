@@ -26,7 +26,7 @@ from .activity import add_last_repliers, add_top_threads, latest_threads, with_a
 from .forms import SearchForm
 from .search import load, matches, search_query
 from .markdown import render as render_markdown
-from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Notification
+from .models import MAX_TEXT_LENGTH, Forum, Thread, Post, UpVote, Subscription
 from .throttling import PreviewThrottle, SearchThrottle, allowed, posting_allowed
 from pages.models import SiteSettings
 from users.audit import log_moderation
@@ -127,7 +127,7 @@ class ThreadDetail(LoginRequiredMixin, DetailView):
                     user=self.request.user, post__in=[post.id for post in context['posts']]
                 ).values_list('post_id', flat=True)
             )
-            context['subscribed'] = Notification.objects.filter(
+            context['subscribed'] = Subscription.objects.filter(
                 thread=self.kwargs['pk'], user=self.request.user
             )
         return context
@@ -363,16 +363,16 @@ class PostUpvote(LoginRequiredMixin, View):
         return HttpResponseRedirect(thread_page_url(self.kwargs['tpk'], request.POST.get('page')))
 
 
-class ThreadNotification(LoginRequiredMixin, View):
+class ThreadSubscription(LoginRequiredMixin, View):
     model = Thread
 
     def post(self, request, **kwargs):
         thread = get_object_or_404(Thread, id=self.kwargs['pk'])
-        deleted, _ = Notification.objects.filter(
+        deleted, _ = Subscription.objects.filter(
             thread=thread, user=request.user
         ).delete()
         if not deleted:
-            Notification.objects.create(thread=thread, user=request.user)
+            Subscription.objects.create(thread=thread, user=request.user)
         return HttpResponseRedirect(thread_page_url(thread.pk, request.POST.get('page')))
 
 

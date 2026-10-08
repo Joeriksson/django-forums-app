@@ -100,7 +100,7 @@ project/           # Django project settings and configuration
   utils.py         # send_mail helper (BCC via the configured email backend), queue_task, site_language
   middleware.py    # ContentSecurityPolicyMiddleware: the CSP header from SECURE_CSP; SiteLanguageMiddleware: the page's language
 
-forums/            # Core app — Forum, Thread, Post, UpVote, Notification, UserProfile models
+forums/            # Core app — Forum, Thread, Post, UpVote, Subscription, UserProfile models
   models.py        # All core models; a django-lifecycle hook on Post sends the notifications
   views.py         # Class-based views (ListView, DetailView, CreateView, etc.)
   urls.py          # Forum URL patterns
@@ -184,10 +184,10 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 - `user` (ForeignKey → AUTH_USER_MODEL)
 - `added` (DateTimeField)
 
-### Notification
+### Subscription
 - `thread` (ForeignKey → Thread)
 - `user` (ForeignKey → AUTH_USER_MODEL)
-- Users subscribe to threads to receive email notifications on new posts
+- Users subscribe to threads to receive email notifications on new posts (called `Notification` until migration `forums/0025`; the table is `forums_subscription`)
 
 ### CustomUser (`users.CustomUser`)
 - Extends `AbstractUser`
@@ -222,7 +222,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 /forums/<fpk>/delete/<pk>  → ThreadDelete (owner or forums.delete_thread)
 /forums/thread/<pk>        → ThreadDetail (posts oldest first, 25 per page by default (*Site settings*); ?page=<n> or ?page=last)
 /forums/thread/<pk>/update/→ ThreadUpdate (owner or forums.change_thread)
-/forums/thread/<pk>/notify → ThreadNotification (toggle subscription)
+/forums/thread/<pk>/notify → ThreadSubscription (toggle subscription)
 /forums/thread/<pk>/post   → PostCreate (then the thread's last page)
 /forums/thread/<tpk>/post/<pk>/update/ → PostUpdate (owner or forums.change_post; then back to the reply on its page)
 /forums/thread/<tpk>/post/<pk>/delete  → PostDelete
