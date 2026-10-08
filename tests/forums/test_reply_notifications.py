@@ -109,11 +109,11 @@ def test_a_deactivated_subscriber_is_not_notified(thread, author, subscriber, re
     assert not Notification.objects.exists()
 
 
-def test_an_unverified_address_does_not_matter(thread, author, subscriber, reply, notification_calls):
+def test_an_unverified_address_does_not_matter(thread, author, subscriber, reply_with_mail, mailoutbox):
     # The mail needs a confirmed address; the notification center is on the site itself
-    reply(thread, author)
+    reply_with_mail(thread, author)
 
-    assert notification_calls == []
+    assert mailoutbox == []
     assert Notification.objects.count() == 1
 
 
@@ -160,8 +160,8 @@ def test_the_queries_do_not_grow_with_the_subscribers(
         Post.objects.create(text='A reply', thread=thread, user=author)
 
     # The subscribers, then inside a savepoint: unread rows, read rows, new rows.
-    # None of the subscribers has a confirmed address, so the mail adds its one query only
-    with django_assert_num_queries(1 + 4 + 2):
+    # Then the site settings, for how long the mail waits
+    with django_assert_num_queries(1 + 3 + 2 + 1):
         for callback in callbacks:
             callback()
 

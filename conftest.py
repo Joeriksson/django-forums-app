@@ -19,15 +19,34 @@ def clear_cache():
     cache.clear()
 
 
-# Same notification path in CI and locally: CI unset, task recorded instead of queued
+# Same notification path in CI and locally: CI unset, task recorded instead of queued.
+# Each call is (the reply's id, the seconds the mail waits); a test that wants the mail
+# runs send_notifications_task(post.pk) itself
 @pytest.fixture(autouse=True)
 def notification_calls(monkeypatch):
     calls = []
     monkeypatch.delenv('CI', raising=False)
     monkeypatch.setattr(
-        'forums.tasks.send_notifications_task.delay', lambda *args: calls.append(args)
+        'forums.tasks.send_notifications_task.apply_async',
+        lambda args, countdown: calls.append((args[0], countdown)),
     )
     return calls
+
+
+@pytest.fixture
+def reply_with_mail(django_capture_on_commit_callbacks):
+    """Post a reply and run its mail task, as the worker does after the wait. Returns the post."""
+
+    def _reply(thread, user, text='A reply'):
+        from forums.models import Post
+        from forums.tasks import send_notifications_task
+
+        with django_capture_on_commit_callbacks(execute=True):
+            post = Post.objects.create(text=text, thread=thread, user=user)
+        send_notifications_task(post.pk)
+        return post
+
+    return _reply
 
 
 @pytest.fixture

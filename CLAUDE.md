@@ -52,7 +52,7 @@ Tests use `project.settings.test` settings. Coverage and pytest configuration ar
 ### Test Structure
 
 ```
-conftest.py                      # Autouse fixtures for every test: clear the cache, record notification tasks; add_totp, verify_email, security_log
+conftest.py                      # Autouse fixtures for every test: clear the cache, record notification tasks (`notification_calls`); `reply_with_mail` posts a reply and runs its mail task; add_totp, verify_email, security_log
 tests/
 ├── test_pages.py                # Home page
 ├── test_users.py                # User model, signup
@@ -161,7 +161,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 - `user` (ForeignKey → AUTH_USER_MODEL)
 - Ordered by `added`
 - **Lifecycle hooks**:
-  - `notify_subscribers` (AFTER_CREATE, after the commit): queues `send_notifications_task` via Celery (skipped in CI). Only active subscribers whose address is verified (allauth's `EmailAddress`) get the mail, so test subscribers need `verify_email`. Tests need `django_capture_on_commit_callbacks(execute=True)` to see it run
+  - `notify_subscribers` (AFTER_CREATE, after the commit): first writes the notification center's rows (`notifications.events.reply_added`), then, if anyone was told, queues `send_notifications_task` with the reply's id and a countdown (skipped in CI). See *Notification mail*. Tests need `django_capture_on_commit_callbacks(execute=True)` to see it run
 
 ### Edited mark
 - `Thread.edited` and `Post.edited` are empty until the text (or a thread's title) changes: the `mark_edited` lifecycle hook (BEFORE_UPDATE) sets the time, so the website, the API and the admin behave alike. Other saves don't count (a moderator's announcement mark), nor does a form saved unchanged. A `queryset.update()` skips the hook, and so does `save(update_fields=...)` without `edited`
@@ -198,13 +198,20 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 ### Notification (`notifications.Notification`)
 - News for one member, listed on `/notifications/` and counted on the bell in the header: `user`, `kind` (only `reply` so far; direct messages will be another kind, not another table), `thread`, `post`, `count`, `read`, `updated`
 - Replies are one row per member and thread (unique), reused: `events.reply_added(post)` adds one to `count` on a row not yet read, and starts a row that was read or is missing over at this reply (`post`, `count` 1). So `post` is the first reply the member hasn't seen, and the table doesn't grow with the posts: no cleanup job. Four queries however many subscribers
-- Who: the thread's subscribers with an active account, except the reply's author. Unlike the mail it needs no confirmed address and also runs in CI. Called by the `add_notifications` lifecycle hook on `Post` (AFTER_CREATE, after the commit), so replies from the website, the API and the admin all count; `forums/models.py` imports `notifications.events` inside the hook, since that app imports `forums.models`
+- Who: the thread's subscribers with an active account, except the reply's author. Unlike the mail it needs no confirmed address and also runs in CI. Called by the `notify_subscribers` lifecycle hook on `Post` (AFTER_CREATE, after the commit), before it queues the mail, so replies from the website, the API and the admin all count; `forums/models.py` imports `notifications.events` inside the hook, since that app imports `forums.models`
 - Read: `events.thread_opened(user, thread)`, called by `ThreadDetail.get`, marks the row read on any page of the thread (one more query on the thread page). Unsubscribing keeps the row
 - A deleted reply doesn't lower `count`; if it was the first unread one, `post` becomes empty (`SET_NULL`) and stays empty until the row starts over. Deleting the thread or the account deletes the rows
 - Two replies committed at the same moment for a member without a row may count as one
 - The page (`NotificationList`, `templates/notifications/notification_list.html`) lists the member's rows, unread first, then the newest, 50 at most and no paging (`MAX_ROWS`). An unread row says *3 new replies*, a read one *Read*. `load()` gives each row its link in the same query: the first unread reply on its page of the thread (`?page=<n>#post-<id>`), or `?page=last` when that reply is gone. Following it marks the row read, since it opens the thread. *Mark all as read* posts to `MarkAllRead`. The template shows replies only: a new `kind` needs its own branch there
 - **The bell** (`.bell` in `_base.html`, for members only) is a link to the page, so it works without JavaScript. It shows the number of unread rows (threads with news, not replies; *9+* above nine), from `{% unread_notifications user as unread %}` (`notifications/templatetags/bell.py`, `Notification.unread_count`): one query on every logged-in page. The same number comes first in the page's `<title>`, *(3) Latest conversations*, for a tab in the background. `static/js/notifications.js` asks `/notifications/count/` every 30 seconds (`INTERVAL`), only while the tab is visible and at once when it becomes visible again, and updates both. It doesn't follow redirects: one means the session has ended (or a privileged account lacks two-factor), and it stops asking. So `UnreadCount` must keep answering visitors with a redirect, not a 403, which would put a line in the security log every half minute. The script has no texts: screen readers get *Notifications* and *Unread:* from `.visually-hidden` spans in the template. The icon is `static/icons/bell.svg` (Lucide)
 - Tests: `tests/forums/test_reply_notifications.py` (the rows), `tests/forums/test_notifications_page.py` (the page), `tests/test_bell.py` (the bell and the count's address). The tests don't run JavaScript: after changing the script, check in a browser that a new notification shows within half a minute without a reload
+
+### Notification mail
+- A reply is not mailed at once. `Post.notify_subscribers` queues `send_notifications_task(post.pk)` with a countdown of `notification_mail_delay` minutes (*Site settings*, 5; 0 runs it at once), and the task picks the recipients when it runs: the thread's subscribers (active account, confirmed address, still subscribed) whose `Notification` for the thread is unread and has this reply as its `post`
+- So a member who opened the thread during the wait gets no mail, and a member who didn't gets one mail for the first reply and none for the replies that follow, until they have been to the thread: those replies' tasks find a row that starts at an earlier reply. The reply's author never has a row starting at their own reply. Each member is mailed about their own first unread reply, so two members can get the mail from different tasks
+- The mail links to the reply on its page of the thread (`?page=<n>#post-<id>`), worked out when the task runs. A reply deleted during the wait sends nothing; if it was a member's first unread one, the replies after it send that member nothing either until they have been to the thread (the bell still shows them): known and accepted
+- The delay must stay well under the broker's visibility timeout (an hour by default), or Redis hands the waiting task to the worker twice: the admin form allows 30 minutes at most. A worker restarted during the wait gets its waiting tasks back, at the latest after that timeout. Checked once on the dev worker with `app.send_task(..., countdown=6)`; the tests don't use a worker
+- Tests: `tests/forums/test_notification_mail.py`. The autouse `notification_calls` fixture (root `conftest.py`) records each queued task as `(post id, seconds)` instead of running it; a test that wants the mail runs the task itself, or uses `reply_with_mail(thread, user)`. Subscribers need `verify_email` to get one
 
 ### CustomUser (`users.CustomUser`)
 - Extends `AbstractUser`
@@ -213,7 +220,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 - `send_welcome_mail` lifecycle hook fires after the user creation commits (`on_commit=True`) and queues `send_welcome_email_task`
 
 ### SiteSettings (`pages.SiteSettings`)
-- One record (pk 1, created by migration `pages/0001`), edited under *Site settings* in the admin, which opens it from the list and allows no adding or deleting: `title` (the site's name), `tagline` and `invitation_note` (the visitors' home page), and the numbers `recent_threads` (3), `latest_threads` (15), `threads_per_page` (20) and `posts_per_page` (25), each with limits checked by the admin form (not by the database)
+- One record (pk 1, created by migration `pages/0001`), edited under *Site settings* in the admin, which opens it from the list and allows no adding or deleting: `title` (the site's name), `tagline` and `invitation_note` (the visitors' home page), and the numbers `recent_threads` (3), `latest_threads` (15), `threads_per_page` (20), `posts_per_page` (25) and `notification_mail_delay` (5 minutes, 0 to 30: see *Notification mail*), each with limits checked by the admin form (not by the database)
 - Read it with `SiteSettings.for_request(request)` in views: loaded once per request and shared with the templates, which get it as `site_settings` from `pages.context_processors.site_settings`, lazily: one query on a page that uses it. `SiteSettings.load()` (the defaults if the record is missing) outside a request, e.g. in tasks. No cache, so every gunicorn worker sees a change at once. `500.html` is rendered without context processors: `_base.html` falls back to `Wildvasa`
 - Saving copies the title into the *Sites* display name. allauth's emails (`AccountAdapter.send_mail`, `format_email_subject`), the welcome and invitation emails and the name in authenticator apps (`MFAAdapter.get_totp_issuer`) read the title from `SiteSettings`, not from *Sites*, whose per-process cache would keep an old name until a restart
 - Tests: `tests/test_site_settings.py`; other tests change it with the `site_settings` fixture (root `conftest.py`), e.g. `site_settings(posts_per_page=2)`
@@ -314,12 +321,12 @@ The **security log** is the `security` logger: one line per event, `event key=va
 ## Async Tasks (Celery)
 
 - Broker: Redis. There is no result backend (`CELERY_TASK_IGNORE_RESULT`): the tasks only send mail and nothing reads their results
-- Queue mail tasks with `project.utils.queue_task(task, *args)`, not `.delay()`: if Redis is unreachable it logs an error (mailed to `DJANGO_ADMINS`) and the request carries on without the mail, since the post, user or invitation is already saved. Queuing gives up after 2 to 6 seconds (`CELERY_BROKER_TRANSPORT_OPTIONS`, `CELERY_TASK_PUBLISH_RETRY_POLICY` in `base.py`). The mail is not sent later
-- `send_notifications_task`: sends BCC email to thread subscribers when a new post is created; retries up to 3 times on failure
+- Queue mail tasks with `project.utils.queue_task(task, *args)`, not `.delay()` (`countdown=<seconds>` makes the worker wait before it runs the task): if Redis is unreachable it logs an error (mailed to `DJANGO_ADMINS`) and the request carries on without the mail, since the post, user or invitation is already saved. Queuing gives up after 2 to 6 seconds (`CELERY_BROKER_TRANSPORT_OPTIONS`, `CELERY_TASK_PUBLISH_RETRY_POLICY` in `base.py`). The mail is not sent later
+- `send_notifications_task(post_id)`: the mail about a reply, BCC to the subscribers who haven't seen it (see *Notification mail*); retries up to 3 times on failure
 - `send_welcome_email_task` (`users/tasks.py`): sends the welcome email to a new user; retries up to 3 times on failure
 - `send_invitation_email_task` (`users/tasks.py`): sends an invitation's link (templates in `templates/users/`) and sets `sent_at`; sends nothing if the invitation is no longer valid; same retries
-- Outside production, `CELERY_TASK_ALWAYS_EAGER = True` and `CELERY_TASK_EAGER_PROPAGATES = True`: tasks run synchronously in the web process and their errors are raised there, so the Celery worker is idle in dev
-- Tasks skipped entirely in CI (`os.environ.get('CI')` check in `Post.notify_subscribers`)
+- Outside production, `CELERY_TASK_ALWAYS_EAGER = True` and `CELERY_TASK_EAGER_PROPAGATES = True`: tasks run synchronously in the web process and their errors are raised there, so the Celery worker is idle in dev. A countdown is ignored there: the notification mail goes out at once
+- The notification mail is not queued in CI (`os.environ.get('CI')` check in `Post.notify_subscribers`); the notification center's rows are written there too
 
 ## Environment Variables
 
@@ -348,7 +355,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | `DJANGO_CSP_REPORT_ONLY` | `true` makes the Content Security Policy report-only (browsers log violations instead of blocking). Default `false`: enforced everywhere, development and tests included |
 | `DJANGO_API_ENABLED` | `true` mounts the REST API under `/api/` (`settings.API_ENABLED`, read by `project/urls.py`). Off by default, so production has no API unless asked for: every `/api/` path is a 404. `development.py` defaults to on and `test.py` sets it on. The `api` app, DRF and the token table stay installed either way, and the website's posting, search and preview limits (DRF throttles) don't depend on it |
 | `DJANGO_STAFF_REQUIRE_MFA` | Staff, moderators and anyone else with a permission need an authenticator app to use the site, and their API tokens are refused (`settings.STAFF_REQUIRE_MFA`). Default `true`; `development.py` defaults to `false` |
-| `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()` and `Post.notify_subscribers`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. |
+| `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()` and `send_notifications_task`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
 | `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
 | `WEB_CONCURRENCY` | Production only: number of gunicorn worker processes (default: `2`), read by `gunicorn.conf.py` |

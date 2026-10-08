@@ -35,6 +35,25 @@ def test_queue_task_logs_a_broker_failure_and_carries_on(monkeypatch, caplog):
     assert 'anna@example.com' not in caplog.text
 
 
+def test_queue_task_with_a_countdown_logs_a_broker_failure_too(monkeypatch, caplog):
+    monkeypatch.setattr(send_welcome_email_task, 'apply_async', broker_down)
+
+    queue_task(send_welcome_email_task, 'anna@example.com', countdown=60)
+
+    assert len(queue_errors(caplog)) == 1
+
+
+def test_queue_task_passes_the_countdown_on(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        send_welcome_email_task, 'apply_async', lambda args, countdown: calls.append((args, countdown))
+    )
+
+    queue_task(send_welcome_email_task, 'anna@example.com', countdown=0)
+
+    assert calls == [(('anna@example.com',), 0)]
+
+
 def test_queue_task_lets_other_errors_through(monkeypatch):
     def broken(*args):
         raise ValueError('a bug in the task')
@@ -60,7 +79,7 @@ def test_post_is_created_when_the_notification_cannot_be_queued(
     client, thread_with_subscriber, monkeypatch, caplog, django_capture_on_commit_callbacks
 ):
     thread, author = thread_with_subscriber
-    monkeypatch.setattr(send_notifications_task, 'delay', broker_down)
+    monkeypatch.setattr(send_notifications_task, 'apply_async', broker_down)
     client.force_login(author)
 
     with django_capture_on_commit_callbacks(execute=True):

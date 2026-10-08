@@ -3,8 +3,6 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.db import transaction
 
-from forums.tasks import send_notifications_task
-
 SENDER = 'forum@example.com'
 
 
@@ -51,12 +49,21 @@ def test_welcome_mail_not_sent_when_creation_is_rolled_back():
     assert len(mail.outbox) == 0
 
 
-def test_notification_mail_uses_default_from_email(settings):
-    settings.DEFAULT_FROM_EMAIL = SENDER
+@pytest.mark.django_db
+def test_notification_mail_uses_default_from_email(settings, verify_email, reply_with_mail):
+    from forums.models import Forum, Subscription, Thread
 
-    send_notifications_task(
-        1, 'A thread', 'someone', 'http://example.com', ['subscriber@example.com']
+    settings.DEFAULT_FROM_EMAIL = SENDER
+    users = get_user_model().objects
+    author = users.create_user(username='author', email='author@example.com', password='testpass123')
+    subscriber = verify_email(
+        users.create_user(username='subscriber', email='subscriber@example.com', password='testpass123')
     )
+    forum = Forum.objects.create(title='General', description='Everything')
+    thread = Thread.objects.create(title='A thread', text='Text', forum=forum, user=author)
+    Subscription.objects.create(thread=thread, user=subscriber)
+
+    reply_with_mail(thread, author)
 
     assert len(mail.outbox) == 1
     assert mail.outbox[0].from_email == SENDER

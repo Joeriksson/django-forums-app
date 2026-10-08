@@ -99,42 +99,41 @@ def thread(db):
     return Thread.objects.create(title='Test Thread', text='Thread text', forum=forum, user=author)
 
 
-def notified_addresses(thread, notification_calls, django_capture_on_commit_callbacks):
+def notified_addresses(thread, reply_with_mail, mailoutbox):
     """Post a reply as the thread's author; return the addresses the notification goes to."""
-    with django_capture_on_commit_callbacks(execute=True):
-        Post.objects.create(text='A reply', thread=thread, user=thread.user)
-    return [address for call in notification_calls for address in call[4]]
+    reply_with_mail(thread, thread.user)
+    return [address for message in mailoutbox for address in message.bcc]
 
 
 @pytest.mark.django_db
 def test_notification_skips_unverified_subscriber(
-    thread, user, verify_email, notification_calls, django_capture_on_commit_callbacks
+    thread, user, verify_email, reply_with_mail, mailoutbox
 ):
     verified = User.objects.create_user(username='verified', email='verified@example.com', password=PASSWORD)
     verify_email(verified)
     Subscription.objects.create(thread=thread, user=user)
     Subscription.objects.create(thread=thread, user=verified)
 
-    assert notified_addresses(thread, notification_calls, django_capture_on_commit_callbacks) == [
+    assert notified_addresses(thread, reply_with_mail, mailoutbox) == [
         'verified@example.com'
     ]
 
 
 @pytest.mark.django_db
 def test_notification_skips_deactivated_subscriber(
-    thread, user, verify_email, notification_calls, django_capture_on_commit_callbacks
+    thread, user, verify_email, reply_with_mail, mailoutbox
 ):
     verify_email(user)
     user.is_active = False
     user.save()
     Subscription.objects.create(thread=thread, user=user)
 
-    assert notified_addresses(thread, notification_calls, django_capture_on_commit_callbacks) == []
+    assert notified_addresses(thread, reply_with_mail, mailoutbox) == []
 
 
 @pytest.mark.django_db
 def test_notification_uses_the_verified_address_only(
-    thread, user, verify_email, notification_calls, django_capture_on_commit_callbacks
+    thread, user, verify_email, reply_with_mail, mailoutbox
 ):
     """A verified address that is not the account's current one doesn't count."""
     verify_email(user)
@@ -142,4 +141,4 @@ def test_notification_uses_the_verified_address_only(
     user.save()
     Subscription.objects.create(thread=thread, user=user)
 
-    assert notified_addresses(thread, notification_calls, django_capture_on_commit_callbacks) == []
+    assert notified_addresses(thread, reply_with_mail, mailoutbox) == []

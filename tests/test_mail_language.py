@@ -8,8 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.utils import timezone, translation
 
-from forums.models import Subscription, Post
-from forums.tasks import send_notifications_task
+from forums.models import Subscription
 from users.models import Invitation
 from users.tasks import send_invitation_email_task, send_welcome_email_task
 
@@ -35,29 +34,9 @@ def test_welcome_mail_is_in_the_site_language(tagged):
     assert message.body.startswith('<en>Thank you for registering at ')
 
 
-def test_notification_mail_is_in_the_site_language(tagged):
-    with translation.override('sv'):
-        send_notifications_task(1, 'A thread', 'Anna Berg', 'https://forum.example.com/t/1', ['a@example.com'])
-
-    message = mail.outbox[0]
-    assert message.subject == '<en>New post added by Anna Berg'
-    assert '<en>A new post was added to thread "A thread"' in message.body
-    assert '<en>Url: https://forum.example.com/t/1' in message.body
-
-
-@pytest.mark.django_db
-def test_notification_mail_follows_a_swedish_site(tagged, settings):
-    settings.LANGUAGE_CODE = 'sv'
-
-    send_notifications_task(1, 'A thread', 'Anna Berg', 'https://forum.example.com/t/1', ['a@example.com'])
-
-    assert mail.outbox[0].subject == '<sv>New post added by Anna Berg'
-
-
-@pytest.mark.django_db
-def test_notification_names_a_member_without_a_name_in_the_site_language(
-    tagged, notification_calls, verify_email, django_capture_on_commit_callbacks
-):
+@pytest.fixture
+def reply(db, verify_email):
+    """A reply by a member without a profile name, in a thread with a subscriber."""
     from forums.models import Forum, Thread
 
     users = get_user_model().objects
@@ -68,11 +47,30 @@ def test_notification_names_a_member_without_a_name_in_the_site_language(
     forum = Forum.objects.create(title='General', description='Everything')
     thread = Thread.objects.create(title='A thread', text='Text', forum=forum, user=author)
     Subscription.objects.create(thread=thread, user=subscriber)
+    return thread, author
 
-    with translation.override('sv'), django_capture_on_commit_callbacks(execute=True):
-        Post.objects.create(text='A reply', thread=thread, user=author)
 
-    assert notification_calls[0][2] == f'<en>Member {author.pk}'
+def test_notification_mail_is_in_the_site_language(tagged, reply, reply_with_mail, settings):
+    settings.SITE_URL = 'https://forum.example.com'
+    thread, author = reply
+
+    # In development the task runs inside the request, in its visitor's language
+    with translation.override('sv'):
+        post = reply_with_mail(thread, author)
+
+    message = mail.outbox[0]
+    # "Member <id>" is a text too
+    assert message.subject == f'<en>New post added by <en>Member {author.pk}'
+    assert '<en>A new post was added to thread "A thread"' in message.body
+    assert f'<en>Url: https://forum.example.com/forums/thread/{thread.pk}?page=1#post-{post.pk}' in message.body
+
+
+def test_notification_mail_follows_a_swedish_site(tagged, reply, reply_with_mail, settings):
+    settings.LANGUAGE_CODE = 'sv'
+
+    reply_with_mail(*reply)
+
+    assert mail.outbox[0].subject.startswith('<sv>New post added by <sv>Member ')
 
 
 @pytest.mark.django_db

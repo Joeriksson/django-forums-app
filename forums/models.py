@@ -4,13 +4,13 @@ from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector
 from django.db import models
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext, gettext_lazy as _
 from django_lifecycle import LifecycleModelMixin, hook, AFTER_CREATE, BEFORE_UPDATE
 
 from forums.tasks import send_notifications_task
-from project.utils import queue_task, site_language
+from pages.models import SiteSettings
+from project.utils import queue_task
 
 MARKDOWN_HELP = _('You can use Markdown: **bold**, *italic*, `code`, > quote, lists, links and tables.')
 # Checked by the forms and the API, not by the database: texts are rendered on every page view
@@ -164,44 +164,15 @@ class Post(EditMark, LifecycleModelMixin, models.Model):
 
     @hook(AFTER_CREATE, on_commit=True)
     def notify_subscribers(self):
-        # Runs only once the post is committed, so a rollback sends nothing
-        if not os.environ.get('CI'):
-            full_url = settings.SITE_URL + reverse('thread_detail', args=(self.thread_id,))
-
-            # Only to active accounts, and only to an address its owner has confirmed
-            email_addresses = list(
-                Subscription.objects.filter(
-                    thread_id=self.thread_id,
-                    user__is_active=True,
-                    user__emailaddress__verified=True,
-                    user__emailaddress__email__iexact=models.F('user__email'),
-                )
-                .exclude(user_id=self.user_id)
-                .order_by('pk')
-                .values_list('user__email', flat=True)
-                .distinct()
-            )
-            if not email_addresses:
-                return
-
-            # The mail is for all subscribers: "Member <id>" in the site's language
-            with site_language():
-                author_name = self.user.display_name
-            queue_task(
-                send_notifications_task,
-                self.thread_id,
-                self.thread.title,
-                author_name,
-                full_url,
-                email_addresses,
-            )
-
-    @hook(AFTER_CREATE, on_commit=True)
-    def add_notifications(self):
-        # For the notification center; imported here since that app builds on this one
+        # Runs only once the post is committed, so a rollback notifies nobody.
+        # Imported here, since the notifications app builds on this one
         from notifications.events import reply_added
 
-        reply_added(self)
+        # The notification center first: the mail goes to those it still shows as unread
+        notified = reply_added(self)
+        if notified and not os.environ.get('CI'):
+            delay = SiteSettings.load().notification_mail_delay
+            queue_task(send_notifications_task, self.pk, countdown=delay * 60)
 
 
 class Gender(models.TextChoices):

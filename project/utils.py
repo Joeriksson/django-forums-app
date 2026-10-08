@@ -36,13 +36,17 @@ def send_mail(subject, from_email, bcc, text_content):
     logger.info('Mail sent to %d recipients', len(bcc))
 
 
-def queue_task(task, *args):
+def queue_task(task, *args, countdown=None):
     """
     Queue a Celery task whose failure mustn't fail the request: the post, user or
     invitation is already saved, and a 500 would make the user try again.
+    `countdown` makes the worker wait that many seconds before it runs the task.
     """
     try:
-        task.delay(*args)
+        if countdown is None:
+            task.delay(*args)
+        else:
+            task.apply_async(args, countdown=countdown)
     except OperationalError:
         # The broker (Redis) is unreachable. Logged as an error, so ADMINS get a mail.
         # Without the arguments: they can hold email addresses
