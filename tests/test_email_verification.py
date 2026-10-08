@@ -7,7 +7,7 @@ from django.core import mail
 from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
-from forums.models import Forum, Notification, Post, Thread
+from forums.models import Forum, Subscription, Post, Thread
 
 User = get_user_model()
 
@@ -112,8 +112,8 @@ def test_notification_skips_unverified_subscriber(
 ):
     verified = User.objects.create_user(username='verified', email='verified@example.com', password=PASSWORD)
     verify_email(verified)
-    Notification.objects.create(thread=thread, user=user)
-    Notification.objects.create(thread=thread, user=verified)
+    Subscription.objects.create(thread=thread, user=user)
+    Subscription.objects.create(thread=thread, user=verified)
 
     assert notified_addresses(thread, notification_calls, django_capture_on_commit_callbacks) == [
         'verified@example.com'
@@ -127,7 +127,7 @@ def test_notification_skips_deactivated_subscriber(
     verify_email(user)
     user.is_active = False
     user.save()
-    Notification.objects.create(thread=thread, user=user)
+    Subscription.objects.create(thread=thread, user=user)
 
     assert notified_addresses(thread, notification_calls, django_capture_on_commit_callbacks) == []
 
@@ -140,6 +140,6 @@ def test_notification_uses_the_verified_address_only(
     verify_email(user)
     user.email = 'changed@example.com'
     user.save()
-    Notification.objects.create(thread=thread, user=user)
+    Subscription.objects.create(thread=thread, user=user)
 
     assert notified_addresses(thread, notification_calls, django_capture_on_commit_callbacks) == []

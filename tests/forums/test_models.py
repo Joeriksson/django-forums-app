@@ -1,7 +1,7 @@
 import pytest
 from django.db import IntegrityError
 
-from forums.models import UserProfile, Post, Notification, UpVote, Gender
+from forums.models import UserProfile, Post, Subscription, UpVote, Gender
 
 
 @pytest.mark.django_db
@@ -57,8 +57,8 @@ def test_notify_subscribers_excludes_post_author(
     subscriber = verify_email(add_user('subscriber', 'subscriber@example.com', 'pass123'))
     thread = add_thread('Test Thread', 'Thread text', forum, author)
 
-    Notification.objects.create(thread=thread, user=author)
-    Notification.objects.create(thread=thread, user=subscriber)
+    Subscription.objects.create(thread=thread, user=author)
+    Subscription.objects.create(thread=thread, user=subscriber)
 
     # The hook runs once the post is committed
     with django_capture_on_commit_callbacks(execute=True):
@@ -88,7 +88,7 @@ def test_no_notification_task_without_recipients(
     thread = add_thread('Test Thread', 'Thread text', forum, author)
 
     if author_subscribed:
-        Notification.objects.create(thread=thread, user=author)
+        Subscription.objects.create(thread=thread, user=author)
 
     # The hook runs once the post is committed
     with django_capture_on_commit_callbacks(execute=True):
@@ -107,7 +107,7 @@ def test_no_notification_task_in_ci(
     subscriber = add_user('subscriber', 'subscriber@example.com', 'pass123')
     thread = add_thread('Test Thread', 'Thread text', forum, author)
 
-    Notification.objects.create(thread=thread, user=subscriber)
+    Subscription.objects.create(thread=thread, user=subscriber)
 
     monkeypatch.setenv('CI', 'true')
 
@@ -133,13 +133,13 @@ def test_upvote_unique_per_user(add_forum, add_user, add_thread, add_post):
 
 
 @pytest.mark.django_db
-def test_notification_unique_per_user(add_forum, add_user, add_thread):
+def test_subscription_unique_per_user(add_forum, add_user, add_thread):
     forum = add_forum('Test Forum', 'Description')
     author = add_user('author', 'author@example.com', 'pass123')
     subscriber = add_user('subscriber', 'subscriber@example.com', 'pass123')
     thread = add_thread('Test Thread', 'Thread text', forum, author)
 
-    Notification.objects.create(thread=thread, user=subscriber)
+    Subscription.objects.create(thread=thread, user=subscriber)
 
     with pytest.raises(IntegrityError):
-        Notification.objects.create(thread=thread, user=subscriber)
+        Subscription.objects.create(thread=thread, user=subscriber)

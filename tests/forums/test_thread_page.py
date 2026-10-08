@@ -138,7 +138,7 @@ def test_thread_page_looks_up_votes_on_its_own_posts_only(client, thread, five_p
 def test_subscribe_returns_to_the_same_page(client, thread, five_posts, reader):
     client.force_login(reader)
 
-    resp = client.post(reverse('thread_notification', args=[thread.pk]), {'page': '3'})
+    resp = client.post(reverse('thread_subscription', args=[thread.pk]), {'page': '3'})
 
     assertRedirects(resp, thread_url(thread, 3))
 

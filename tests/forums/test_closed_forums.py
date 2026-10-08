@@ -257,7 +257,7 @@ def test_thread_page_offers_no_reply_in_a_moderators_only_forum(member_client, f
     assertNotContains(resp, reverse('post_add', args=[thread.pk]))
     assertContains(resp, 'This forum is closed for replies.')
     # Moderators' replies still send notifications
-    assertContains(resp, reverse('thread_notification', args=[thread.pk]))
+    assertContains(resp, reverse('thread_subscription', args=[thread.pk]))
 
 
 @pytest.mark.parametrize('posting', [Posting.OPEN, Posting.MODERATORS_START])

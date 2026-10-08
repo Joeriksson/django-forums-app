@@ -170,7 +170,7 @@ class Post(EditMark, LifecycleModelMixin, models.Model):
 
             # Only to active accounts, and only to an address its owner has confirmed
             email_addresses = list(
-                Notification.objects.filter(
+                Subscription.objects.filter(
                     thread_id=self.thread_id,
                     user__is_active=True,
                     user__emailaddress__verified=True,
@@ -252,19 +252,19 @@ class UpVote(models.Model):
         ]
 
 
-class Notification(models.Model):
+class Subscription(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     added = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Notification: {self.thread} - (subscribed by {self.user})'
+        return f'Subscription: {self.thread} - (subscribed by {self.user})'
 
     class Meta:
         ordering = ['added']
         constraints = [
             models.UniqueConstraint(
-                fields=['thread', 'user'], name='unique_notification_per_user'
+                fields=['thread', 'user'], name='unique_subscription_per_user'
             ),
         ]
