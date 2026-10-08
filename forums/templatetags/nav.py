@@ -19,12 +19,13 @@ SECTIONS = {
     },
     'latest': {'latest'},
     'search': {'search_results'},
+    'notifications': {'notifications'},
 }
 
 
 @register.simple_tag(takes_context=True)
 def nav_section(context):
-    """The menu item of the current page ('forums', 'latest', 'search'), or None."""
+    """The menu item of the current page ('forums', 'latest', 'search', 'notifications'), or None."""
     request = context.get('request')
     # Django renders 500.html without a request
     match = getattr(request, 'resolver_match', None)

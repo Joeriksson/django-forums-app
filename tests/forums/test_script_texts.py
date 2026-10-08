@@ -63,7 +63,7 @@ NOT_TEXTS = {'Escape'}
 
 def test_scripts_have_no_texts_of_their_own():
     """A sentence or a capitalised word in quotes is a text for members: it belongs in the template."""
-    for script in ('editor.js', 'thread.js', 'theme.js', 'menu.js', 'search.js'):
+    for script in ('editor.js', 'thread.js', 'theme.js', 'menu.js', 'search.js', 'notifications.js'):
         source = re.sub(r'//.*', '', (SCRIPTS / script).read_text())
         quoted = set(re.findall(r"'([^'\n]*)'", source)) - NOT_TEXTS
         assert [text for text in quoted if re.match(r'[A-Z][a-z]+( |$|…)', text)] == [], script

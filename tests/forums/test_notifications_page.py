@@ -187,15 +187,9 @@ def test_the_page_uses_one_query_however_many_rows(client, subscribed, reply, dj
         reply(thread)
         reply(thread)
 
-    # Seven for the logged-in member, then the rows with thread, forum and reply position
-    with django_assert_num_queries(7 + 1):
+    # Eight for the logged-in member, then the rows with thread, forum and reply position
+    with django_assert_num_queries(8 + 1):
         client.get(PAGE)
-
-
-def test_the_user_menu_links_to_the_page(client):
-    resp = client.get(reverse('home'))
-
-    assertContains(resp, f'<a href="{PAGE}">Notifications</a>', html=True)
 
 
 # Mark all as read

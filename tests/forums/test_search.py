@@ -284,8 +284,8 @@ def test_query_count_does_not_grow_with_results(
         add_post(f'pelican post {number}', thread, user)
 
     # The forums and members for the filters, the number of results, one page of them,
-    # and the threads and replies on it, after seven for the logged-in reader
-    with django_assert_num_queries(7 + 6):
+    # and the threads and replies on it, after eight for the logged-in reader
+    with django_assert_num_queries(8 + 6):
         search(client, q='pelican')
 
 

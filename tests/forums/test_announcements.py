@@ -241,6 +241,6 @@ def test_forum_page_query_count_with_announcements(
     add_post('A reply', announcement, author)
 
     # As before (forum, count, threads, last repliers), plus the announcements,
-    # after seven for the logged-in reader
-    with django_assert_num_queries(7 + 5):
+    # after eight for the logged-in reader
+    with django_assert_num_queries(8 + 5):
         author_client.get(reverse('forum_detail', args=[forum.pk]))
