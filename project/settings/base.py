@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
     'forums.apps.ForumsConfig',
+    'notifications.apps.NotificationsConfig',
     'api.apps.ApiConfig',
 ]
 
