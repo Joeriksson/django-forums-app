@@ -446,6 +446,44 @@ textarea {
     text-underline-offset: 0.35em;
 }
 
+/* The bell: a link to the notifications, with the number of unread ones on its corner
+   (js/notifications.js keeps it current) */
+
+.bell {
+    position: relative;
+    align-self: center;
+    padding: var(--space-1);
+    line-height: 0;
+}
+
+.bell::before {
+    content: '';
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: currentColor;
+    mask: url('../icons/bell.svg') center / contain no-repeat;
+}
+
+.bell__count {
+    position: absolute;
+    top: -0.375rem;
+    left: 55%;
+    min-width: 1.125rem;
+    padding: 0 0.25rem;
+    background: var(--spruce);
+    color: var(--on-spruce);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.125rem;
+    text-align: center;
+}
+
+.bell__count[hidden] {
+    display: none;
+}
+
 /* The light/dark switch (js/theme.js): a moon to go dark, a sun to go light */
 
 .theme-toggle {
@@ -635,6 +673,16 @@ textarea {
 }
 
 /* Small helpers */
+
+/* For screen readers only: what an icon means */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
 
 .quiet {
     color: var(--quiet);

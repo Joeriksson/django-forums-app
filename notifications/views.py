@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, OuterRef, Q, Subquery
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.generic import TemplateView, View
 
@@ -59,6 +60,15 @@ class NotificationList(LoginRequiredMixin, TemplateView):
         context['notifications'] = notifications
         context['unread'] = any(not notification.read for notification in notifications)
         return context
+
+
+class UnreadCount(LoginRequiredMixin, View):
+    """The number on the bell, for js/notifications.js, which asks every half minute."""
+
+    def get(self, request):
+        response = JsonResponse({'unread': Notification.unread_count(request.user)})
+        response['Cache-Control'] = 'no-store'
+        return response
 
 
 class MarkAllRead(LoginRequiredMixin, View):

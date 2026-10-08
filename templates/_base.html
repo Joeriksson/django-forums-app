@@ -1,10 +1,12 @@
-{% load i18n nav static signup %}
+{% load i18n nav static signup bell %}
 {% get_current_language as language %}
+{% comment %}The number on the bell, also first in the title; 500.html has no user{% endcomment %}
+{% if user.is_authenticated %}{% unread_notifications user as unread %}{% endif %}
 <!DOCTYPE html>
 <html lang="{{ language }}">
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}{{ site_settings.title|default:'Wildvasa' }}{% endblock title %}</title>
+    <title>{% if unread %}({{ unread }}) {% endif %}{% block title %}{{ site_settings.title|default:'Wildvasa' }}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
     {% comment %}Before the stylesheets and not deferred: the saved colours apply before the page draws{% endcomment %}
@@ -31,7 +33,6 @@
                     <summary>{{ user.display_name }}</summary>
                     <div class="menu__items">
                         <div class="menu__who">{% blocktranslate with email=user.email %}Signed in as {{ email }}{% endblocktranslate %}</div>
-                        <a href="{% url 'notifications' %}">{% translate 'Notifications' %}</a>
                         <a href="{% url 'user_profile_edit' request.user.profile.id %}">{% translate 'Edit profile' %}</a>
                         {% if not user.socialaccount_set.first %}
                             <a href="{% url 'account_change_password' %}">{% translate 'Change password' %}</a>
@@ -40,6 +41,17 @@
                         <a href="{% url 'account_logout' %}">{% translate 'Sign out' %}</a>
                     </div>
                 </details>
+                {% comment %}
+                News in the member's subscribed threads: a link to the list, with the number
+                of unread ones, which js/notifications.js keeps current
+                {% endcomment %}
+                <a class="bell" href="{% url 'notifications' %}" title="{% translate 'Notifications' %}" data-count="{{ unread }}"{% if section == 'notifications' %} aria-current="page"{% endif %}>
+                    <span class="visually-hidden">{% translate 'Notifications' %}</span>
+                    <span class="bell__count"{% if not unread %} hidden{% endif %}>
+                        <span class="visually-hidden">{% translate 'Unread:' %}</span>
+                        <span class="bell__number">{% if unread > 9 %}9+{% else %}{{ unread }}{% endif %}</span>
+                    </span>
+                </a>
             {% else %}
                 <a href="{% url 'account_login' %}">{% translate 'Sign in' %}</a>
                 {% signup_is_open as signup_open %}
@@ -90,6 +102,9 @@
 
 {% block javascripts %}
     <script defer src="{% static 'js/menu.js' %}"></script>
+    {% if user.is_authenticated %}
+        <script defer src="{% static 'js/notifications.js' %}" data-url="{% url 'notifications_count' %}"></script>
+    {% endif %}
 {% endblock %}
 </body>
 </html>

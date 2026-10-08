@@ -34,6 +34,11 @@ class Notification(models.Model):
     read = models.BooleanField(default=False)
     updated = models.DateTimeField(default=timezone.now)
 
+    @classmethod
+    def unread_count(cls, user):
+        """The number on the header's bell."""
+        return cls.objects.filter(user=user, read=False).count()
+
     def __str__(self):
         return f'Notification: {self.kind} in {self.thread} ({self.count}) for {self.user}'
 
