@@ -31,6 +31,7 @@
                     <summary>{{ user.display_name }}</summary>
                     <div class="menu__items">
                         <div class="menu__who">{% blocktranslate with email=user.email %}Signed in as {{ email }}{% endblocktranslate %}</div>
+                        <a href="{% url 'notifications' %}">{% translate 'Notifications' %}</a>
                         <a href="{% url 'user_profile_edit' request.user.profile.id %}">{% translate 'Edit profile' %}</a>
                         {% if not user.socialaccount_set.first %}
                             <a href="{% url 'account_change_password' %}">{% translate 'Change password' %}</a>

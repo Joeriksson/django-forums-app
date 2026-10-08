@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 17:44+0000\n"
+"POT-Creation-Date: 2026-10-08 16:59+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -321,6 +321,10 @@ msgstr "Admin"
 #, python-format
 msgid "Signed in as %(email)s"
 msgstr "Inloggad som %(email)s"
+
+#: templates/_base.html templates/notifications/notification_list.html
+msgid "Notifications"
+msgstr "Aviseringar"
 
 #: templates/_base.html
 msgid "Edit profile"
@@ -893,6 +897,30 @@ msgstr ""
 #: templates/forums/userprofile_form.html
 msgid "Save profile"
 msgstr "Spara profil"
+
+#: templates/notifications/notification_list.html
+msgid "Mark all as read"
+msgstr "Markera alla som lästa"
+
+#: templates/notifications/notification_list.html
+msgid "Read"
+msgstr "Läst"
+
+#: templates/notifications/notification_list.html
+#, python-format
+msgid "<strong>%(counter)s</strong> new reply"
+msgid_plural "<strong>%(counter)s</strong> new replies"
+msgstr[0] "<strong>%(counter)s</strong> nytt svar"
+msgstr[1] "<strong>%(counter)s</strong> nya svar"
+
+#: templates/notifications/notification_list.html
+#, python-format
+msgid "in <a href=\"%(forum_url)s\">%(forum)s</a>"
+msgstr "i <a href=\"%(forum_url)s\">%(forum)s</a>"
+
+#: templates/notifications/notification_list.html
+msgid "Nothing new."
+msgstr "Inget nytt."
 
 #: templates/users/invitation_email_message.txt
 msgid "Hello,"

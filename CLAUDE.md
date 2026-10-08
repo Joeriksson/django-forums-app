@@ -119,9 +119,10 @@ users/             # Custom user model (email-based auth)
   tasks.py         # Celery task send_welcome_email_task
 
 pages/             # Home (visitors: the name, a way in, an invitation note while signup is closed, a drawn landscape; members: the forum list), the latest conversations, and SiteSettings (models.py; context_processors.py)
-notifications/     # The notification center's rows: one Notification model for every kind of news (no pages yet)
+notifications/     # The notification center: one Notification model for every kind of news, and the page that lists it
   models.py        # Notification
-  events.py        # reply_added(post), thread_opened(user, thread): the only code that writes the rows
+  events.py        # reply_added(post), thread_opened(user, thread): what happens on the site, turned into rows
+  views.py         # NotificationList (load() builds each row's link), MarkAllRead
 
 api/               # Django REST Framework API (mounted only with DJANGO_API_ENABLED)
   views.py         # ModelViewSet for Forum, Thread, Post, User
@@ -194,13 +195,14 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 - Users subscribe to threads to receive email notifications on new posts, and a row in the notification center (see *Notification*) (called `Notification` until migration `forums/0025`; the table is `forums_subscription`)
 
 ### Notification (`notifications.Notification`)
-- News for one member, for the notification center (the bell and its page are not built yet): `user`, `kind` (only `reply` so far; direct messages will be another kind, not another table), `thread`, `post`, `count`, `read`, `updated`
+- News for one member, listed on `/notifications/` (the bell in the header is not built yet; the page is linked from the user menu): `user`, `kind` (only `reply` so far; direct messages will be another kind, not another table), `thread`, `post`, `count`, `read`, `updated`
 - Replies are one row per member and thread (unique), reused: `events.reply_added(post)` adds one to `count` on a row not yet read, and starts a row that was read or is missing over at this reply (`post`, `count` 1). So `post` is the first reply the member hasn't seen, and the table doesn't grow with the posts: no cleanup job. Four queries however many subscribers
 - Who: the thread's subscribers with an active account, except the reply's author. Unlike the mail it needs no confirmed address and also runs in CI. Called by the `add_notifications` lifecycle hook on `Post` (AFTER_CREATE, after the commit), so replies from the website, the API and the admin all count; `forums/models.py` imports `notifications.events` inside the hook, since that app imports `forums.models`
 - Read: `events.thread_opened(user, thread)`, called by `ThreadDetail.get`, marks the row read on any page of the thread (one more query on the thread page). Unsubscribing keeps the row
 - A deleted reply doesn't lower `count`; if it was the first unread one, `post` becomes empty (`SET_NULL`) and stays empty until the row starts over. Deleting the thread or the account deletes the rows
 - Two replies committed at the same moment for a member without a row may count as one
-- Tests: `tests/forums/test_reply_notifications.py`
+- The page (`NotificationList`, `templates/notifications/notification_list.html`) lists the member's rows, unread first, then the newest, 50 at most and no paging (`MAX_ROWS`). An unread row says *3 new replies*, a read one *Read*. `load()` gives each row its link in the same query: the first unread reply on its page of the thread (`?page=<n>#post-<id>`), or `?page=last` when that reply is gone. Following it marks the row read, since it opens the thread. *Mark all as read* posts to `MarkAllRead`. The template shows replies only: a new `kind` needs its own branch there
+- Tests: `tests/forums/test_reply_notifications.py` (the rows), `tests/forums/test_notifications_page.py` (the page)
 
 ### CustomUser (`users.CustomUser`)
 - Extends `AbstractUser`
@@ -242,6 +244,8 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 /forums/thread/<tpk>/post/<pk>/upvote  → PostUpvote
 /forums/search/            → redirect to /search/, keeping the query string
 /forums/preview/           → MarkdownPreview (POST, login required: Markdown text → HTML for the editor's preview)
+/notifications/            → NotificationList (new replies in the member's subscribed threads; login required)
+/notifications/read/       → MarkAllRead (POST: marks all of the member's notifications read, then back to the list)
 
 # /api/ exists only while DJANGO_API_ENABLED is true (default: off; on in development and tests)
 /api/forums/               → ForumViewSet (read for members; write needs forums.add/change/delete_forum)
