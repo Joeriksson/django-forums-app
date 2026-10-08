@@ -46,6 +46,13 @@ class SiteSettings(models.Model):
         help_text='Posts per page of a thread (5 to 100). Old links to a page may then lead elsewhere.',
     )
 
+    notification_mail_delay = models.PositiveSmallIntegerField(
+        default=5,
+        validators=[MaxValueValidator(30)],
+        help_text='Minutes a reply waits before it is mailed to the thread\'s subscribers. Those who '
+        'open the thread in that time get no mail (0 to 30; 0 mails at once).',
+    )
+
     class Meta:
         verbose_name = 'site settings'
         verbose_name_plural = 'site settings'

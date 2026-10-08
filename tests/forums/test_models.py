@@ -47,7 +47,7 @@ def test_saving_user_again_does_not_duplicate_profile(add_user):
 
 @pytest.mark.django_db
 def test_notify_subscribers_excludes_post_author(
-    add_forum, add_user, add_thread, notification_calls, settings, django_capture_on_commit_callbacks,
+    add_forum, add_user, add_thread, notification_calls, settings, reply_with_mail, mailoutbox,
     verify_email,
 ):
     """Post author should not receive a notification for their own post."""
@@ -60,20 +60,19 @@ def test_notify_subscribers_excludes_post_author(
     Subscription.objects.create(thread=thread, user=author)
     Subscription.objects.create(thread=thread, user=subscriber)
 
-    # The hook runs once the post is committed
-    with django_capture_on_commit_callbacks(execute=True):
-        Post.objects.create(text='A reply', thread=thread, user=author)
+    post = reply_with_mail(thread, author)
 
-    assert len(notification_calls) == 1
-    thread_id, thread_title, username, full_url, email_addresses = notification_calls[0]
-    assert thread_id == thread.id
-    assert thread_title == 'Test Thread'
+    # Queued once, to wait the five minutes of Site settings
+    assert notification_calls == [(post.pk, 300)]
+    (message,) = mailoutbox
     # The name others see, not the username (derived from the email address)
-    assert username == f'Member {author.pk}'
-    # Built from DJANGO_SITE_URL, like invitation links
-    assert full_url == f'https://forum.example.com/forums/thread/{thread.id}'
+    assert message.subject == f'New post added by Member {author.pk}'
+    assert 'A new post was added to thread "Test Thread"' in message.body
+    # Built from DJANGO_SITE_URL, like invitation links: the reply on its page
+    assert f'Url: https://forum.example.com/forums/thread/{thread.id}?page=1#post-{post.pk}' in message.body
     # Exact list: no author, no duplicates
-    assert email_addresses == ['subscriber@example.com']
+    assert message.bcc == ['subscriber@example.com']
+    assert message.to == []
 
 
 @pytest.mark.django_db

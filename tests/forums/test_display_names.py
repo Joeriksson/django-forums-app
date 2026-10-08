@@ -137,18 +137,18 @@ def test_search_loads_names_without_a_query_per_result(client, anna, thread, dja
 
 
 def test_notification_names_the_author_by_display_name(
-    anna, thread, verify_email, notification_calls, django_capture_on_commit_callbacks
+    anna, thread, verify_email, reply_with_mail, mailoutbox
 ):
     subscriber = verify_email(
         User.objects.create_user(username='sub', email='sub@example.com', password='x')
     )
     Subscription.objects.create(thread=thread, user=subscriber)
 
-    with django_capture_on_commit_callbacks(execute=True):
-        Post.objects.create(text='A reply', thread=thread, user=anna)
+    reply_with_mail(thread, anna)
 
-    (call,) = notification_calls
-    assert call[2] == f'Member {anna.pk}'
+    (message,) = mailoutbox
+    assert message.subject == f'New post added by Member {anna.pk}'
+    assert 'anna.berg' not in message.subject + message.body
 
 
 # The reminder on the forms

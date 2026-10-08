@@ -173,6 +173,7 @@ def test_admin_edits_the_record(staff_client, settings):
         {
             'title': TITLE, 'tagline': 'T', 'invitation_note': 'N',
             'recent_threads': 3, 'latest_threads': 15, 'threads_per_page': 20, 'posts_per_page': 25,
+            'notification_mail_delay': 5,
         },
     )
 
@@ -264,6 +265,7 @@ def test_thread_page_shows_the_set_number_of_posts(member_client, forum, site_se
         ('latest_threads', 4, 51),
         ('threads_per_page', 4, 101),
         ('posts_per_page', 4, 101),
+        ('notification_mail_delay', -1, 31),
     ],
 )
 def test_admin_refuses_numbers_out_of_range(staff_client, field, low, high):
@@ -271,6 +273,7 @@ def test_admin_refuses_numbers_out_of_range(staff_client, field, low, high):
     data = {
         'title': 'T', 'tagline': 'T', 'invitation_note': 'N',
         'recent_threads': 3, 'latest_threads': 15, 'threads_per_page': 20, 'posts_per_page': 25,
+        'notification_mail_delay': 5,
     }
 
     for value in (low, high):

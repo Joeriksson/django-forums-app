@@ -13,7 +13,7 @@ def reply_added(post):
     """
     Tell the thread's subscribers about a new reply, except its author: one more on a
     row not yet read, a fresh start at this reply on a row that was read or is missing.
-    Four queries however many subscribers.
+    Four queries however many subscribers. Returns whether anyone was told.
     """
     user_ids = list(
         Subscription.objects.filter(thread_id=post.thread_id, user__is_active=True)
@@ -21,7 +21,7 @@ def reply_added(post):
         .values_list('user_id', flat=True)
     )
     if not user_ids:
-        return
+        return False
 
     now = timezone.now()
     rows = Notification.objects.filter(thread_id=post.thread_id, user_id__in=user_ids)
@@ -36,6 +36,7 @@ def reply_added(post):
             ],
             ignore_conflicts=True,
         )
+    return True
 
 
 def thread_opened(user, thread):
