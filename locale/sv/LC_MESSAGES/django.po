@@ -605,7 +605,7 @@ msgstr "Redigera det här forumet"
 
 #: templates/forums/forum_detail.html
 msgid "Announcements"
-msgstr "Anslag"
+msgstr "Tillkännagivanden"
 
 #: templates/forums/forum_detail.html
 msgid "Pages of threads"
@@ -664,7 +664,7 @@ msgstr "Trådar · svar"
 #: templates/forums/forum_list.html templates/forums/search.html
 #: templates/forums/thread_detail.html
 msgid "Announcement"
-msgstr "Anslag"
+msgstr "Tillkännagivande"
 
 #: templates/forums/forum_list.html
 msgid "No threads yet"
