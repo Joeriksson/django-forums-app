@@ -122,7 +122,7 @@ def test_author_sees_thread_buttons(client, forum_with_thread):
         assert url in content
 
 
-# Moderators group (created by migration 0016)
+# Moderators group (created by migration 0016; conversations/0003 adds the reports)
 
 
 @pytest.mark.django_db
@@ -137,6 +137,9 @@ def test_moderators_group_has_only_moderation_permissions():
         ('forums', 'change_thread'),
         ('forums', 'delete_thread'),
         ('forums', 'delete_post'),
+        # The reported direct messages (migration conversations/0003)
+        ('conversations', 'view_report'),
+        ('conversations', 'change_report'),
     }
 
 
