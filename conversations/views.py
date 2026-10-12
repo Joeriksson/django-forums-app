@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
@@ -7,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.views.generic import FormView, TemplateView, View
 
@@ -16,8 +18,8 @@ from notifications.models import Notification
 from pages.models import SiteSettings
 from users.audit import log_event
 
-from .forms import MessageForm
-from .models import Block, Blocked, Conversation, Message, send
+from .forms import MessageForm, ReportForm
+from .models import Block, Blocked, Conversation, Message, Report, send
 
 
 def other_member(request, pk):
@@ -121,16 +123,20 @@ class ConversationDetail(LoginRequiredMixin, FormView):
         context['blocked'] = bool(self.blockers)
         context['blocked_by_me'] = self.request.user.pk in self.blockers
         # One page of messages with each sender and profile in the same query
-        messages = Message.objects.filter(conversation=self.conversation).select_related(
-            'sender__profile'
+        # and whether it was reported
+        texts = Message.objects.filter(conversation=self.conversation).select_related(
+            'sender__profile', 'report'
         )
-        paginator = Paginator(messages, SiteSettings.for_request(self.request).posts_per_page)
+        paginator = Paginator(texts, SiteSettings.for_request(self.request).posts_per_page)
         # The newest messages unless a page is asked for; get_page() shows the first or
         # last page for a page number that doesn't exist
         page = self.request.GET.get('page', 'last')
         context['messages_page'] = paginator.get_page(
             paginator.num_pages if page == 'last' else page
         )
+        for message in context['messages_page']:
+            # Loaded with the message: no query
+            message.reported = hasattr(message, 'report')
         return context
 
     def form_valid(self, form):
@@ -168,3 +174,59 @@ class UnblockMember(LoginRequiredMixin, View):
         if deleted:
             log_event('unblock', request, user=request.user.pk, blocked=other.pk)
         return redirect('conversation', pk=other.pk)
+
+
+class ReportMessage(LoginRequiredMixin, FormView):
+    """
+    Show one received message to the moderators: a page to confirm it, with a note.
+    Only the member the message was sent to can, and once.
+    """
+
+    template_name = 'conversations/report_form.html'
+    form_class = ReportForm
+
+    @cached_property
+    def message(self):
+        other = other_member(self.request, self.kwargs['pk'])
+        conversation = Conversation.find(self.request.user, other)
+        if conversation is None:
+            raise Http404
+        # From the other member in the address, so never one's own
+        return get_object_or_404(
+            Message.objects.select_related('sender__profile', 'report'),
+            pk=self.kwargs['message_pk'],
+            conversation=conversation,
+            sender=other,
+        )
+
+    def back(self):
+        url = reverse('conversation', kwargs={'pk': self.kwargs['pk']})
+        return redirect(f'{url}#message-{self.message.pk}')
+
+    def dispatch(self, request, *args, **kwargs):
+        # After LoginRequiredMixin has sent a visitor to the login page
+        if request.user.is_authenticated and hasattr(self.message, 'report'):
+            return self.back()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['message'] = self.message
+        return context
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                report = Report.of(self.message, self.request.user, form.cleaned_data['note'])
+        except IntegrityError:
+            # Reported in another tab since this page was loaded
+            return self.back()
+        log_event(
+            'report',
+            self.request,
+            user=self.request.user.pk,
+            sender=self.message.sender_id,
+            report=report.pk,
+        )
+        messages.success(self.request, gettext('The message was reported to the moderators.'))
+        return self.back()

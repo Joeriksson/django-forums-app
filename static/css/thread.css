@@ -102,11 +102,13 @@
 }
 
 .post__message,
+.post__report,
 .post__edit,
 .post__delete {
     color: var(--quiet);
 }
 
+.post__report:hover,
 .post__delete:hover {
     color: var(--danger);
 }

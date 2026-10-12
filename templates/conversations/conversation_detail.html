@@ -26,6 +26,15 @@
                 </header>
                 <div class="post__body">
                     <div class="prose">{{ message.text|render_markdown }}</div>
+                    {% if message.sender_id != user.id %}
+                        <div class="post__foot">
+                            {% if message.reported %}
+                                <span>{% translate 'Reported' %}</span>
+                            {% else %}
+                                <a class="post__report" href="{% url 'message_report' other.pk message.id %}">{% translate 'Report' %}</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </article>
         {% empty %}

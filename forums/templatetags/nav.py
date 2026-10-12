@@ -19,7 +19,7 @@ SECTIONS = {
     },
     'latest': {'latest'},
     'search': {'search_results'},
-    'messages': {'conversations', 'conversation', 'conversation_new'},
+    'messages': {'conversations', 'conversation', 'conversation_new', 'message_report'},
     'notifications': {'notifications'},
 }
 
