@@ -49,8 +49,9 @@ class SiteSettings(models.Model):
     notification_mail_delay = models.PositiveSmallIntegerField(
         default=5,
         validators=[MaxValueValidator(30)],
-        help_text='Minutes a reply waits before it is mailed to the thread\'s subscribers. Those who '
-        'open the thread in that time get no mail (0 to 30; 0 mails at once).',
+        help_text='Minutes a reply waits before it is mailed to the thread\'s subscribers, and a '
+        'direct message to its receiver. Those who open the thread or the conversation in that '
+        'time get no mail (0 to 30; 0 mails at once).',
     )
 
     class Meta:
