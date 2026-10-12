@@ -1,16 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.db import IntegrityError, transaction
 from django.db.models import Q
-from django.views.generic import FormView, TemplateView, View
+from django.views.generic import FormView, ListView, TemplateView, View
 
 from forums.throttling import MESSAGE_THROTTLES, allowed
 from notifications.events import conversation_opened
@@ -230,3 +231,37 @@ class ReportMessage(LoginRequiredMixin, FormView):
         )
         messages.success(self.request, gettext('The message was reported to the moderators.'))
         return self.back()
+
+
+class ReportList(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """
+    The reported messages, for the moderators: those not yet handled first. A report
+    shows the one message and who it is between, nothing else of the conversation.
+    A member without the permission gets a 403.
+    """
+
+    permission_required = 'conversations.view_report'
+    template_name = 'conversations/report_list.html'
+    context_object_name = 'reports'
+    queryset = Report.objects.select_related(
+        'reporter__profile', 'sender__profile', 'handled_by__profile'
+    )
+
+    def get_paginate_by(self, queryset):
+        return SiteSettings.for_request(self.request).threads_per_page
+
+
+class ReportHandled(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """A moderator has dealt with a report: it says who and when, and can't be reopened."""
+
+    permission_required = 'conversations.change_report'
+
+    def post(self, request, pk):
+        get_object_or_404(Report, pk=pk)
+        # Only the first one to press the button is recorded
+        handled = Report.objects.filter(pk=pk, handled__isnull=True).update(
+            handled=timezone.now(), handled_by=request.user
+        )
+        if handled:
+            log_event('report_handled', request, user=request.user.pk, report=pk)
+        return redirect('reports')
