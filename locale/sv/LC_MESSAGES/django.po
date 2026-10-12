@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 16:49+0000\n"
+"POT-Creation-Date: 2026-10-12 17:02+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -14,6 +14,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: conversations/forms.py
+msgid "Name"
+msgstr "Namn"
+
+#: conversations/forms.py
+msgid "Part of a name, or a member number."
+msgstr "En del av ett namn, eller ett medlemsnummer."
 
 #: conversations/models.py forums/models.py
 msgid "text"
@@ -37,6 +45,11 @@ msgstr "%(name)s har skickat ett meddelande till dig."
 #, python-format
 msgid "Url: %(url)s"
 msgstr "Länk: %(url)s"
+
+#: conversations/views.py users/models.py
+#, python-format
+msgid "Member %(id)s"
+msgstr "Medlem %(id)s"
 
 #: conversations/views.py
 msgid "You are sending messages too fast. Wait a while and try again."
@@ -330,8 +343,8 @@ msgstr "Forum"
 msgid "Latest"
 msgstr "Senaste"
 
-#: templates/_base.html templates/forums/_search.html
-#: templates/forums/search.html
+#: templates/_base.html templates/conversations/member_list.html
+#: templates/forums/_search.html templates/forums/search.html
 msgid "Search"
 msgstr "Sök"
 
@@ -592,13 +605,26 @@ msgid_plural "<strong>%(counter)s</strong> new messages"
 msgstr[0] "<strong>%(counter)s</strong> nytt meddelande"
 msgstr[1] "<strong>%(counter)s</strong> nya meddelanden"
 
-#: templates/conversations/member_list.html
-msgid "Choose a member to write to."
-msgstr "Välj en medlem att skriva till."
+#: templates/conversations/member_list.html templates/forums/search.html
+msgid "Too many searches. Wait a minute and try again."
+msgstr "För många sökningar. Vänta en minut och försök igen."
 
 #: templates/conversations/member_list.html
-msgid "There are no other members yet."
-msgstr "Det finns inga andra medlemmar än."
+#, python-format
+msgid "member %(id)s"
+msgstr "medlem %(id)s"
+
+#: templates/conversations/member_list.html
+msgid "More members fit than are shown. Type more of the name."
+msgstr "Fler medlemmar passar än de som visas. Skriv mer av namnet."
+
+#: templates/conversations/member_list.html
+msgid "No member fits that."
+msgstr "Ingen medlem passar in på det."
+
+#: templates/conversations/member_list.html
+msgid "Members you have written with"
+msgstr "Medlemmar du har skrivit med"
 
 #: templates/conversations/report_form.html
 msgid "Report a message"
@@ -970,10 +996,6 @@ msgid "Filters"
 msgstr "Filter"
 
 #: templates/forums/search.html
-msgid "Too many searches. Wait a minute and try again."
-msgstr "För många sökningar. Vänta en minut och försök igen."
-
-#: templates/forums/search.html
 #, python-format
 msgid "%(counter)s result"
 msgid_plural "%(counter)s results"
@@ -1160,11 +1182,6 @@ msgstr "Registrera dig med den inbjudna adressen: %(email)s"
 msgid "Your invitation is for this address."
 msgstr "Din inbjudan gäller den här adressen."
 
-#: users/models.py
-#, python-format
-msgid "Member %(id)s"
-msgstr "Medlem %(id)s"
-
 #: users/security.py
 msgid ""
 "Staff and moderator accounts need two-factor authentication. Set up an "
@@ -1182,3 +1199,9 @@ msgstr "Välkommen till %(title)s"
 #, python-format
 msgid "Thank you for registering at %(title)s"
 msgstr "Tack för att du registrerade dig på %(title)s"
+
+#~ msgid "Choose a member to write to."
+#~ msgstr "Välj en medlem att skriva till."
+
+#~ msgid "There are no other members yet."
+#~ msgstr "Det finns inga andra medlemmar än."

@@ -1,3 +1,5 @@
+from collections import Counter
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -11,15 +13,16 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.db import IntegrityError, transaction
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.views.generic import FormView, ListView, TemplateView, View
 
-from forums.throttling import MESSAGE_THROTTLES, allowed
+from forums.throttling import MESSAGE_THROTTLES, SearchThrottle, allowed
 from notifications.events import conversation_opened
 from notifications.models import Notification
 from pages.models import SiteSettings
 from users.audit import log_event
 
-from .forms import MessageForm, ReportForm
+from .forms import MemberSearchForm, MessageForm, ReportForm
 from .models import Block, Blocked, Conversation, Message, Report, send
 
 
@@ -62,24 +65,82 @@ class ConversationList(LoginRequiredMixin, TemplateView):
         return context
 
 
+# The members a search shows; with more than these, the page asks for more of the name
+MAX_MEMBERS = 20
+
+
+def find_members(user, text):
+    """
+    The members with an active account that the words fit, by name, one more than
+    MAX_MEMBERS at most. Every word must be in the first or the last name, ignoring
+    case; a number also fits the member with that number, which is how a member
+    without a name ("Member 11") is found. One query.
+    """
+    members = (
+        get_user_model()
+        .objects.filter(is_active=True)
+        .exclude(pk=user.pk)
+        .select_related('profile')
+    )
+    # "member 11" as the pages write it, in the reader's language
+    label = (gettext('Member %(id)s') % {'id': ''}).strip().casefold()
+    words = [word for word in text.split() if word.casefold() != label]
+    if not words:
+        return []
+    for word in words:
+        fits = Q(profile__first_name__icontains=word) | Q(profile__last_name__icontains=word)
+        # Not longer than a member number can be
+        if word.isdecimal() and len(word) <= 9:
+            fits |= Q(pk=int(word))
+        members = members.filter(fits)
+    return list(
+        members.order_by(
+            Lower('profile__first_name'), Lower('profile__last_name'), 'pk'
+        )[: MAX_MEMBERS + 1]
+    )
+
+
 class MemberList(LoginRequiredMixin, TemplateView):
-    """Who to write to: every member with an active account, by name."""
+    """
+    Who to write to: a search among the members by name or number. Until something is
+    searched for, the members the reader already has conversations with.
+    """
 
     template_name = 'conversations/member_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        members = (
-            get_user_model()
-            .objects.filter(is_active=True)
-            .exclude(pk=self.request.user.pk)
-            .select_related('profile')
+    def get(self, request, *args, **kwargs):
+        form = MemberSearchForm(request.GET or None)
+        text = form.cleaned_data['q'].strip() if form.is_valid() else ''
+        members, more, throttled = None, False, False
+        if text:
+            # Counted with the searches of the search page, so the members can't be
+            # listed quickly a few letters at a time
+            throttled = not allowed(request, SearchThrottle)
+            if not throttled:
+                members = find_members(request.user, text)
+                more = len(members) > MAX_MEMBERS
+                members = members[:MAX_MEMBERS]
+                # Members with the same name are told apart by their number
+                names = Counter(member.display_name for member in members)
+                for member in members:
+                    member.show_number = names[member.display_name] > 1
+        context = self.get_context_data(
+            form=form,
+            members=members,
+            more=more,
+            throttled=throttled,
+            known=None if text else self.known(),
         )
-        # The name is the profile's or "Member <id>": sorted here, not by the database
-        context['members'] = sorted(
-            members, key=lambda member: (member.display_name.casefold(), member.pk)
-        )
-        return context
+        return self.render_to_response(context, status=429 if throttled else 200)
+
+    def known(self):
+        """The members of the reader's latest conversations, if still active. One query."""
+        user = self.request.user
+        conversations = Conversation.objects.filter(
+            Q(user_low=user) | Q(user_high=user)
+        ).select_related('user_low__profile', 'user_high__profile')[:MAX_MEMBERS]
+        others = (c.user_high if c.user_low == user else c.user_low for c in conversations)
+        return [other for other in others if other.is_active]
 
 
 class ConversationDetail(LoginRequiredMixin, FormView):

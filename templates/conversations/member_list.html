@@ -7,19 +7,49 @@
     <div class="page-head">
         <h1>{% translate 'New message' %}</h1>
     </div>
-    {% if members %}
-        <p>{% translate 'Choose a member to write to.' %}</p>
+    <form class="search-form" method="get" role="search">
+        <div class="search-form__words">
+            {{ form.q.label_tag }}
+            <div class="search__row">
+                {{ form.q }}
+                <button class="button" type="submit">{% translate 'Search' %}</button>
+            </div>
+            <p class="helptext">{{ form.q.help_text }}</p>
+            {{ form.q.errors }}
+        </div>
+    </form>
+
+    {% if throttled %}
+        <p class="empty">{% translate 'Too many searches. Wait a minute and try again.' %}</p>
+    {% elif members is not None %}
+        {% if members %}
+            <div class="panel">
+                <ul class="rows">
+                    {% for member in members %}
+                        <li class="row">
+                            <a class="member-link" href="{% url 'conversation' member.pk %}">{% include 'forums/_person.html' with person=member %}</a>
+                            {% if member.show_number %}<span class="quiet">{% blocktranslate with id=member.pk %}member {{ id }}{% endblocktranslate %}</span>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if more %}
+                <p class="note">{% translate 'More members fit than are shown. Type more of the name.' %}</p>
+            {% endif %}
+        {% else %}
+            <p class="empty">{% translate 'No member fits that.' %}</p>
+        {% endif %}
+    {% elif known %}
+        <p class="kicker">{% translate 'Members you have written with' %}</p>
         <div class="panel">
             <ul class="rows">
-                {% for member in members %}
+                {% for member in known %}
                     <li class="row">
                         <a class="member-link" href="{% url 'conversation' member.pk %}">{% include 'forums/_person.html' with person=member %}</a>
                     </li>
                 {% endfor %}
             </ul>
         </div>
-    {% else %}
-        <p class="empty">{% translate 'There are no other members yet.' %}</p>
     {% endif %}
     <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
 {% endblock content %}

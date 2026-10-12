@@ -140,38 +140,6 @@ def test_the_list_costs_a_fixed_number_of_queries(as_anna, anna, write, django_a
         as_anna.get(reverse('conversations'))
 
 
-# Who to write to
-
-
-def test_the_member_list_has_the_other_active_members_by_name(as_anna, anna, bo):
-    cia = add_member('cia', 'cia')
-    nameless = add_member('zed')
-    gone = add_member('gone', 'Gone')
-    gone.is_active = False
-    gone.save()
-
-    resp = as_anna.get(reverse('conversation_new'))
-
-    assert resp.context['members'] == [bo, cia, nameless]
-    for member in (bo, cia, nameless):
-        assertContains(resp, link(member))
-    assertNotContains(resp, link(anna))
-    assertNotContains(resp, link(gone))
-    assertNotContains(resp, 'zed')
-
-
-def test_the_member_list_alone(as_anna):
-    assertContains(as_anna.get(reverse('conversation_new')), 'There are no other members yet.')
-
-
-def test_the_member_list_costs_one_query(as_anna, bo, django_assert_num_queries):
-    add_member('cia')
-    as_anna.get(reverse('conversation_new'))
-
-    with django_assert_num_queries(8 + 1):
-        as_anna.get(reverse('conversation_new'))
-
-
 # The menu
 
 
