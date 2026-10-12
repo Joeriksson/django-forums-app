@@ -44,7 +44,7 @@ def user(db):
 
 @pytest.mark.django_db
 def test_signup_does_not_log_in_before_confirmation(client, signup_open):
-    resp = client.post(reverse('account_signup'), {'email': EMAIL, 'password1': PASSWORD})
+    resp = client.post(reverse('account_signup'), {'email': EMAIL, 'first_name': 'New', 'password1': PASSWORD})
 
     assertRedirects(resp, reverse('account_email_verification_sent'))
     assert not is_logged_in(client)
@@ -54,7 +54,7 @@ def test_signup_does_not_log_in_before_confirmation(client, signup_open):
 
 @pytest.mark.django_db
 def test_confirmation_link_lets_the_user_log_in(client, signup_open):
-    client.post(reverse('account_signup'), {'email': EMAIL, 'password1': PASSWORD})
+    client.post(reverse('account_signup'), {'email': EMAIL, 'first_name': 'New', 'password1': PASSWORD})
 
     client.post(confirmation_path())
 

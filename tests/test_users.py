@@ -40,20 +40,20 @@ def test_signup_page(client):
 
 
 @pytest.mark.django_db
-def test_signup_form_asks_only_for_email_and_one_password(client):
+def test_signup_form_asks_for_email_name_and_one_password(client):
     resp = client.get(reverse('account_signup'))
 
     # The page's own part: the header has the language menu's form
     main = resp.content.decode().split('<main', 1)[1]
     fields = set(re.findall(r'<input[^>]*name="([^"]+)"', main))
-    assert fields - {'csrfmiddlewaretoken'} == {'email', 'password1'}
+    assert fields - {'csrfmiddlewaretoken'} == {'email', 'first_name', 'last_name', 'password1'}
 
 
 @pytest.mark.django_db
 def test_signup_creates_user(client):
     resp = client.post(
         reverse('account_signup'),
-        {'email': 'newuser@email.com', 'password1': 'a-long-test-pass-123'},
+        {'email': 'newuser@email.com', 'first_name': 'New', 'password1': 'a-long-test-pass-123'},
     )
 
     # Not logged in yet: the address must be confirmed first (test_email_verification.py)

@@ -11,7 +11,7 @@ from pytest_django.asserts import (
 )
 
 User = get_user_model()
-SIGNUP_DATA = {'email': 'newuser@example.com', 'password1': 'a-long-test-pass-123'}
+SIGNUP_DATA = {'email': 'newuser@example.com', 'first_name': 'New', 'password1': 'a-long-test-pass-123'}
 
 
 @pytest.fixture

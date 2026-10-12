@@ -62,6 +62,23 @@ class AccountAdapter(DefaultAccountAdapter):
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    def save_user(self, request, sociallogin, form=None):
+        """
+        A GitHub signup shows no form of ours: take the name others will see from the
+        GitHub profile, split at the first space. Without one there, the member is
+        "Member <id>" until they give a name on their profile.
+        """
+        user = super().save_user(request, sociallogin, form)
+        # The profile's name, never the login name; extra spaces go
+        name = ' '.join((sociallogin.account.extra_data.get('name') or '').split())
+        if name:
+            profile = user.profile
+            limit = profile._meta.get_field('first_name').max_length
+            first, _space, last = name.partition(' ')
+            profile.first_name, profile.last_name = first[:limit], last[:limit]
+            profile.save(update_fields=['first_name', 'last_name'])
+        return user
+
     def is_open_for_signup(self, request, sociallogin):
         if settings.SIGNUP_OPEN:
             return True

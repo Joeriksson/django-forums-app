@@ -98,7 +98,7 @@ def test_signature_limit(client, author, length, saved):
 
     resp = client.post(
         reverse('user_profile_edit', args=[profile.pk]),
-        {'gender': profile.gender, 'signature': 'x' * length},
+        {'first_name': 'Anna', 'gender': profile.gender, 'signature': 'x' * length},
     )
 
     profile.refresh_from_db()

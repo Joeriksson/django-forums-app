@@ -100,7 +100,7 @@ def test_password_change_is_logged(client, user, security_log):
 def test_signup_is_logged(client, db, security_log):
     client.post(
         reverse('account_signup'),
-        {'email': 'new@example.com', 'password1': 'new-Passw0rd-xyz'},
+        {'email': 'new@example.com', 'first_name': 'New', 'password1': 'new-Passw0rd-xyz'},
         REMOTE_ADDR=IP,
     )
 
