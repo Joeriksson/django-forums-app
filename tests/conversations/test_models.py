@@ -99,11 +99,14 @@ def test_a_message_does_not_show_its_text_as_a_string(anna, bo):
     assert 'A secret' not in str(message)
 
 
-def test_a_block_counts_in_one_direction(anna, bo):
-    Block.objects.create(blocker=anna, blocked=bo)
+def test_between_tells_who_blocked_whom(anna, bo):
+    assert Block.between(anna, bo) == set()
 
-    assert Block.is_blocked(sender=bo, receiver=anna)
-    assert not Block.is_blocked(sender=anna, receiver=bo)
+    Block.objects.create(blocker=anna, blocked=bo)
+    assert Block.between(anna, bo) == Block.between(bo, anna) == {anna.pk}
+
+    Block.objects.create(blocker=bo, blocked=anna)
+    assert Block.between(anna, bo) == {anna.pk, bo.pk}
 
 
 def test_the_database_refuses_a_second_block_and_blocking_oneself(anna, bo):

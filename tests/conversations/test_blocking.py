@@ -2,10 +2,13 @@
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import Client
 from django.urls import reverse
 from pytest_django.asserts import assertContains, assertNotContains, assertRedirects
+from rest_framework.throttling import SimpleRateThrottle
 
-from conversations.models import Block
+from conversations.models import Block, Blocked, Message, send
+from notifications.models import Notification
 
 pytestmark = pytest.mark.django_db
 
@@ -140,3 +143,116 @@ def test_no_blocking_oneself_a_missing_or_a_deactivated_member(as_anna, anna, bo
 
     assert resp.status_code == 404
     assert not Block.objects.exists()
+
+
+# What a block stops
+
+
+@pytest.fixture
+def as_bo(bo):
+    client = Client()
+    client.force_login(bo)
+    return client
+
+
+def test_send_refuses_both_ways(anna, bo):
+    Block.objects.create(blocker=anna, blocked=bo)
+
+    for sender, receiver in ((bo, anna), (anna, bo)):
+        with pytest.raises(Blocked):
+            send(sender, receiver, 'Hello')
+    assert not Message.objects.exists()
+
+
+def test_a_block_of_someone_else_stops_nothing(anna, bo):
+    cia = add_member('cia')
+    Block.objects.create(blocker=anna, blocked=cia)
+
+    send(bo, anna, 'Hello')
+    send(cia, bo, 'Hello')
+
+    assert Message.objects.count() == 2
+
+
+def test_the_blocked_member_cannot_send(as_bo, anna, bo, security_log, django_capture_on_commit_callbacks):
+    Block.objects.create(blocker=anna, blocked=bo)
+
+    with django_capture_on_commit_callbacks(execute=True):
+        resp = as_bo.post(page(anna), {'text': 'Let me in'})
+
+    assert resp.status_code == 403
+    assert not Message.objects.exists()
+    assert not Notification.objects.exists()
+    assert security_log()[-1].startswith(f'denied status=403 user={bo.pk} method=POST')
+
+
+def test_the_blocker_cannot_send_either(as_anna, anna, bo):
+    as_anna.post(block(bo))
+
+    assert as_anna.post(page(bo), {'text': 'One last word'}).status_code == 403
+    assert not Message.objects.exists()
+
+
+def test_the_blocked_member_sees_a_note_instead_of_the_form(as_bo, anna, bo):
+    send(anna, bo, 'Written earlier')
+    Block.objects.create(blocker=anna, blocked=bo)
+
+    resp = as_bo.get(page(anna))
+
+    assertContains(resp, 'You can\'t send messages to this member.')
+    assertNotContains(resp, '<textarea')
+    # Not in so many words
+    assertNotContains(resp, 'blocked')
+    # What was written before stays readable, and their own Block button is there
+    assertContains(resp, 'Written earlier')
+    assertContains(resp, f'action="{block(anna)}"')
+
+
+def test_the_blocker_sees_what_they_did_and_the_way_back(as_anna, anna, bo):
+    send(bo, anna, 'Written earlier')
+    as_anna.post(block(bo))
+
+    resp = as_anna.get(page(bo))
+
+    assertContains(resp, f'You have blocked Member {bo.pk}.')
+    assertNotContains(resp, '<textarea')
+    assertContains(resp, 'Written earlier')
+    assertContains(resp, f'action="{unblock(bo)}"')
+
+
+def test_unblocking_brings_the_form_back(as_anna, as_bo, anna, bo):
+    as_anna.post(block(bo))
+    as_anna.post(unblock(bo))
+
+    assertContains(as_anna.get(page(bo)), '<textarea')
+    assert as_bo.post(page(anna), {'text': 'Hello again'}).status_code == 302
+    assert Message.objects.count() == 1
+
+
+def test_with_two_blocks_one_unblock_is_not_enough(as_anna, as_bo, anna, bo):
+    as_anna.post(block(bo))
+    as_bo.post(block(anna))
+
+    as_anna.post(unblock(bo))
+
+    resp = as_anna.get(page(bo))
+    assertContains(resp, 'You can\'t send messages to this member.')
+    assert as_anna.post(page(bo), {'text': 'Hello'}).status_code == 403
+
+
+def test_a_refused_message_does_not_count_against_the_limit(as_bo, anna, bo, monkeypatch):
+    monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, 'message_burst', '1/min')
+    saved = Block.objects.create(blocker=anna, blocked=bo)
+    assert as_bo.post(page(anna), {'text': 'Refused'}).status_code == 403
+    saved.delete()
+
+    assert as_bo.post(page(anna), {'text': 'Allowed'}).status_code == 302
+
+
+def test_a_block_keeps_the_unread_notification(anna, bo, django_capture_on_commit_callbacks):
+    with django_capture_on_commit_callbacks(execute=True):
+        send(bo, anna, 'Hello')
+
+    Block.objects.create(blocker=anna, blocked=bo)
+
+    assert Notification.objects.get().read is False
