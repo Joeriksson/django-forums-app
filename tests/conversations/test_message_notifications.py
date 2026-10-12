@@ -4,8 +4,10 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.urls import reverse
+from pytest_django.asserts import assertContains, assertNotContains
 
 from conversations.models import Conversation, Message, send
+from forums.models import Forum, Thread
 from notifications import events
 from notifications.models import Notification
 
@@ -153,10 +155,75 @@ def test_deleting_the_senders_account_deletes_the_row(anna, bo, write):
     assert not Notification.objects.exists()
 
 
-def test_the_bell_counts_a_message_and_the_page_lists_replies_only(anna, bo, write, client):
-    # Until the conversation pages exist there is nowhere for the row to lead
+# The notifications page and the bell
+
+
+def test_the_bell_counts_a_conversation_once(anna, bo, write, client):
+    write(anna, bo)
     write(anna, bo)
     client.force_login(bo)
 
     assert client.get(reverse('notifications_count')).json() == {'unread': 1}
-    assert client.get(reverse('notifications')).context['notifications'] == []
+
+
+def test_the_page_lists_the_messages_with_a_link_to_the_conversation(anna, bo, write, client):
+    write(anna, bo, 'The text itself')
+    write(anna, bo)
+    client.force_login(bo)
+
+    resp = client.get(reverse('notifications'))
+
+    url = reverse('conversation', kwargs={'pk': anna.pk})
+    assertContains(resp, f'href="{url}">Messages with Member {anna.pk}</a>')
+    assertContains(resp, '<strong>2</strong> new messages')
+    # Not the text, and never the username
+    assertNotContains(resp, 'The text itself')
+    assertNotContains(resp, '>anna<')
+
+
+def test_following_the_link_marks_the_row_read(anna, bo, write, client):
+    write(anna, bo)
+    client.force_login(bo)
+    url = client.get(reverse('notifications')).context['notifications'][0].url
+
+    client.get(url)
+
+    resp = client.get(reverse('notifications'))
+    assertContains(resp, 'Read')
+    assertNotContains(resp, 'new message')
+    assert client.get(reverse('notifications_count')).json() == {'unread': 0}
+
+
+def test_mark_all_as_read_covers_messages(anna, bo, write, client):
+    write(anna, bo)
+    client.force_login(bo)
+
+    client.post(reverse('notifications_read'))
+
+    assert Notification.objects.get().read is True
+
+
+def test_replies_and_messages_share_the_page(anna, bo, write, client):
+    forum = Forum.objects.create(title='General', description='Everything')
+    thread = Thread.objects.create(title='A thread', text='Text', forum=forum, user=anna)
+    Notification.objects.create(user=bo, thread=thread)
+    write(anna, bo)
+    client.force_login(bo)
+
+    resp = client.get(reverse('notifications'))
+
+    assert len(resp.context['notifications']) == 2
+    assertContains(resp, 'A thread')
+    assertContains(resp, '<strong>1</strong> new message')
+
+
+def test_the_page_still_uses_one_query(anna, bo, write, client, django_assert_num_queries):
+    for n in range(3):
+        write(add_member(f'member{n}'), bo)
+    write(anna, bo)
+    client.force_login(bo)
+    client.get(reverse('notifications'))
+
+    # Eight for the logged-in member, then the rows with both members of each conversation
+    with django_assert_num_queries(8 + 1):
+        client.get(reverse('notifications'))
