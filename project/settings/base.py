@@ -367,6 +367,8 @@ REST_FRAMEWORK = {
         'message_hour': '60/hour',
         # Web views: search per user or address, the editor's preview per user
         'search': '20/min',
+        # The member search for a new message, which runs while a name is typed
+        'member_search': '60/min',
         'preview': '30/min',
     },
     # No proxy: the address is the connection's. DRF's default would trust any

@@ -16,7 +16,7 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 from django.views.generic import FormView, ListView, TemplateView, View
 
-from forums.throttling import MESSAGE_THROTTLES, SearchThrottle, allowed
+from forums.throttling import MESSAGE_THROTTLES, MemberSearchThrottle, allowed
 from notifications.events import conversation_opened
 from notifications.models import Notification
 from pages.models import SiteSettings
@@ -104,6 +104,7 @@ class MemberList(LoginRequiredMixin, TemplateView):
     """
     Who to write to: a search among the members by name or number. Until something is
     searched for, the members the reader already has conversations with.
+    js/member-search.js asks for this page while a name is typed and shows its list.
     """
 
     template_name = 'conversations/member_list.html'
@@ -113,9 +114,8 @@ class MemberList(LoginRequiredMixin, TemplateView):
         text = form.cleaned_data['q'].strip() if form.is_valid() else ''
         members, more, throttled = None, False, False
         if text:
-            # Counted with the searches of the search page, so the members can't be
-            # listed quickly a few letters at a time
-            throttled = not allowed(request, SearchThrottle)
+            # Counted, so the members can't be listed quickly a few letters at a time
+            throttled = not allowed(request, MemberSearchThrottle)
             if not throttled:
                 members = find_members(request.user, text)
                 more = len(members) > MAX_MEMBERS

@@ -216,8 +216,13 @@ def test_a_search_costs_one_query(as_anna, members, django_assert_num_queries):
 # The limit
 
 
+def test_default_rate():
+    # More than the search page's: this one searches while a name is typed
+    assert SimpleRateThrottle.THROTTLE_RATES['member_search'] == '60/min'
+
+
 def test_searches_over_the_limit_are_refused(as_anna, anna, members, monkeypatch, security_log):
-    monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, 'search', '2/min')
+    monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, 'member_search', '2/min')
 
     assert [search(as_anna, 'bo').status_code for _ in range(2)] == [200, 200]
     resp = search(as_anna, 'bo')
@@ -228,8 +233,9 @@ def test_searches_over_the_limit_are_refused(as_anna, anna, members, monkeypatch
     assert security_log()[-1].startswith(f'denied status=429 user={anna.pk} method=GET')
 
 
-def test_the_empty_page_does_not_count_and_the_search_page_shares_the_limit(as_anna, members, monkeypatch):
-    monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, 'search', '2/min')
+def test_the_empty_page_does_not_count_and_the_search_page_counts_apart(as_anna, members, monkeypatch):
+    monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, 'member_search', '1/min')
+    monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, 'search', '1/min')
     for _ in range(3):
         assert as_anna.get(PAGE).status_code == 200
         assert search(as_anna, '   ').status_code == 200
@@ -237,6 +243,27 @@ def test_the_empty_page_does_not_count_and_the_search_page_shares_the_limit(as_a
     assert search(as_anna, 'bo').status_code == 200
     assert as_anna.get(reverse('search_results'), {'q': 'anything'}).status_code == 200
     assert search(as_anna, 'bo').status_code == 429
+
+
+# The script that searches while a name is typed (not run by the tests)
+
+
+def test_the_page_loads_the_script_and_marks_the_list_it_replaces(as_anna, members):
+    for resp in (as_anna.get(PAGE), search(as_anna, 'bo'), search(as_anna, 'nobody')):
+        html = resp.content.decode()
+
+        assert html.count('id="member-results"') == 1
+        assert 'js/member-search.js' in html
+    # The field is outside it, so typing isn't interrupted
+    assert html.index('name="q"') < html.index('id="member-results"')
+
+
+def test_the_refusal_is_inside_the_list_the_script_replaces(as_anna, members, monkeypatch):
+    monkeypatch.setitem(SimpleRateThrottle.THROTTLE_RATES, 'member_search', '0/min')
+
+    html = search(as_anna, 'bo').content.decode()
+
+    assert html.index('id="member-results"') < html.index('Too many searches.')
 
 
 def test_a_visitor_is_sent_to_the_login_page(client, members):

@@ -27,6 +27,12 @@ class PreviewThrottle(UserRateThrottle):
     scope = 'preview'
 
 
+class MemberSearchThrottle(UserRateThrottle):
+    # Who to write to (conversations/views.py): it searches while a name is typed, so
+    # more often than the search page; still too few to list the members
+    scope = 'member_search'
+
+
 class MessageBurstThrottle(UserRateThrottle):
     scope = 'message_burst'
 

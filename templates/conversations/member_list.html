@@ -1,5 +1,5 @@
 {% extends '_base.html' %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% translate 'New message' %}{% endblock title %}
 
@@ -19,6 +19,8 @@
         </div>
     </form>
 
+    {% comment %}What js/member-search.js replaces while a name is typed{% endcomment %}
+    <div id="member-results" aria-live="polite">
     {% if throttled %}
         <p class="empty">{% translate 'Too many searches. Wait a minute and try again.' %}</p>
     {% elif members is not None %}
@@ -51,5 +53,11 @@
             </ul>
         </div>
     {% endif %}
+    </div>
     <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
 {% endblock content %}
+
+{% block javascripts %}
+    {{ block.super }}
+    <script defer src="{% static 'js/member-search.js' %}"></script>
+{% endblock javascripts %}
