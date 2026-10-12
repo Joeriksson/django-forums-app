@@ -579,6 +579,17 @@ textarea {
     text-decoration: none;
 }
 
+/* How many reports wait for a moderator */
+.menu__count {
+    margin-left: var(--space-1);
+    padding: 0 var(--space-2);
+    border-radius: 999px;
+    background: var(--spruce);
+    color: var(--on-spruce);
+    font-size: var(--size-small);
+    font-weight: 600;
+}
+
 .menu__who {
     padding: var(--space-1) var(--space-3) var(--space-2);
     border-bottom: 1px solid var(--rule);
@@ -1016,6 +1027,34 @@ textarea {
 /* Messages (conversations/): a member's name as the row's link */
 .member-link {
     text-decoration: none;
+}
+
+/* Reports (conversations/report_list.html): each reported message with who, when and
+   the reporter's note */
+.report {
+    margin: var(--space-5) 0;
+}
+
+.report .post {
+    margin: var(--space-2) 0;
+}
+
+.report__note {
+    margin: var(--space-2) 0;
+    max-width: var(--measure);
+}
+
+.report__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--quiet);
+    font-size: var(--size-small);
+}
+
+.report__foot form {
+    margin: 0;
 }
 
 /* Under a conversation: the way back, and Block or Unblock at the other end */

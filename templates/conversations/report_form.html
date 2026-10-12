@@ -1,0 +1,26 @@
+{% extends '_base.html' %}
+{% load markdown when i18n %}
+
+{% block title %}{% translate 'Report a message' %}{% endblock title %}
+
+{% block content %}
+    <div class="page-head">
+        <h1>{% translate 'Report this message?' %}</h1>
+    </div>
+    <blockquote class="excerpt">
+        <p class="row__meta">
+            {% include 'forums/_person.html' with person=message.sender %}
+            <span>{{ message.added|when }}</span>
+        </p>
+        <p>{{ message.text|truncatechars:400|render_markdown|striptags|truncatechars:240 }}</p>
+    </blockquote>
+    <form class="form" method="post">
+        {% csrf_token %}
+        <p>{% translate "The moderators will see this message, who sent it and your note. They can't read the rest of your messages." %}</p>
+        {{ form }}
+        <div class="form__actions">
+            <button class="button button--danger" type="submit">{% translate 'Report' %}</button>
+            <a class="button button--quiet" href="{% url 'conversation' message.sender_id %}">{% translate 'Cancel' %}</a>
+        </div>
+    </form>
+{% endblock content %}

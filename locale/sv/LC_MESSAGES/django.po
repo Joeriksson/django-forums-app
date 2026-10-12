@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 16:01+0000\n"
+"POT-Creation-Date: 2026-10-12 16:34+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -19,9 +19,17 @@ msgstr ""
 msgid "text"
 msgstr "text"
 
+#: conversations/models.py
+msgid "note to the moderators"
+msgstr "kommentar till moderatorerna"
+
 #: conversations/views.py
 msgid "You are sending messages too fast. Wait a while and try again."
 msgstr "Du skickar meddelanden för snabbt. Vänta en stund och försök igen."
+
+#: conversations/views.py
+msgid "The message was reported to the moderators."
+msgstr "Meddelandet har anmälts till moderatorerna."
 
 #: forums/forms.py
 msgid "Words"
@@ -343,6 +351,10 @@ msgstr "Byt lösenord"
 msgid "Two-factor authentication"
 msgstr "Tvåfaktorsautentisering"
 
+#: templates/_base.html templates/conversations/report_list.html
+msgid "Reports"
+msgstr "Anmälningar"
+
 #: templates/_base.html
 msgid "Sign out"
 msgstr "Logga ut"
@@ -486,6 +498,15 @@ msgid "Later messages"
 msgstr "Senare meddelanden"
 
 #: templates/conversations/conversation_detail.html
+msgid "Reported"
+msgstr "Anmält"
+
+#: templates/conversations/conversation_detail.html
+#: templates/conversations/report_form.html
+msgid "Report"
+msgstr "Anmäl"
+
+#: templates/conversations/conversation_detail.html
 #: templates/conversations/conversation_list.html
 msgid "No messages yet."
 msgstr "Inga meddelanden än."
@@ -493,7 +514,9 @@ msgstr "Inga meddelanden än."
 #: templates/conversations/conversation_detail.html
 #, python-format
 msgid "You have blocked %(name)s. Unblock to write to each other again."
-msgstr "Du har blockerat %(name)s. Avblockera för att kunna skriva till varandra igen."
+msgstr ""
+"Du har blockerat %(name)s. Avblockera för att kunna skriva till varandra "
+"igen."
 
 #: templates/conversations/conversation_detail.html
 msgid "You can't send messages to this member."
@@ -523,17 +546,17 @@ msgid "Block"
 msgstr "Blockera"
 
 #: templates/conversations/conversation_detail.html
-#: templates/forums/thread_detail.html
+#: templates/conversations/report_list.html templates/forums/thread_detail.html
 msgid "Copy"
 msgstr "Kopiera"
 
 #: templates/conversations/conversation_detail.html
-#: templates/forums/thread_detail.html
+#: templates/conversations/report_list.html templates/forums/thread_detail.html
 msgid "Copied"
 msgstr "Kopierat"
 
 #: templates/conversations/conversation_detail.html
-#: templates/forums/thread_detail.html
+#: templates/conversations/report_list.html templates/forums/thread_detail.html
 msgid "Not copied"
 msgstr "Inte kopierat"
 
@@ -542,10 +565,12 @@ msgid "Pages of conversations"
 msgstr "Sidor med meddelanden"
 
 #: templates/conversations/conversation_list.html
+#: templates/conversations/report_list.html
 msgid "Newer"
 msgstr "Nyare"
 
 #: templates/conversations/conversation_list.html
+#: templates/conversations/report_list.html
 msgid "Older"
 msgstr "Äldre"
 
@@ -564,6 +589,76 @@ msgstr "Välj en medlem att skriva till."
 #: templates/conversations/member_list.html
 msgid "There are no other members yet."
 msgstr "Det finns inga andra medlemmar än."
+
+#: templates/conversations/report_form.html
+msgid "Report a message"
+msgstr "Anmäl ett meddelande"
+
+#: templates/conversations/report_form.html
+msgid "Report this message?"
+msgstr "Anmäla det här meddelandet?"
+
+#: templates/conversations/report_form.html
+msgid ""
+"The moderators will see this message, who sent it and your note. They can't "
+"read the rest of your messages."
+msgstr ""
+"Moderatorerna får se det här meddelandet, vem som skickade det och din "
+"kommentar. De kan inte läsa resten av era meddelanden."
+
+#: templates/conversations/report_form.html templates/forums/forum_form.html
+#: templates/forums/forum_update_form.html
+#: templates/forums/post_delete_form.html templates/forums/post_form.html
+#: templates/forums/post_update_form.html
+#: templates/forums/thread_delete_form.html templates/forums/thread_form.html
+#: templates/forums/thread_update_form.html
+#: templates/forums/userprofile_form.html
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: templates/conversations/report_list.html
+msgid ""
+"Messages that members have reported. You see the reported message only, not "
+"the rest of the conversation."
+msgstr "Meddelanden som medlemmar har anmält. Du ser bara det anmälda meddelandet, inte resten av meddelandena."
+
+#: templates/conversations/report_list.html
+msgid "Deleted account"
+msgstr "Borttaget konto"
+
+#: templates/conversations/report_list.html
+msgid "Pages of reports"
+msgstr "Sidor med anmälningar"
+
+#: templates/conversations/report_list.html
+msgid "Reported by"
+msgstr "Anmält av"
+
+#: templates/conversations/report_list.html
+msgid "Note to the moderators:"
+msgstr "Kommentar till moderatorerna:"
+
+#: templates/conversations/report_list.html
+#, python-format
+msgid "Handled by %(name)s, %(when)s"
+msgstr "Hanterad av %(name)s, %(when)s"
+
+#: templates/conversations/report_list.html
+#, python-format
+msgid "Handled %(when)s"
+msgstr "Hanterad %(when)s"
+
+#: templates/conversations/report_list.html
+msgid "Mark as handled"
+msgstr "Markera som hanterad"
+
+#: templates/conversations/report_list.html
+msgid "Not handled yet"
+msgstr "Inte hanterad än"
+
+#: templates/conversations/report_list.html
+msgid "No reports."
+msgstr "Inga anmälningar."
 
 #: templates/forums/_edited.html
 #, python-format
@@ -749,15 +844,6 @@ msgstr "Nytt forum"
 #: templates/forums/forum_form.html
 msgid "Add forum"
 msgstr "Lägg till forum"
-
-#: templates/forums/forum_form.html templates/forums/forum_update_form.html
-#: templates/forums/post_delete_form.html templates/forums/post_form.html
-#: templates/forums/post_update_form.html
-#: templates/forums/thread_delete_form.html templates/forums/thread_form.html
-#: templates/forums/thread_update_form.html
-#: templates/forums/userprofile_form.html
-msgid "Cancel"
-msgstr "Avbryt"
 
 #: templates/forums/forum_list.html
 msgid "Recent activity"

@@ -1,0 +1,70 @@
+{% extends '_base.html' %}
+{% load static markdown when i18n %}
+
+{% block title %}{% translate 'Reports' %}{% endblock title %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/thread.css' %}">
+{% endblock stylesheets %}
+
+{% block content %}
+    <div class="page-head">
+        <h1>{% translate 'Reports' %}</h1>
+    </div>
+    <p class="note">{% translate 'Messages that members have reported. You see the reported message only, not the rest of the conversation.' %}</p>
+    {% translate 'Deleted account' as deleted %}
+    {% translate 'Pages of reports' as pages_label %}
+    {% translate 'Newer' as newer_label %}
+    {% translate 'Older' as older_label %}
+    {% include 'forums/_pages.html' with request=request page=page_obj label=pages_label previous=newer_label next=older_label only %}
+    {% for report in reports %}
+        <section class="report" id="report-{{ report.id }}">
+            <p class="row__meta">
+                <span>{% translate 'Reported by' %}</span>
+                {% if report.reporter %}{% include 'forums/_person.html' with person=report.reporter %}{% else %}<span>{{ deleted }}</span>{% endif %}
+                <span>{{ report.created|when }}</span>
+            </p>
+            <article class="post">
+                <header class="post__head">
+                    {% if report.sender %}{% include 'forums/_person.html' with person=report.sender %}{% else %}<span>{{ deleted }}</span>{% endif %}
+                    <time datetime="{{ report.sent|date:'c' }}" title="{{ report.sent }}">{{ report.sent|when }}</time>
+                </header>
+                <div class="post__body">
+                    <div class="prose">{{ report.text|render_markdown }}</div>
+                </div>
+            </article>
+            {% if report.note %}
+                <p class="report__note"><strong>{% translate 'Note to the moderators:' %}</strong> {{ report.note }}</p>
+            {% endif %}
+            <div class="report__foot">
+                {% if report.handled %}
+                    {% if report.handled_by %}
+                        <span>{% blocktranslate with name=report.handled_by.display_name when=report.handled|when %}Handled by {{ name }}, {{ when }}{% endblocktranslate %}</span>
+                    {% else %}
+                        <span>{% blocktranslate with when=report.handled|when %}Handled {{ when }}{% endblocktranslate %}</span>
+                    {% endif %}
+                {% elif perms.conversations.change_report %}
+                    <form method="post" action="{% url 'report_handled' report.id %}">
+                        {% csrf_token %}
+                        <button class="button button--quiet button--small" type="submit">{% translate 'Mark as handled' %}</button>
+                    </form>
+                {% else %}
+                    <span>{% translate 'Not handled yet' %}</span>
+                {% endif %}
+            </div>
+        </section>
+    {% empty %}
+        <p class="empty">{% translate 'No reports.' %}</p>
+    {% endfor %}
+    {% include 'forums/_pages.html' with request=request page=page_obj label=pages_label previous=newer_label next=older_label only %}
+{% endblock content %}
+
+{% block javascripts %}
+    {{ block.super }}
+    <script src="{% static 'js/highlight.min.js' %}"></script>
+    <script src="{% static 'js/thread.js' %}"
+            data-copy="{% translate 'Copy' %}"
+            data-copied="{% translate 'Copied' %}"
+            data-not-copied="{% translate 'Not copied' %}"></script>
+{% endblock javascripts %}

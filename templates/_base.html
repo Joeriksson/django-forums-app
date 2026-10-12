@@ -1,4 +1,4 @@
-{% load i18n nav static signup bell %}
+{% load i18n nav static signup bell reports %}
 {% get_current_language as language %}
 {% comment %}The number on the bell, also first in the title; 500.html has no user{% endcomment %}
 {% if user.is_authenticated %}{% unread_notifications user as unread %}{% endif %}
@@ -39,6 +39,11 @@
                             <a href="{% url 'account_change_password' %}">{% translate 'Change password' %}</a>
                         {% endif %}
                         <a href="{% url 'mfa_index' %}">{% translate 'Two-factor authentication' %}</a>
+                        {% if perms.conversations.view_report %}
+                            {% comment %}For the moderators: the reported messages, with how many are waiting{% endcomment %}
+                            {% unhandled_reports as waiting %}
+                            <a href="{% url 'reports' %}">{% translate 'Reports' %}{% if waiting %} <span class="menu__count">{{ waiting }}</span>{% endif %}</a>
+                        {% endif %}
                         <a href="{% url 'account_logout' %}">{% translate 'Sign out' %}</a>
                     </div>
                 </details>
