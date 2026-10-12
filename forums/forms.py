@@ -103,3 +103,8 @@ class UserProfileForm(forms.ModelForm):
             'github_url',
             'signature',
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Asked for at signup; a member can change the name, not remove it
+        self.fields['first_name'].required = True

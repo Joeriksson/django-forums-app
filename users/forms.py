@@ -4,7 +4,10 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.utils.translation import gettext
+from django.utils.text import capfirst
+from django.utils.translation import gettext, gettext_lazy
+
+from forums.models import UserProfile
 
 from .models import Invitation
 from .security import has_second_factor
@@ -72,8 +75,39 @@ class InvitationAdminForm(forms.ModelForm):
         return email
 
 
+def name_field(name, required, help_text=''):
+    """A signup field for one of the profile's names, with its label and length."""
+    field = UserProfile._meta.get_field(name)
+    return forms.CharField(
+        label=capfirst(field.verbose_name),
+        max_length=field.max_length,
+        required=required,
+        help_text=help_text,
+    )
+
+
 class InvitedSignupForm(SignupForm):
-    """allauth's signup form (ACCOUNT_FORMS). With an invitation, the address is fixed."""
+    """
+    allauth's signup form (ACCOUNT_FORMS), with the name others will see: a member has
+    one from the start, instead of "Member <id>". With an invitation, the address is fixed.
+    """
+
+    first_name = name_field(
+        'first_name',
+        required=True,
+        # The same line as on the profile page
+        help_text=gettext_lazy('Others see your first and last name next to what you write.'),
+    )
+    last_name = name_field('last_name', required=False)
+    field_order = ['email', 'first_name', 'last_name', 'password1']
+
+    def custom_signup(self, request, user):
+        super().custom_signup(request, user)
+        # The profile was made when the user was saved (forums/signals.py)
+        profile = user.profile
+        profile.first_name = self.cleaned_data['first_name']
+        profile.last_name = self.cleaned_data['last_name']
+        profile.save(update_fields=['first_name', 'last_name'])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

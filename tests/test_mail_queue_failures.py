@@ -111,7 +111,7 @@ def test_signup_succeeds_when_the_welcome_mail_cannot_be_queued(
 
     with django_capture_on_commit_callbacks(execute=True):
         resp = client.post(
-            reverse('account_signup'), {'email': 'new@example.com', 'password1': 'a-long-test-pass-123'}
+            reverse('account_signup'), {'email': 'new@example.com', 'first_name': 'New', 'password1': 'a-long-test-pass-123'}
         )
 
     assert resp.status_code == 302

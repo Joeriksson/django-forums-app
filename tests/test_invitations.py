@@ -35,7 +35,7 @@ def accept_url(invitation):
 
 
 def sign_up(client, email):
-    return client.post(reverse('account_signup'), {'email': email, 'password1': PASSWORD})
+    return client.post(reverse('account_signup'), {'email': email, 'first_name': 'New', 'password1': PASSWORD})
 
 
 # Model
@@ -97,7 +97,7 @@ def test_invited_email_cannot_be_edited_on_the_signup_form(client, invitation):
 def test_invited_email_stays_read_only_when_the_form_comes_back(client, invitation):
     client.get(accept_url(invitation))
 
-    resp = client.post(reverse('account_signup'), {'email': 'anna@example.com', 'password1': '1'})
+    resp = client.post(reverse('account_signup'), {'email': 'anna@example.com', 'first_name': 'New', 'password1': '1'})
 
     assert resp.status_code == 200
     assert resp.context['form']['email'].field.widget.attrs.get('readonly')
