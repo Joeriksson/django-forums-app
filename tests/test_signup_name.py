@@ -113,6 +113,72 @@ def test_the_labels_are_translated(client, settings):
     assert 'Förnamn' in main and 'Efternamn' in main
 
 
+# GitHub signups, which show no form of ours
+
+
+@pytest.mark.parametrize(
+    'github_name, first, last, shown',
+    [
+        ('Anna Berg', 'Anna', 'Berg', 'Anna Berg'),
+        ('Anna', 'Anna', '', 'Anna'),
+        ('Anna Maria Berg', 'Anna', 'Maria Berg', 'Anna Maria Berg'),
+        ('  Anna   Berg ', 'Anna', 'Berg', 'Anna Berg'),
+    ],
+)
+def test_a_github_signup_takes_the_name_from_github(github_login, github_name, first, last, shown):
+    github_login(EMAIL, name=github_name)
+
+    member = new_member()
+    assert (member.profile.first_name, member.profile.last_name) == (first, last)
+    assert member.display_name == shown
+
+
+@pytest.mark.parametrize('github_name', [None, '', '   '])
+def test_a_github_signup_without_a_name_is_a_numbered_member(github_login, github_name):
+    github_login(EMAIL, name=github_name)
+
+    member = new_member()
+    assert member.display_name == f'Member {member.pk}'
+    assert not member.has_profile_name
+
+
+def test_a_long_github_name_is_cut_to_what_the_profile_holds(github_login):
+    github_login(EMAIL, name='A' * 140 + ' ' + 'B' * 140)
+
+    profile = new_member().profile
+    assert (profile.first_name, profile.last_name) == ('A' * 100, 'B' * 100)
+
+
+def test_the_github_login_name_is_never_used(github_login):
+    # "octocat" is the GitHub username, not a name the member chose to show here
+    github_login(EMAIL, name=None)
+
+    assert 'octocat' not in new_member().display_name
+
+
+def test_a_later_github_login_does_not_change_the_name(client, github_login):
+    github_login(EMAIL, name='Anna Berg')
+    member = new_member()
+    member.profile.first_name = 'Annika'
+    member.profile.save()
+    client.logout()
+
+    github_login(EMAIL, name='Somebody Else')
+
+    member.profile.refresh_from_db()
+    assert (member.profile.first_name, member.profile.last_name) == ('Annika', 'Berg')
+
+
+def test_an_invited_github_signup_takes_the_name_too(client, github_login, settings):
+    settings.SIGNUP_OPEN = False
+    invitation = Invitation.objects.create(email=EMAIL)
+    client.get(reverse('accept_invitation', args=[invitation.key]))
+
+    github_login(EMAIL, name='Anna Berg')
+
+    assert new_member().display_name == 'Anna Berg'
+
+
 # The profile form
 
 

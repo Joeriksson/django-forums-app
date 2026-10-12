@@ -68,14 +68,18 @@ def github_login(client, monkeypatch):
     are faked: the token exchange and the profile with its email addresses.
     """
 
-    def _login(email, uid=12345, emails=None):
-        """`emails`: GitHub's addresses as (address, verified); default: `email`, verified."""
+    def _login(email, uid=12345, emails=None, name=None):
+        """
+        `emails`: GitHub's addresses as (address, verified); default: `email`, verified.
+        `name`: the GitHub profile's name; many have none.
+        """
         monkeypatch.setattr(
             OAuth2Client, 'get_access_token', lambda *args, **kwargs: {'access_token': 'token'}
         )
         profile = {
             'id': uid,
             'login': 'octocat',
+            'name': name,
             'email': email,
             'emails': [
                 {'email': address, 'verified': verified, 'primary': address == email}
