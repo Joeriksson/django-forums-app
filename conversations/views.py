@@ -6,14 +6,65 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext
-from django.views.generic import FormView
+from django.db.models import Q
+from django.views.generic import FormView, TemplateView
 
 from forums.throttling import MESSAGE_THROTTLES, allowed
 from notifications.events import conversation_opened
+from notifications.models import Notification
 from pages.models import SiteSettings
 
 from .forms import MessageForm
 from .models import Conversation, Message, send
+
+
+class ConversationList(LoginRequiredMixin, TemplateView):
+    """The member's conversations, the one with the newest message first."""
+
+    template_name = 'conversations/conversation_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        conversations = Conversation.objects.filter(
+            Q(user_low=user) | Q(user_high=user)
+        ).select_related('user_low__profile', 'user_high__profile')
+        paginator = Paginator(
+            conversations, SiteSettings.for_request(self.request).threads_per_page
+        )
+        page = paginator.get_page(self.request.GET.get('page'))
+        # The messages the member hasn't seen, from the notification center's rows
+        unread = dict(
+            Notification.objects.filter(
+                user=user, read=False, conversation__in=[c.pk for c in page]
+            ).values_list('conversation_id', 'count')
+        )
+        for conversation in page:
+            low = conversation.user_low
+            conversation.other = conversation.user_high if low == user else low
+            conversation.unread = unread.get(conversation.pk, 0)
+        context['conversations'] = page
+        return context
+
+
+class MemberList(LoginRequiredMixin, TemplateView):
+    """Who to write to: every member with an active account, by name."""
+
+    template_name = 'conversations/member_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        members = (
+            get_user_model()
+            .objects.filter(is_active=True)
+            .exclude(pk=self.request.user.pk)
+            .select_related('profile')
+        )
+        # The name is the profile's or "Member <id>": sorted here, not by the database
+        context['members'] = sorted(
+            members, key=lambda member: (member.display_name.casefold(), member.pk)
+        )
+        return context
 
 
 class ConversationDetail(LoginRequiredMixin, FormView):

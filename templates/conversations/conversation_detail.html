@@ -45,6 +45,8 @@
         </div>
     </form>
     {% include 'forums/_editor.html' %}
+
+    <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
 {% endblock content %}
 
 {% block javascripts %}

@@ -26,6 +26,7 @@
                 <a href="{% url 'home' %}"{% if section == 'forums' %} aria-current="page"{% endif %}>{% translate 'Forums' %}</a>
                 <a href="{% url 'latest' %}"{% if section == 'latest' %} aria-current="page"{% endif %}>{% translate 'Latest' %}</a>
                 <a href="{% url 'search_results' %}"{% if section == 'search' %} aria-current="page"{% endif %}>{% translate 'Search' %}</a>
+                <a href="{% url 'conversations' %}"{% if section == 'messages' %} aria-current="page"{% endif %}>{% translate 'Messages' %}</a>
                 {% if user.is_staff %}
                     <a href="{% url 'admin:index' %}">{% translate 'Admin' %}</a>
                 {% endif %}

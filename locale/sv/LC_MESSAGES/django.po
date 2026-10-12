@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 15:33+0000\n"
+"POT-Creation-Date: 2026-10-12 15:40+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -317,6 +317,11 @@ msgstr "Senaste"
 msgid "Search"
 msgstr "Sök"
 
+#: templates/_base.html templates/conversations/conversation_detail.html
+#: templates/conversations/conversation_list.html
+msgid "Messages"
+msgstr "Meddelanden"
+
 #: templates/_base.html
 msgid "Admin"
 msgstr "Admin"
@@ -468,10 +473,6 @@ msgid "Messages with %(name)s"
 msgstr "Meddelanden med %(name)s"
 
 #: templates/conversations/conversation_detail.html
-msgid "Messages"
-msgstr "Meddelanden"
-
-#: templates/conversations/conversation_detail.html
 msgid "Pages of messages"
 msgstr "Sidor med meddelanden"
 
@@ -484,16 +485,24 @@ msgid "Later messages"
 msgstr "Senare meddelanden"
 
 #: templates/conversations/conversation_detail.html
+#: templates/conversations/conversation_list.html
 msgid "No messages yet."
 msgstr "Inga meddelanden än."
 
 #: templates/conversations/conversation_detail.html
+#: templates/conversations/conversation_list.html
+#: templates/conversations/member_list.html
 msgid "New message"
 msgstr "Nytt meddelande"
 
 #: templates/conversations/conversation_detail.html
 msgid "Send"
 msgstr "Skicka"
+
+#: templates/conversations/conversation_detail.html
+#: templates/conversations/member_list.html
+msgid "Back to messages"
+msgstr "Tillbaka till meddelanden"
 
 #: templates/conversations/conversation_detail.html
 #: templates/forums/thread_detail.html
@@ -509,6 +518,33 @@ msgstr "Kopierat"
 #: templates/forums/thread_detail.html
 msgid "Not copied"
 msgstr "Inte kopierat"
+
+#: templates/conversations/conversation_list.html
+msgid "Pages of conversations"
+msgstr "Sidor med meddelanden"
+
+#: templates/conversations/conversation_list.html
+msgid "Newer"
+msgstr "Nyare"
+
+#: templates/conversations/conversation_list.html
+msgid "Older"
+msgstr "Äldre"
+
+#: templates/conversations/conversation_list.html
+#, python-format
+msgid "<strong>%(counter)s</strong> new message"
+msgid_plural "<strong>%(counter)s</strong> new messages"
+msgstr[0] "<strong>%(counter)s</strong> nytt meddelande"
+msgstr[1] "<strong>%(counter)s</strong> nya meddelanden"
+
+#: templates/conversations/member_list.html
+msgid "Choose a member to write to."
+msgstr "Välj en medlem att skriva till."
+
+#: templates/conversations/member_list.html
+msgid "There are no other members yet."
+msgstr "Det finns inga andra medlemmar än."
 
 #: templates/forums/_edited.html
 #, python-format
@@ -872,6 +908,10 @@ msgstr "Tråden och alla dess svar tas bort. De går inte att få tillbaka."
 #: templates/forums/thread_detail.html
 msgid "Opening post"
 msgstr "Första inlägget"
+
+#: templates/forums/thread_detail.html
+msgid "Message"
+msgstr "Meddelande"
 
 #: templates/forums/thread_detail.html
 #, python-format

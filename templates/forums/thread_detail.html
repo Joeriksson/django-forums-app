@@ -24,6 +24,11 @@
             <div class="prose">{{ thread.text|render_markdown }}</div>
             {% include 'forums/_edited.html' with edited=thread.edited by_moderator=thread.edited_by_moderator only %}
             {% include 'forums/_signature.html' with profile=thread.user.profile only %}
+            {% if thread.user != user and thread.user.is_active %}
+                <div class="post__foot">
+                    <a class="post__message" href="{% url 'conversation' thread.user_id %}">{% translate 'Message' %}</a>
+                </div>
+            {% endif %}
         </div>
     </article>
 
@@ -66,6 +71,9 @@
                                     <input type="hidden" name="page" value="{{ posts.number }}">
                                     <button class="button button--quiet button--small" type="submit">+1</button>
                                 </form>
+                            {% endif %}
+                            {% if post.user != user and post.user.is_active %}
+                                <a class="post__message" href="{% url 'conversation' post.user_id %}">{% translate 'Message' %}</a>
                             {% endif %}
                             {% if post.user == user or perms.forums.change_post %}
                                 <a class="post__edit" href="{% url 'post_update' thread.id post.id %}">{% translate 'Edit' %}</a>
