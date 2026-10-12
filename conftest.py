@@ -33,6 +33,18 @@ def notification_calls(monkeypatch):
     return calls
 
 
+# The same for direct messages: each call is (the message's id, the seconds the mail waits);
+# a test that wants the mail runs send_message_mail_task(message.pk) itself
+@pytest.fixture(autouse=True)
+def message_mail_calls(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        'conversations.tasks.send_message_mail_task.apply_async',
+        lambda args, countdown: calls.append((args[0], countdown)),
+    )
+    return calls
+
+
 @pytest.fixture
 def reply_with_mail(django_capture_on_commit_callbacks):
     """Post a reply and run its mail task, as the worker does after the wait. Returns the post."""

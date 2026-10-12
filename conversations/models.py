@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.db import models, transaction
 from django.db.models import F, Q
@@ -6,6 +8,10 @@ from django.utils.translation import gettext_lazy as _
 
 from forums.models import MARKDOWN_HELP, MAX_TEXT_LENGTH
 from notifications.events import message_sent
+from pages.models import SiteSettings
+from project.utils import queue_task
+
+from .tasks import send_message_mail_task
 
 
 class Conversation(models.Model):
@@ -173,8 +179,9 @@ class Blocked(Exception):
 
 def send(sender, receiver, text):
     """
-    Add a message from one member to another, in their conversation, and tell the
-    receiver in the notification center once it is committed. Returns the message.
+    Add a message from one member to another, in their conversation. Once it is
+    committed the receiver is told in the notification center, and the mail about it is
+    queued to wait some minutes (conversations/tasks.py). Returns the message.
     Raises Blocked if either has blocked the other.
     """
     if Block.between(sender, receiver):
@@ -183,5 +190,14 @@ def send(sender, receiver, text):
         conversation = Conversation.between(sender, receiver)
         message = Message.objects.create(conversation=conversation, sender=sender, text=text)
         Conversation.objects.filter(pk=conversation.pk).update(updated=message.added)
-        transaction.on_commit(lambda: message_sent(message))
+        transaction.on_commit(lambda: notify(message))
     return message
+
+
+def notify(message):
+    # The notification center first: the mail goes to a receiver it still shows as unread
+    notified = message_sent(message)
+    # Not in CI, as for replies
+    if notified and not os.environ.get('CI'):
+        delay = SiteSettings.load().notification_mail_delay
+        queue_task(send_message_mail_task, message.pk, countdown=delay * 60)

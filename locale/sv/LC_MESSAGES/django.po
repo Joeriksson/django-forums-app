@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 16:34+0000\n"
+"POT-Creation-Date: 2026-10-12 16:49+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -22,6 +22,21 @@ msgstr "text"
 #: conversations/models.py
 msgid "note to the moderators"
 msgstr "kommentar till moderatorerna"
+
+#: conversations/tasks.py
+#, python-format
+msgid "New message from %(name)s"
+msgstr "Nytt meddelande från %(name)s"
+
+#: conversations/tasks.py
+#, python-format
+msgid "%(name)s has sent you a message."
+msgstr "%(name)s har skickat ett meddelande till dig."
+
+#: conversations/tasks.py forums/tasks.py
+#, python-format
+msgid "Url: %(url)s"
+msgstr "Länk: %(url)s"
 
 #: conversations/views.py
 msgid "You are sending messages too fast. Wait a while and try again."
@@ -223,11 +238,6 @@ msgstr "Nytt inlägg av %(name)s"
 #, python-format
 msgid "A new post was added to thread \"%(title)s\""
 msgstr "Ett nytt inlägg har skrivits i tråden \"%(title)s\""
-
-#: forums/tasks.py
-#, python-format
-msgid "Url: %(url)s"
-msgstr "Länk: %(url)s"
 
 #: forums/templatetags/when.py
 msgid "just now"
@@ -620,7 +630,9 @@ msgstr "Avbryt"
 msgid ""
 "Messages that members have reported. You see the reported message only, not "
 "the rest of the conversation."
-msgstr "Meddelanden som medlemmar har anmält. Du ser bara det anmälda meddelandet, inte resten av meddelandena."
+msgstr ""
+"Meddelanden som medlemmar har anmält. Du ser bara det anmälda meddelandet, "
+"inte resten av meddelandena."
 
 #: templates/conversations/report_list.html
 msgid "Deleted account"
