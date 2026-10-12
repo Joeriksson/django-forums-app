@@ -1,5 +1,6 @@
 """
-How fast a user may create threads and posts, search, and preview Markdown.
+How fast a user may create threads and posts, send direct messages, search, and
+preview Markdown.
 
 Every post in a thread with subscribers sends them a mail, so a flood of posts is
 also a flood of mail. The website and the API share the counters: they are DRF
@@ -26,7 +27,17 @@ class PreviewThrottle(UserRateThrottle):
     scope = 'preview'
 
 
+class MessageBurstThrottle(UserRateThrottle):
+    scope = 'message_burst'
+
+
+class MessageHourThrottle(UserRateThrottle):
+    scope = 'message_hour'
+
+
 POSTING_THROTTLES = (PostingBurstThrottle, PostingHourThrottle)
+# Direct messages (conversations/views.py) have their own count
+MESSAGE_THROTTLES = (MessageBurstThrottle, MessageHourThrottle)
 
 
 def allowed(request, *throttles):
