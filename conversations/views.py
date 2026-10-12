@@ -7,15 +7,26 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.db.models import Q
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView, TemplateView, View
 
 from forums.throttling import MESSAGE_THROTTLES, allowed
 from notifications.events import conversation_opened
 from notifications.models import Notification
 from pages.models import SiteSettings
+from users.audit import log_event
 
 from .forms import MessageForm
-from .models import Conversation, Message, send
+from .models import Block, Conversation, Message, send
+
+
+def other_member(request, pk):
+    """The member a conversation's address names: someone else, with an active account."""
+    other = get_object_or_404(
+        get_user_model().objects.select_related('profile'), pk=pk, is_active=True
+    )
+    if other == request.user:
+        raise Http404
+    return other
 
 
 class ConversationList(LoginRequiredMixin, TemplateView):
@@ -80,14 +91,7 @@ class ConversationDetail(LoginRequiredMixin, FormView):
 
     @cached_property
     def other(self):
-        other = get_object_or_404(
-            get_user_model().objects.select_related('profile'),
-            pk=self.kwargs['pk'],
-            is_active=True,
-        )
-        if other == self.request.user:
-            raise Http404
-        return other
+        return other_member(self.request, self.kwargs['pk'])
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
@@ -102,6 +106,8 @@ class ConversationDetail(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['other'] = self.other
+        blockers = Block.between(self.request.user, self.other)
+        context['blocked_by_me'] = self.request.user.pk in blockers
         # One page of messages with each sender and profile in the same query
         messages = Message.objects.filter(conversation=self.conversation).select_related(
             'sender__profile'
@@ -126,3 +132,23 @@ class ConversationDetail(LoginRequiredMixin, FormView):
         message = send(self.request.user, self.other, form.cleaned_data['text'])
         url = reverse('conversation', kwargs={'pk': self.other.pk})
         return redirect(f'{url}#message-{message.pk}')
+
+
+class BlockMember(LoginRequiredMixin, View):
+    """The member no longer wants messages from the one in the address."""
+
+    def post(self, request, pk):
+        other = other_member(request, pk)
+        _block, created = Block.objects.get_or_create(blocker=request.user, blocked=other)
+        if created:
+            log_event('block', request, user=request.user.pk, blocked=other.pk)
+        return redirect('conversation', pk=other.pk)
+
+
+class UnblockMember(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        other = other_member(request, pk)
+        deleted, _per_model = Block.objects.filter(blocker=request.user, blocked=other).delete()
+        if deleted:
+            log_event('unblock', request, user=request.user.pk, blocked=other.pk)
+        return redirect('conversation', pk=other.pk)

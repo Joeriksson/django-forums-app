@@ -1018,6 +1018,19 @@ textarea {
     text-decoration: none;
 }
 
+/* Under a conversation: the way back, and Block or Unblock at the other end */
+.conversation-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.conversation-foot form {
+    margin: 0;
+}
+
 .member-link:hover .person {
     color: var(--spruce);
     text-decoration: underline;

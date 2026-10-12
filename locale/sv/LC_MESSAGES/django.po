@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 15:40+0000\n"
+"POT-Creation-Date: 2026-10-12 15:58+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -468,6 +468,7 @@ msgid "Two-factor"
 msgstr "Tvåfaktor"
 
 #: templates/conversations/conversation_detail.html
+#: templates/notifications/notification_list.html
 #, python-format
 msgid "Messages with %(name)s"
 msgstr "Meddelanden med %(name)s"
@@ -505,6 +506,14 @@ msgid "Back to messages"
 msgstr "Tillbaka till meddelanden"
 
 #: templates/conversations/conversation_detail.html
+msgid "Unblock"
+msgstr "Avblockera"
+
+#: templates/conversations/conversation_detail.html
+msgid "Block"
+msgstr "Blockera"
+
+#: templates/conversations/conversation_detail.html
 #: templates/forums/thread_detail.html
 msgid "Copy"
 msgstr "Kopiera"
@@ -532,6 +541,7 @@ msgid "Older"
 msgstr "Äldre"
 
 #: templates/conversations/conversation_list.html
+#: templates/notifications/notification_list.html
 #, python-format
 msgid "<strong>%(counter)s</strong> new message"
 msgid_plural "<strong>%(counter)s</strong> new messages"

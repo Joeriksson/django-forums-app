@@ -46,7 +46,20 @@
     </form>
     {% include 'forums/_editor.html' %}
 
-    <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
+    <div class="conversation-foot">
+        <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
+        {% if blocked_by_me %}
+            <form method="post" action="{% url 'conversation_unblock' other.pk %}">
+                {% csrf_token %}
+                <button class="button button--quiet button--small" type="submit">{% translate 'Unblock' %}</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'conversation_block' other.pk %}">
+                {% csrf_token %}
+                <button class="button button--quiet button--small" type="submit">{% translate 'Block' %}</button>
+            </form>
+        {% endif %}
+    </div>
 {% endblock content %}
 
 {% block javascripts %}

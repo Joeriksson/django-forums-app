@@ -87,6 +87,15 @@ class Block(models.Model):
     added = models.DateTimeField(auto_now_add=True)
 
     @classmethod
+    def between(cls, user, other):
+        """Who of the two has blocked the other: the blockers' ids, in one query."""
+        return set(
+            cls.objects.filter(
+                Q(blocker=user, blocked=other) | Q(blocker=other, blocked=user)
+            ).values_list('blocker_id', flat=True)
+        )
+
+    @classmethod
     def is_blocked(cls, sender, receiver):
         """Whether the receiver has blocked the sender."""
         return cls.objects.filter(blocker=receiver, blocked=sender).exists()

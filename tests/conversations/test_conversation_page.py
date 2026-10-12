@@ -202,7 +202,7 @@ def test_the_page_costs_a_fixed_number_of_queries(as_anna, anna, bo, django_asse
         send(bo if n % 2 else anna, anna if n % 2 else bo, f'Message {n}')
     as_anna.get(page(bo))
 
-    # Eight for a logged-in page, then: the other member, the conversation, the count
-    # and the page of messages, the notification marked read
-    with django_assert_num_queries(8 + 5):
+    # Eight for a logged-in page, then: the other member, the conversation, the blocks,
+    # the count and the page of messages, the notification marked read
+    with django_assert_num_queries(8 + 6):
         as_anna.get(page(bo))
