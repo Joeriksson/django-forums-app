@@ -35,18 +35,37 @@
         {% include 'forums/_pages.html' with request=request page=messages_page label=pages_label previous=earlier_label next=later_label only %}
     </section>
 
-    <h2 class="replies__heading">{% translate 'New message' %}</h2>
-    {% include 'forums/_posting_as.html' %}
-    <form class="form form--wide" method="post" action="{% url 'conversation' other.pk %}">
-        {% csrf_token %}
-        {{ form }}
-        <div class="form__actions">
-            <button class="button" type="submit">{% translate 'Send' %}</button>
-        </div>
-    </form>
-    {% include 'forums/_editor.html' %}
+    {% if blocked_by_me %}
+        <p class="note">{% blocktranslate with name=other.display_name %}You have blocked {{ name }}. Unblock to write to each other again.{% endblocktranslate %}</p>
+    {% elif blocked %}
+        <p class="note">{% translate "You can't send messages to this member." %}</p>
+    {% else %}
+        <h2 class="replies__heading">{% translate 'New message' %}</h2>
+        {% include 'forums/_posting_as.html' %}
+        <form class="form form--wide" method="post" action="{% url 'conversation' other.pk %}">
+            {% csrf_token %}
+            {{ form }}
+            <div class="form__actions">
+                <button class="button" type="submit">{% translate 'Send' %}</button>
+            </div>
+        </form>
+        {% include 'forums/_editor.html' %}
+    {% endif %}
 
-    <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
+    <div class="conversation-foot">
+        <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
+        {% if blocked_by_me %}
+            <form method="post" action="{% url 'conversation_unblock' other.pk %}">
+                {% csrf_token %}
+                <button class="button button--quiet button--small" type="submit">{% translate 'Unblock' %}</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'conversation_block' other.pk %}">
+                {% csrf_token %}
+                <button class="button button--quiet button--small" type="submit">{% translate 'Block' %}</button>
+            </form>
+        {% endif %}
+    </div>
 {% endblock content %}
 
 {% block javascripts %}

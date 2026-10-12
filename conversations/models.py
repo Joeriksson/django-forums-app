@@ -76,7 +76,10 @@ class Message(models.Model):
 
 
 class Block(models.Model):
-    """The blocker doesn't want messages from the blocked member."""
+    """
+    The blocker doesn't want messages from the blocked member. It stops messages both
+    ways, so the blocker doesn't get the last word: see send().
+    """
 
     blocker = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='+'
@@ -87,9 +90,13 @@ class Block(models.Model):
     added = models.DateTimeField(auto_now_add=True)
 
     @classmethod
-    def is_blocked(cls, sender, receiver):
-        """Whether the receiver has blocked the sender."""
-        return cls.objects.filter(blocker=receiver, blocked=sender).exists()
+    def between(cls, user, other):
+        """Who of the two has blocked the other: the blockers' ids, in one query."""
+        return set(
+            cls.objects.filter(
+                Q(blocker=user, blocked=other) | Q(blocker=other, blocked=user)
+            ).values_list('blocker_id', flat=True)
+        )
 
     def __str__(self):
         return f'Block: {self.blocker} blocks {self.blocked}'
@@ -103,11 +110,18 @@ class Block(models.Model):
         ]
 
 
+class Blocked(Exception):
+    """One of the two members has blocked the other: no messages either way."""
+
+
 def send(sender, receiver, text):
     """
     Add a message from one member to another, in their conversation, and tell the
     receiver in the notification center once it is committed. Returns the message.
+    Raises Blocked if either has blocked the other.
     """
+    if Block.between(sender, receiver):
+        raise Blocked
     with transaction.atomic():
         conversation = Conversation.between(sender, receiver)
         message = Message.objects.create(conversation=conversation, sender=sender, text=text)

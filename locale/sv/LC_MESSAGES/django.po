@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 15:40+0000\n"
+"POT-Creation-Date: 2026-10-12 16:01+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -468,6 +468,7 @@ msgid "Two-factor"
 msgstr "Tvåfaktor"
 
 #: templates/conversations/conversation_detail.html
+#: templates/notifications/notification_list.html
 #, python-format
 msgid "Messages with %(name)s"
 msgstr "Meddelanden med %(name)s"
@@ -490,6 +491,15 @@ msgid "No messages yet."
 msgstr "Inga meddelanden än."
 
 #: templates/conversations/conversation_detail.html
+#, python-format
+msgid "You have blocked %(name)s. Unblock to write to each other again."
+msgstr "Du har blockerat %(name)s. Avblockera för att kunna skriva till varandra igen."
+
+#: templates/conversations/conversation_detail.html
+msgid "You can't send messages to this member."
+msgstr "Du kan inte skicka meddelanden till den här medlemmen."
+
+#: templates/conversations/conversation_detail.html
 #: templates/conversations/conversation_list.html
 #: templates/conversations/member_list.html
 msgid "New message"
@@ -503,6 +513,14 @@ msgstr "Skicka"
 #: templates/conversations/member_list.html
 msgid "Back to messages"
 msgstr "Tillbaka till meddelanden"
+
+#: templates/conversations/conversation_detail.html
+msgid "Unblock"
+msgstr "Avblockera"
+
+#: templates/conversations/conversation_detail.html
+msgid "Block"
+msgstr "Blockera"
 
 #: templates/conversations/conversation_detail.html
 #: templates/forums/thread_detail.html
@@ -532,6 +550,7 @@ msgid "Older"
 msgstr "Äldre"
 
 #: templates/conversations/conversation_list.html
+#: templates/notifications/notification_list.html
 #, python-format
 msgid "<strong>%(counter)s</strong> new message"
 msgid_plural "<strong>%(counter)s</strong> new messages"
