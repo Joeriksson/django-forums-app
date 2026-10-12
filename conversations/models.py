@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from forums.models import MARKDOWN_HELP, MAX_TEXT_LENGTH
+from notifications.events import message_sent
 
 
 class Conversation(models.Model):
@@ -30,6 +31,10 @@ class Conversation(models.Model):
         low, high = sorted((user.pk, other.pk))
         conversation, _created = cls.objects.get_or_create(user_low_id=low, user_high_id=high)
         return conversation
+
+    def other_id(self, user_id):
+        """The id of the member that one of the two is talking to."""
+        return self.user_high_id if user_id == self.user_low_id else self.user_low_id
 
     def __str__(self):
         return f'Conversation: {self.user_low} and {self.user_high}'
@@ -93,9 +98,13 @@ class Block(models.Model):
 
 
 def send(sender, receiver, text):
-    """Add a message from one member to another, in their conversation. Returns the message."""
+    """
+    Add a message from one member to another, in their conversation, and tell the
+    receiver in the notification center once it is committed. Returns the message.
+    """
     with transaction.atomic():
         conversation = Conversation.between(sender, receiver)
         message = Message.objects.create(conversation=conversation, sender=sender, text=text)
         Conversation.objects.filter(pk=conversation.pk).update(updated=message.added)
+        transaction.on_commit(lambda: message_sent(message))
     return message
