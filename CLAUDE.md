@@ -57,6 +57,7 @@ tests/
 ├── test_pages.py                # Home page
 ├── test_users.py                # User model, signup
 ├── test_account_pages.py, test_email_verification.py, test_user_*.py, test_email_senders.py, test_*settings.py
+├── conversations/               # Direct messages: test_models.py, test_message_notifications.py
 └── forums/
     ├── conftest.py              # Factory fixtures (add_user, add_forum, add_thread, add_post, get_user_client)
     ├── test_models.py           # Model unit tests
@@ -124,6 +125,9 @@ notifications/     # The notification center: one Notification model for every k
   events.py        # reply_added(post), thread_opened(user, thread): what happens on the site, turned into rows
   views.py         # NotificationList (load() builds each row's link), MarkAllRead, UnreadCount (JSON for the bell)
   templatetags/    # bell: unread_notifications, the number in the header
+
+conversations/     # Direct messages between two members: models only so far, no pages
+  models.py        # Conversation (one per pair), Message, Block; send(sender, receiver, text)
 
 api/               # Django REST Framework API (mounted only with DJANGO_API_ENABLED)
   views.py         # ModelViewSet for Forum, Thread, Post, User
@@ -196,7 +200,7 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 - Users subscribe to threads to receive email notifications on new posts, and a row in the notification center (see *Notification*) (called `Notification` until migration `forums/0025`; the table is `forums_subscription`)
 
 ### Notification (`notifications.Notification`)
-- News for one member, listed on `/notifications/` and counted on the bell in the header: `user`, `kind` (only `reply` so far; direct messages will be another kind, not another table), `thread`, `post`, `count`, `read`, `updated`
+- News for one member, listed on `/notifications/` and counted on the bell in the header: `user`, `kind` (`reply` or `message`: every kind of news is a row here, not a table of its own), `thread` and `post` for replies, `conversation` and `message` for direct messages (see *Direct messages*), `count`, `read`, `updated`
 - Replies are one row per member and thread (unique), reused: `events.reply_added(post)` adds one to `count` on a row not yet read, and starts a row that was read or is missing over at this reply (`post`, `count` 1). So `post` is the first reply the member hasn't seen, and the table doesn't grow with the posts: no cleanup job. Four queries however many subscribers
 - Who: the thread's subscribers with an active account, except the reply's author. Unlike the mail it needs no confirmed address and also runs in CI. Called by the `notify_subscribers` lifecycle hook on `Post` (AFTER_CREATE, after the commit), before it queues the mail, so replies from the website, the API and the admin all count; `forums/models.py` imports `notifications.events` inside the hook, since that app imports `forums.models`
 - Read: `events.thread_opened(user, thread)`, called by `ThreadDetail.get`, marks the row read on any page of the thread (one more query on the thread page). Unsubscribing keeps the row
@@ -205,6 +209,16 @@ static/            # Static file sources (our CSS and JS, fonts, icons, flags, t
 - The page (`NotificationList`, `templates/notifications/notification_list.html`) lists the member's rows, unread first, then the newest, 50 at most and no paging (`MAX_ROWS`). An unread row says *3 new replies*, a read one *Read*. `load()` gives each row its link in the same query: the first unread reply on its page of the thread (`?page=<n>#post-<id>`), or `?page=last` when that reply is gone. Following it marks the row read, since it opens the thread. *Mark all as read* posts to `MarkAllRead`. The template shows replies only: a new `kind` needs its own branch there
 - **The bell** (`.bell` in `_base.html`, for members only) is a link to the page, so it works without JavaScript. It shows the number of unread rows (threads with news, not replies; *9+* above nine), from `{% unread_notifications user as unread %}` (`notifications/templatetags/bell.py`, `Notification.unread_count`): one query on every logged-in page. The same number comes first in the page's `<title>`, *(3) Latest conversations*, for a tab in the background. `static/js/notifications.js` asks `/notifications/count/` every 30 seconds (`INTERVAL`), only while the tab is visible and at once when it becomes visible again, and updates both. It doesn't follow redirects: one means the session has ended (or a privileged account lacks two-factor), and it stops asking. So `UnreadCount` must keep answering visitors with a redirect, not a 403, which would put a line in the security log every half minute. The script has no texts: screen readers get *Notifications* and *Unread:* from `.visually-hidden` spans in the template. The icon is `static/icons/bell.svg` (Lucide)
 - Tests: `tests/forums/test_reply_notifications.py` (the rows), `tests/forums/test_notifications_page.py` (the page), `tests/test_bell.py` (the bell and the count's address). The tests don't run JavaScript: after changing the script, check in a browser that a new notification shows within half a minute without a reload
+
+### Direct messages (`conversations`)
+- Between two members only. So far the models and the notification rows: no pages, no URLs, no mail, and nothing refuses a blocked sender yet. Not in the admin and not in the API: nobody but the two members reads the messages, and `Message.__str__` leaves out the text
+- `Conversation`: one row per pair, the smaller user id in `user_low` (the database checks the order and that the pair is unique, so nobody has one with themselves). Get it with `Conversation.between(user, other)`, never `create()`. `updated` is the time of the latest message; `other_id(user_id)` is the member one of the two is talking to
+- `Message`: `conversation`, `sender`, `text` (Markdown, `MAX_TEXT_LENGTH`, checked by forms, not by the database), `added`; oldest first
+- `Block`: `blocker`, `blocked`; `Block.is_blocked(sender, receiver)` tells whether the receiver has blocked the sender
+- Send with `conversations.models.send(sender, receiver, text)`, not `Message.objects.create()`: it finds the conversation, moves `updated` and, after the commit, calls `notifications.events.message_sent(message)`. That keeps one `Notification` row per member and conversation by the rule for replies: one more on an unread row, a fresh start at this message (`message`, `count` 1) on a row that was read or is missing; nothing for a receiver whose account is not active. `events.conversation_opened(user, conversation)` marks it read (no page calls it yet)
+- The bell counts a message row, but the notifications page lists replies only (`load()` leaves out rows without a thread) until the conversation pages exist
+- Deleting an account deletes its conversations, for the other member too, with their messages and notification rows
+- Tests: `tests/conversations/`; a test that wants the notification row wraps `send()` in `django_capture_on_commit_callbacks(execute=True)`
 
 ### Notification mail
 - A reply is not mailed at once. `Post.notify_subscribers` queues `send_notifications_task(post.pk)` with a countdown of `notification_mail_delay` minutes (*Site settings*, 5; 0 runs it at once), and the task picks the recipients when it runs: the thread's subscribers (active account, confirmed address, still subscribed) whose `Notification` for the thread is unread and has this reply as its `post`

@@ -1,5 +1,6 @@
 """What happens on the site, turned into rows for the notification center."""
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
@@ -42,3 +43,40 @@ def reply_added(post):
 def thread_opened(user, thread):
     """The member has seen the thread: its news is read, whichever page was opened."""
     Notification.objects.filter(user=user, thread=thread, read=False).update(read=True)
+
+
+def message_sent(message):
+    """
+    Tell the other member of the conversation about a new message, by the same rule as
+    for replies: one more on a row not yet read, a fresh start at this message on a row
+    that was read or is missing. Four queries. Returns whether the member was told.
+    """
+    conversation = message.conversation
+    user_id = conversation.other_id(message.sender_id)
+    if not get_user_model().objects.filter(pk=user_id, is_active=True).exists():
+        return False
+
+    now = timezone.now()
+    rows = Notification.objects.filter(conversation=conversation, user_id=user_id)
+    with transaction.atomic():
+        rows.filter(read=False).update(count=F('count') + 1, updated=now)
+        rows.filter(read=True).update(read=False, message=message, count=1, updated=now)
+        # A row that exists was handled above and is left alone here
+        Notification.objects.bulk_create(
+            [
+                Notification(
+                    user_id=user_id,
+                    kind=Notification.Kind.MESSAGE,
+                    conversation=conversation,
+                    message=message,
+                    updated=now,
+                )
+            ],
+            ignore_conflicts=True,
+        )
+    return True
+
+
+def conversation_opened(user, conversation):
+    """The member has seen the conversation: its news is read."""
+    Notification.objects.filter(user=user, conversation=conversation, read=False).update(read=True)
