@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-forums-app\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 17:15+0000\n"
+"POT-Creation-Date: 2026-10-12 15:40+0000\n"
 "PO-Revision-Date: 2026-10-06 17:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -14,6 +14,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: conversations/models.py forums/models.py
+msgid "text"
+msgstr "text"
+
+#: conversations/views.py
+msgid "You are sending messages too fast. Wait a while and try again."
+msgstr "Du skickar meddelanden för snabbt. Vänta en stund och försök igen."
 
 #: forums/forms.py
 msgid "Words"
@@ -141,10 +149,6 @@ msgstr "Bara moderatorer kan starta trådar här. Alla kan svara."
 #: forums/models.py
 msgid "Only moderators can post here."
 msgstr "Bara moderatorer kan skriva här."
-
-#: forums/models.py
-msgid "text"
-msgstr "text"
 
 #: forums/models.py
 msgid "announcement"
@@ -313,6 +317,11 @@ msgstr "Senaste"
 msgid "Search"
 msgstr "Sök"
 
+#: templates/_base.html templates/conversations/conversation_detail.html
+#: templates/conversations/conversation_list.html
+msgid "Messages"
+msgstr "Meddelanden"
+
 #: templates/_base.html
 msgid "Admin"
 msgstr "Admin"
@@ -457,6 +466,85 @@ msgstr "Lösenord"
 #: templates/allauth/layouts/manage.html
 msgid "Two-factor"
 msgstr "Tvåfaktor"
+
+#: templates/conversations/conversation_detail.html
+#, python-format
+msgid "Messages with %(name)s"
+msgstr "Meddelanden med %(name)s"
+
+#: templates/conversations/conversation_detail.html
+msgid "Pages of messages"
+msgstr "Sidor med meddelanden"
+
+#: templates/conversations/conversation_detail.html
+msgid "Earlier messages"
+msgstr "Tidigare meddelanden"
+
+#: templates/conversations/conversation_detail.html
+msgid "Later messages"
+msgstr "Senare meddelanden"
+
+#: templates/conversations/conversation_detail.html
+#: templates/conversations/conversation_list.html
+msgid "No messages yet."
+msgstr "Inga meddelanden än."
+
+#: templates/conversations/conversation_detail.html
+#: templates/conversations/conversation_list.html
+#: templates/conversations/member_list.html
+msgid "New message"
+msgstr "Nytt meddelande"
+
+#: templates/conversations/conversation_detail.html
+msgid "Send"
+msgstr "Skicka"
+
+#: templates/conversations/conversation_detail.html
+#: templates/conversations/member_list.html
+msgid "Back to messages"
+msgstr "Tillbaka till meddelanden"
+
+#: templates/conversations/conversation_detail.html
+#: templates/forums/thread_detail.html
+msgid "Copy"
+msgstr "Kopiera"
+
+#: templates/conversations/conversation_detail.html
+#: templates/forums/thread_detail.html
+msgid "Copied"
+msgstr "Kopierat"
+
+#: templates/conversations/conversation_detail.html
+#: templates/forums/thread_detail.html
+msgid "Not copied"
+msgstr "Inte kopierat"
+
+#: templates/conversations/conversation_list.html
+msgid "Pages of conversations"
+msgstr "Sidor med meddelanden"
+
+#: templates/conversations/conversation_list.html
+msgid "Newer"
+msgstr "Nyare"
+
+#: templates/conversations/conversation_list.html
+msgid "Older"
+msgstr "Äldre"
+
+#: templates/conversations/conversation_list.html
+#, python-format
+msgid "<strong>%(counter)s</strong> new message"
+msgid_plural "<strong>%(counter)s</strong> new messages"
+msgstr[0] "<strong>%(counter)s</strong> nytt meddelande"
+msgstr[1] "<strong>%(counter)s</strong> nya meddelanden"
+
+#: templates/conversations/member_list.html
+msgid "Choose a member to write to."
+msgstr "Välj en medlem att skriva till."
+
+#: templates/conversations/member_list.html
+msgid "There are no other members yet."
+msgstr "Det finns inga andra medlemmar än."
 
 #: templates/forums/_edited.html
 #, python-format
@@ -822,6 +910,10 @@ msgid "Opening post"
 msgstr "Första inlägget"
 
 #: templates/forums/thread_detail.html
+msgid "Message"
+msgstr "Meddelande"
+
+#: templates/forums/thread_detail.html
 #, python-format
 msgid "%(counter)s reply"
 msgid_plural "%(counter)s replies"
@@ -855,18 +947,6 @@ msgstr "Du har röstat"
 #, python-format
 msgid "Back to %(forum)s"
 msgstr "Tillbaka till %(forum)s"
-
-#: templates/forums/thread_detail.html
-msgid "Copy"
-msgstr "Kopiera"
-
-#: templates/forums/thread_detail.html
-msgid "Copied"
-msgstr "Kopierat"
-
-#: templates/forums/thread_detail.html
-msgid "Not copied"
-msgstr "Inte kopierat"
 
 #: templates/forums/thread_form.html
 #, python-format

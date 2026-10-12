@@ -32,6 +32,12 @@ class Conversation(models.Model):
         conversation, _created = cls.objects.get_or_create(user_low_id=low, user_high_id=high)
         return conversation
 
+    @classmethod
+    def find(cls, user, other):
+        """The two members' conversation, or None before their first message."""
+        low, high = sorted((user.pk, other.pk))
+        return cls.objects.filter(user_low_id=low, user_high_id=high).first()
+
     def other_id(self, user_id):
         """The id of the member that one of the two is talking to."""
         return self.user_high_id if user_id == self.user_low_id else self.user_low_id

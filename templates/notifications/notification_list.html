@@ -18,17 +18,29 @@
             <ul class="rows">
                 {% for notification in notifications %}
                     <li class="row notification-row{% if notification.read %} notification-row--read{% endif %}">
-                        <a class="row__title" href="{{ notification.url }}">{{ notification.thread.title }}</a>
-                        <p class="row__meta">
-                            {% if notification.read %}
-                                <span>{% translate 'Read' %}</span>
-                            {% else %}
-                                <span class="notification-row__count">{% blocktranslate count counter=notification.count %}<strong>{{ counter }}</strong> new reply{% plural %}<strong>{{ counter }}</strong> new replies{% endblocktranslate %}</span>
-                            {% endif %}
-                            {% url 'forum_detail' notification.thread.forum_id as forum_url %}
-                            <span>{% blocktranslate with forum=notification.thread.forum.title %}in <a href="{{ forum_url }}">{{ forum }}</a>{% endblocktranslate %}</span>
-                            <span>{{ notification.updated|when }}</span>
-                        </p>
+                        {% if notification.conversation %}
+                            <a class="row__title" href="{{ notification.url }}">{% blocktranslate with name=notification.other.display_name %}Messages with {{ name }}{% endblocktranslate %}</a>
+                            <p class="row__meta">
+                                {% if notification.read %}
+                                    <span>{% translate 'Read' %}</span>
+                                {% else %}
+                                    <span class="notification-row__count">{% blocktranslate count counter=notification.count %}<strong>{{ counter }}</strong> new message{% plural %}<strong>{{ counter }}</strong> new messages{% endblocktranslate %}</span>
+                                {% endif %}
+                                <span>{{ notification.updated|when }}</span>
+                            </p>
+                        {% else %}
+                            <a class="row__title" href="{{ notification.url }}">{{ notification.thread.title }}</a>
+                            <p class="row__meta">
+                                {% if notification.read %}
+                                    <span>{% translate 'Read' %}</span>
+                                {% else %}
+                                    <span class="notification-row__count">{% blocktranslate count counter=notification.count %}<strong>{{ counter }}</strong> new reply{% plural %}<strong>{{ counter }}</strong> new replies{% endblocktranslate %}</span>
+                                {% endif %}
+                                {% url 'forum_detail' notification.thread.forum_id as forum_url %}
+                                <span>{% blocktranslate with forum=notification.thread.forum.title %}in <a href="{{ forum_url }}">{{ forum }}</a>{% endblocktranslate %}</span>
+                                <span>{{ notification.updated|when }}</span>
+                            </p>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>

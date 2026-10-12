@@ -1002,6 +1002,27 @@ textarea {
     color: var(--ink);
 }
 
+/* The way back under a page: to the forum from a thread, to the messages */
+.thread-back {
+    margin: var(--space-4) 0;
+    font-size: var(--size-small);
+    font-weight: 600;
+}
+
+.thread-back a::before {
+    content: '‹ ';
+}
+
+/* Messages (conversations/): a member's name as the row's link */
+.member-link {
+    text-decoration: none;
+}
+
+.member-link:hover .person {
+    color: var(--spruce);
+    text-decoration: underline;
+}
+
 .notification-row--read .row__title {
     color: var(--quiet);
     font-weight: 400;

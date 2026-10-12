@@ -101,6 +101,7 @@
     margin: 0;
 }
 
+.post__message,
 .post__edit,
 .post__delete {
     color: var(--quiet);
@@ -159,16 +160,6 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-}
-
-.thread-back {
-    margin: var(--space-4) 0;
-    font-size: var(--size-small);
-    font-weight: 600;
-}
-
-.thread-back a::before {
-    content: '‹ ';
 }
 
 /* Post text */

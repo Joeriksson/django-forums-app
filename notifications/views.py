@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.generic import TemplateView, View
 
 from forums.models import Post
@@ -18,7 +19,8 @@ def load(user, posts_per_page):
     """
     The member's notifications, unread first, each with `url`: the first reply not yet
     seen, on its page of the thread, or the thread's last page if that reply is gone.
-    One query.
+    A direct message's row leads to the conversation and has `other`, the member it is
+    with. One query.
     """
     # The replies up to and including that one, in the thread page's order
     position = (
@@ -33,12 +35,22 @@ def load(user, posts_per_page):
         .values('count')
     )
     notifications = list(
-        Notification.objects.filter(user=user, thread__isnull=False)
-        .select_related('thread__forum')
+        Notification.objects.filter(user=user)
+        .filter(Q(thread__isnull=False) | Q(conversation__isnull=False))
+        .select_related(
+            'thread__forum',
+            'conversation__user_low__profile',
+            'conversation__user_high__profile',
+        )
         .annotate(position=Subquery(position))[:MAX_ROWS]
     )
     for notification in notifications:
-        if notification.position:
+        if notification.conversation:
+            conversation = notification.conversation
+            low = conversation.user_low
+            notification.other = conversation.user_high if low == user else low
+            notification.url = reverse('conversation', kwargs={'pk': notification.other.pk})
+        elif notification.position:
             page = (notification.position - 1) // posts_per_page + 1
             url = thread_page_url(notification.thread_id, page)
             notification.url = f'{url}#post-{notification.post_id}'
@@ -48,7 +60,10 @@ def load(user, posts_per_page):
 
 
 class NotificationList(LoginRequiredMixin, TemplateView):
-    """What is new for the member; following a row opens the thread, which marks it read."""
+    """
+    What is new for the member; following a row opens the thread or the conversation,
+    which marks it read.
+    """
 
     template_name = 'notifications/notification_list.html'
 

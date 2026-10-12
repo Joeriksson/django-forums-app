@@ -39,6 +39,7 @@ urlpatterns = [
     path('', include('pages.urls')),
     path('forums/', include('forums.urls')),
     path('notifications/', include('notifications.urls')),
+    path('messages/', include('conversations.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Without DJANGO_API_ENABLED there is no API: every path under api/ is a 404

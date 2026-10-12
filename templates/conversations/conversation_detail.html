@@ -1,0 +1,59 @@
+{% extends '_base.html' %}
+{% load static markdown when i18n %}
+
+{% block title %}{% blocktranslate with name=other.display_name %}Messages with {{ name }}{% endblocktranslate %}{% endblock title %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/thread.css' %}">
+{% endblock stylesheets %}
+
+{% block content %}
+    <p class="kicker">{% translate 'Messages' %}</p>
+    <h1 class="thread-title">{{ other.display_name }}</h1>
+
+    <section class="replies" aria-label="{% translate 'Messages' %}">
+        {% translate 'Pages of messages' as pages_label %}
+        {% translate 'Earlier messages' as earlier_label %}
+        {% translate 'Later messages' as later_label %}
+        {% include 'forums/_pages.html' with request=request page=messages_page label=pages_label previous=earlier_label next=later_label only %}
+
+        {% for message in messages_page %}
+            <article class="post" id="message-{{ message.id }}">
+                <header class="post__head">
+                    {% include 'forums/_person.html' with person=message.sender %}
+                    <time datetime="{{ message.added|date:'c' }}" title="{{ message.added }}">{{ message.added|when }}</time>
+                </header>
+                <div class="post__body">
+                    <div class="prose">{{ message.text|render_markdown }}</div>
+                </div>
+            </article>
+        {% empty %}
+            <p class="empty">{% translate 'No messages yet.' %}</p>
+        {% endfor %}
+
+        {% include 'forums/_pages.html' with request=request page=messages_page label=pages_label previous=earlier_label next=later_label only %}
+    </section>
+
+    <h2 class="replies__heading">{% translate 'New message' %}</h2>
+    {% include 'forums/_posting_as.html' %}
+    <form class="form form--wide" method="post" action="{% url 'conversation' other.pk %}">
+        {% csrf_token %}
+        {{ form }}
+        <div class="form__actions">
+            <button class="button" type="submit">{% translate 'Send' %}</button>
+        </div>
+    </form>
+    {% include 'forums/_editor.html' %}
+
+    <p class="thread-back"><a href="{% url 'conversations' %}">{% translate 'Back to messages' %}</a></p>
+{% endblock content %}
+
+{% block javascripts %}
+    {{ block.super }}
+    <script src="{% static 'js/highlight.min.js' %}"></script>
+    <script src="{% static 'js/thread.js' %}"
+            data-copy="{% translate 'Copy' %}"
+            data-copied="{% translate 'Copied' %}"
+            data-not-copied="{% translate 'Not copied' %}"></script>
+{% endblock javascripts %}

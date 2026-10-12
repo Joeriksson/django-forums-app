@@ -362,6 +362,9 @@ REST_FRAMEWORK = {
         # New threads and posts per user, on the site and in the API together (forums/throttling.py)
         'posting_burst': '5/min',
         'posting_hour': '30/hour',
+        # Direct messages per user (conversations/views.py)
+        'message_burst': '10/min',
+        'message_hour': '60/hour',
         # Web views: search per user or address, the editor's preview per user
         'search': '20/min',
         'preview': '30/min',

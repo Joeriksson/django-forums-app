@@ -21,7 +21,7 @@ from forums.templatetags.when import when
 BASE = Path(settings.BASE_DIR)
 CATALOG = BASE / 'locale' / 'sv' / 'LC_MESSAGES'
 # Where texts are marked: our apps' code and the templates
-CODE = ['api', 'forums', 'pages', 'project', 'users']
+CODE = ['api', 'conversations', 'forums', 'notifications', 'pages', 'project', 'users']
 MARKERS = {'gettext', 'gettext_lazy', 'ngettext', 'ngettext_lazy', '_'}
 
 
