@@ -1,0 +1,41 @@
+# Version updates for the pins that make audit doesn't cover: the GitHub
+# Actions and the Docker images. The Python packages get security updates only
+# (repo settings). See CLAUDE.md, Production Deployment.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+    ignore:
+      # A new major version is a decision of its own
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      dockerfile:
+        patterns: ["*"]
+    ignore:
+      # Stay on Python 3.12: only its patch releases
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      compose:
+        patterns: ["*"]
+    ignore:
+      # Stay on Postgres 16 and Redis 8. The CI services in django.yml are not
+      # updated by Dependabot: tests/test_image_pins.py fails until they match
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
