@@ -29,13 +29,17 @@ Server runs at `http://127.0.0.1:8000`
 
 Production runs `docker-compose-prod.yml` on a VPS behind a reverse proxy container (Caddy). The stack publishes no ports: only `web` joins the shared `forum_proxy` network, where the proxy reaches it as `forum-web:8000`. The network is external: created once on the server (`docker network create forum_proxy`), and by CI before its compose step. See `docs/deployment-vps.md` for the proxy config, the `.env` checklist, first deploy, updates, backups and troubleshooting.
 
-The `Dockerfile` installs only runtime dependencies by default (`ARG UV_SYNC_FLAGS=--no-dev`); `docker-compose-dev.yml` passes an empty value so dev images also get the dev group (pytest etc.). `.dockerignore` keeps `.env`, `.git` and `.venv` out of the image; compose passes `.env` in at runtime via `env_file`. It also leaves out `docs/`, the root `*.md` files and the compose files, so an update that changes only those doesn't rebuild the image or restart the containers.
+The `Dockerfile` installs only runtime dependencies by default (`ARG UV_SYNC_FLAGS=--no-dev`); `docker-compose-dev.yml` passes an empty value so dev images also get the dev group (pytest etc.). `.dockerignore` keeps `.env`, `.git` and `.venv` out of the image; compose passes `.env` in at runtime via `env_file`. It also leaves out `docs/`, `reviews/`, the docs site's files, the root `*.md` files and the compose files, so an update that changes only those doesn't rebuild the image or restart the containers.
 
 The image runs as the unprivileged user `app` (uid 1000); the code and the venv belong to root, so the app can't write under `/code` or `/opt/venv` in production: anything it must write goes to `/tmp`. In development the mounted repo belongs to the host user, normally also uid 1000, so files written by the containers (migrations) get the right owner; with another host uid, add `user:` to the services in `docker-compose-dev.yml`. Redis gets its password from a config file written at container start, not from its command line, and runs as `redis`. Production has no `celery-beat` service (nothing is scheduled); the dev one keeps its schedule file in `/tmp`.
 
 gunicorn's settings are in `gunicorn.conf.py` (address, 2 workers with 4 threads each; `WEB_CONCURRENCY` changes the worker count; its control socket is off, since it would be a file in `/code`). The compose command for `web` is `migrate --noinput` and then just `gunicorn project.wsgi` (flags on the command line would win over the file): migrations run at every start of `web`, which waits for a healthy `db`; a failed one makes the container exit. `celery` doesn't migrate.
 
 uv is pinned to an exact version (`COPY --from=ghcr.io/astral-sh/uv:<version>` in the `Dockerfile`). `make audit` doesn't cover it, so bump it when upgrading dependencies, and check uv's release notes for security fixes. The same goes for the other images, pinned to patch versions (`python:3.12.15-slim` in the `Dockerfile`; `postgres:16.15` and `redis:8.10-alpine` in both compose files and in CI, kept equal), and for the GitHub Actions, pinned to commit SHAs with the version in a comment (`.github/workflows/django.yml`; find a tag's commit with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`, and for an annotated tag follow it to its commit). Dependabot version updates (`.github/dependabot.yml`) propose these once a month, one grouped PR per kind: the Actions (no new major versions), the `Dockerfile`'s Python (patch releases of 3.12 only) and the compose files' Postgres and Redis (no new major versions). It doesn't update the `services:` images in `django.yml`: `tests/test_image_pins.py` fails until they equal the compose files, so edit them in the same PR. uv (the `COPY --from` line) may not be picked up: bump it by hand. Major versions too are a hand bump. The Python packages get no version updates, only Dependabot security updates (repo settings): when an alert on a package in `uv.lock` has a fix, it opens a PR that upgrades it, and closes the PR itself if master gets the fix first (e.g. from `make audit`).
+
+## Documentation site
+
+`docs/` is the source of the public site (https://docs.brommaplan.nu/forums/), built with Zensical (`zensical.toml`, the `docs` dependency group, not in the image) as plain HTML into `site/`. Preview with `make docs`; `deploy/docs.sh` builds it and copies it with rsync to `DOCS_TARGET` (from the environment or `.env`). Everything in `docs/` is published, git-ignored files too, so the script refuses to run while a file there isn't in `nav` in `zensical.toml`. Private notes go in `reviews/`, which git ignores and the image leaves out.
 
 ## Running Tests
 
@@ -81,9 +85,10 @@ make dev_redis_exec cmd='redis-cli'                        # Access Redis CLI
 make audit                                                 # Check uv.lock for known vulnerabilities (runs on the host)
 make messages                                              # Collect the texts marked for translation into locale/sv (host, needs gettext)
 make compile_messages                                      # Compile locale/sv's django.po into django.mo (host, needs gettext)
+make docs                                                  # Preview the documentation site at http://localhost:8001 (host)
 ```
 
-`make audit` runs `pip-audit` on the locked dependencies, dev ones included. Known vulnerabilities that can't be fixed yet are listed in `AUDIT_IGNORE` in the `Makefile`; remove each entry with the upgrade that fixes it.
+`make audit` runs `pip-audit` on the locked dependencies, the dev and docs groups included. Known vulnerabilities that can't be fixed yet are listed in `AUDIT_IGNORE` in the `Makefile`; remove each entry with the upgrade that fixes it.
 
 `manage.py` defaults to `project.settings.base`, which has no `EMAIL_BACKEND` (falls back to SMTP on localhost, so e.g. `createsuperuser` fails when the welcome mail hook fires). Set `DJANGO_SETTINGS_MODULE=project.settings.development` in `.env`, or pass `--settings=project.settings.development` to management commands.
 
@@ -390,6 +395,7 @@ The **security log** is the `security` logger: one line per event, `event key=va
 | `DJANGO_SITE_URL` | The site's public address, for links in emails (`settings.SITE_URL`; used by `Invitation.get_link()` and `send_notifications_task`). Required in production, where it must be `https` without a path (`ImproperlyConfigured` otherwise); elsewhere it defaults to `http://127.0.0.1:8000`. |
 | `DJANGO_ALLOWED_HOSTS` | Production only: comma-separated hosts, e.g. `forum.example.com`. Also sets `CSRF_TRUSTED_ORIGINS`. If empty, every request gets a 400 |
 | `DJANGO_SECURE_HSTS_SECONDS` | Production HSTS max-age (default: `3600`) |
+| `DOCS_TARGET` | Host only, for `deploy/docs.sh`: where the documentation site is copied, `user@host:/path/forums/`. The folder must be the site's own: rsync deletes everything else in it |
 | `WEB_CONCURRENCY` | Production only: number of gunicorn worker processes (default: `2`), read by `gunicorn.conf.py` |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` / `DJANGO_SECURE_HSTS_PRELOAD` | Opt-in HSTS flags (default: `false`) |
 
@@ -448,7 +454,7 @@ GitHub Actions workflow (`.github/workflows/django.yml`) runs on push/PR to `mas
 2. Installs deps with `uv sync`
 3. Runs `pytest` (parallel via `pytest-xdist`)
 
-A push or PR that changes only `*.md` files or `docs/` doesn't start the workflow (`paths-ignore`); one other changed file runs everything. This relies on master having no required status checks: a skipped workflow never reports, so a required check would block docs-only PRs.
+A push or PR that changes only `*.md` files, `docs/`, `zensical.toml` or `deploy/docs.sh` doesn't start the workflow (`paths-ignore`); one other changed file runs everything. This relies on master having no required status checks: a skipped workflow never reports, so a required check would block docs-only PRs.
 
 A separate `audit` job runs `make audit` and fails on any vulnerability not in `AUDIT_IGNORE`.
 

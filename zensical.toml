@@ -1,0 +1,60 @@
+# Documentation site, built with `uv run --group docs zensical build` into site/ and
+# published by deploy/docs.sh. Preview with `make docs`.
+[project]
+site_name = "Wildvasa"
+site_url = "https://docs.brommaplan.nu/forums/"
+site_description = "A private discussion forum built with Django and PostgreSQL."
+site_author = "J-O Eriksson"
+copyright = "Copyright &copy; 2026 J-O Eriksson"
+
+nav = [
+  { "Overview" = "index.md" },
+  { "Development" = "development.md" },
+  { "Managing the forum" = "managing.md" },
+  { "Configuration" = "configuration.md" },
+  { "Deploying" = "deployment-vps.md" },
+  { "How it works" = "architecture.md" },
+]
+
+[project.theme]
+language = "en"
+# System fonts: no requests to Google Fonts.
+font = false
+features = [
+  "content.code.copy",
+  "navigation.footer",
+  "navigation.instant",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+def_list = {}
+md_in_html = {}
+toc.permalink = true
+pymdownx.highlight.anchor_linenums = true
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+pymdownx.superfences = {}
