@@ -49,9 +49,15 @@ class Notification(models.Model):
     updated = models.DateTimeField(default=timezone.now)
 
     @classmethod
-    def unread_count(cls, user):
-        """The number on the header's bell."""
-        return cls.objects.filter(user=user, read=False).count()
+    def unread_counts(cls, user):
+        """
+        The numbers in the header, in one query: threads with unread replies (the bell)
+        and conversations with unread messages (the envelope).
+        """
+        return cls.objects.filter(user=user, read=False).aggregate(
+            replies=models.Count('pk', filter=models.Q(kind=cls.Kind.REPLY)),
+            messages=models.Count('pk', filter=models.Q(kind=cls.Kind.MESSAGE)),
+        )
 
     def __str__(self):
         where = self.thread or self.conversation

@@ -446,9 +446,10 @@ textarea {
     text-underline-offset: 0.35em;
 }
 
-/* The bell: a link to the notifications, with the number of unread ones on its corner
-   (js/notifications.js keeps it current) */
+/* The envelope and the bell: links to the conversations and the notifications, with the
+   number of unread ones on the corner (js/notifications.js keeps it current) */
 
+.envelope,
 .bell {
     position: relative;
     align-self: center;
@@ -456,15 +457,25 @@ textarea {
     line-height: 0;
 }
 
+.envelope::before,
 .bell::before {
     content: '';
     display: inline-block;
     width: 1.25rem;
     height: 1.25rem;
     background: currentColor;
-    mask: url('../icons/bell.svg') center / contain no-repeat;
+    mask: center / contain no-repeat;
 }
 
+.envelope::before {
+    mask-image: url('../icons/mail.svg');
+}
+
+.bell::before {
+    mask-image: url('../icons/bell.svg');
+}
+
+.envelope__count,
 .bell__count {
     position: absolute;
     top: -0.375rem;
@@ -480,6 +491,7 @@ textarea {
     text-align: center;
 }
 
+.envelope__count[hidden],
 .bell__count[hidden] {
     display: none;
 }
