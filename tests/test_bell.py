@@ -1,4 +1,7 @@
-"""The bell in the header: a link to the notifications with the number of unread ones."""
+"""
+The bell and the envelope in the header: links to the notifications and the conversations,
+with the number of threads with unread replies and of conversations with unread messages.
+"""
 
 import re
 
@@ -27,10 +30,11 @@ def client(client, member):
     return client
 
 
-def notify(user, unread=0, read=0):
+def notify(user, unread=0, read=0, messages=0):
     Notification.objects.bulk_create(
         [Notification(user=user) for n in range(unread)]
         + [Notification(user=user, read=True) for n in range(read)]
+        + [Notification(user=user, kind=Notification.Kind.MESSAGE) for n in range(messages)]
     )
 
 
@@ -40,6 +44,10 @@ def bell(html):
 
 def number(html):
     return re.search(r'<span class="bell__number">([^<]*)</span>', bell(html)).group(1)
+
+
+def envelope(html):
+    return re.search(r'<a class="envelope".*?</a>', html, re.DOTALL).group(0)
 
 
 def test_the_bell_links_to_the_notifications(client):
@@ -107,12 +115,63 @@ def test_the_bell_marks_its_own_page(client):
     assert 'aria-current' not in bell(client.get(reverse('home')).content.decode())
 
 
+# The envelope: conversations with unread messages, apart from the bell
+
+
+def test_messages_count_on_the_envelope_and_replies_on_the_bell(client, member):
+    notify(member, unread=2, messages=3)
+
+    html = client.get(reverse('home')).content.decode()
+
+    assert 'data-count="2"' in bell(html)
+    assert 'data-count="3"' in envelope(html)
+    assert '<span class="envelope__number">3</span>' in envelope(html)
+    assert '<span class="visually-hidden">Unread:</span>' in envelope(html)
+    # Both together in the title
+    assert '<title>(5) Forums</title>' in html
+
+
+def test_messages_alone_leave_the_bell_empty(client, member):
+    notify(member, messages=1)
+
+    html = client.get(reverse('home')).content.decode()
+
+    assert '<span class="bell__count" hidden>' in bell(html)
+    assert '<span class="envelope__count">' in envelope(html)
+    assert '<title>(1) Forums</title>' in html
+
+
+def test_no_unread_messages_show_no_number_on_the_envelope(client, member):
+    notify(member, unread=1)
+
+    html = client.get(reverse('home')).content.decode()
+
+    assert '<span class="envelope__count" hidden>' in envelope(html)
+    assert 'data-count="0"' in envelope(html)
+
+
+def test_more_than_nine_conversations_are_shown_as_nine_plus(client, member):
+    notify(member, messages=10)
+
+    html = client.get(reverse('home')).content.decode()
+
+    assert '<span class="envelope__number">9+</span>' in envelope(html)
+    assert 'data-count="10"' in envelope(html)
+
+
+def test_count_splits_replies_and_messages(client, member):
+    notify(member, unread=2, read=1, messages=3)
+
+    assert client.get(COUNT).json() == {'replies': 2, 'messages': 3}
+
+
 def test_a_visitor_has_no_bell_and_no_script(member):
     notify(member, unread=1)
 
     html = Client().get(reverse('home')).content.decode()
 
     assert 'class="bell"' not in html
+    assert 'class="envelope"' not in html
     assert 'notifications.js' not in html
     assert '<title>Wildvasa</title>' in html
 
@@ -138,7 +197,7 @@ def test_count(client, member):
     resp = client.get(COUNT)
 
     assert resp.status_code == 200
-    assert resp.json() == {'unread': 3}
+    assert resp.json() == {'replies': 3, 'messages': 0}
     assert resp['Cache-Control'] == 'no-store'
 
 
@@ -146,9 +205,9 @@ def test_count_is_the_members_own(client):
     other = get_user_model().objects.create_user(
         username='other', email='other@example.com', password='testpass123'
     )
-    notify(other, unread=4)
+    notify(other, unread=4, messages=2)
 
-    assert client.get(COUNT).json() == {'unread': 0}
+    assert client.get(COUNT).json() == {'replies': 0, 'messages': 0}
 
 
 def test_count_for_a_visitor_redirects_to_the_login_page(security_log):
@@ -174,4 +233,4 @@ def test_count_follows_reading(client, member):
 
     client.post(reverse('notifications_read'))
 
-    assert client.get(COUNT).json() == {'unread': 0}
+    assert client.get(COUNT).json() == {'replies': 0, 'messages': 0}

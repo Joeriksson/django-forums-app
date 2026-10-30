@@ -78,10 +78,10 @@ class NotificationList(LoginRequiredMixin, TemplateView):
 
 
 class UnreadCount(LoginRequiredMixin, View):
-    """The number on the bell, for js/notifications.js, which asks every half minute."""
+    """The numbers on the bell and the envelope, for js/notifications.js, which asks every half minute."""
 
     def get(self, request):
-        response = JsonResponse({'unread': Notification.unread_count(request.user)})
+        response = JsonResponse(Notification.unread_counts(request.user))
         response['Cache-Control'] = 'no-store'
         return response
 

@@ -1,12 +1,12 @@
 {% load i18n nav static signup bell reports %}
 {% get_current_language as language %}
-{% comment %}The number on the bell, also first in the title; 500.html has no user{% endcomment %}
-{% if user.is_authenticated %}{% unread_notifications user as unread %}{% endif %}
+{% comment %}The numbers on the bell and the envelope, added together first in the title; 500.html has no user{% endcomment %}
+{% if user.is_authenticated %}{% unread_notifications user as unread_counts %}{% endif %}
 <!DOCTYPE html>
 <html lang="{{ language }}">
 <head>
     <meta charset="utf-8">
-    <title>{% if unread %}({{ unread }}) {% endif %}{% block title %}{{ site_settings.title|default:'Wildvasa' }}{% endblock title %}</title>
+    <title>{% if unread_counts.replies or unread_counts.messages %}({{ unread_counts.replies|add:unread_counts.messages }}) {% endif %}{% block title %}{{ site_settings.title|default:'Wildvasa' }}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
     {% comment %}Before the stylesheets and not deferred: the saved colours apply before the page draws{% endcomment %}
@@ -26,7 +26,6 @@
                 <a href="{% url 'home' %}"{% if section == 'forums' %} aria-current="page"{% endif %}>{% translate 'Forums' %}</a>
                 <a href="{% url 'latest' %}"{% if section == 'latest' %} aria-current="page"{% endif %}>{% translate 'Latest' %}</a>
                 <a href="{% url 'search_results' %}"{% if section == 'search' %} aria-current="page"{% endif %}>{% translate 'Search' %}</a>
-                <a href="{% url 'conversations' %}"{% if section == 'messages' %} aria-current="page"{% endif %}>{% translate 'Messages' %}</a>
                 {% if user.is_staff %}
                     <a href="{% url 'admin:index' %}">{% translate 'Admin' %}</a>
                 {% endif %}
@@ -48,14 +47,25 @@
                     </div>
                 </details>
                 {% comment %}
-                News in the member's subscribed threads: a link to the list, with the number
-                of unread ones, which js/notifications.js keeps current
+                The member's direct messages: a link to the conversations, with the number of
+                those with unread messages, which js/notifications.js keeps current
                 {% endcomment %}
-                <a class="bell" href="{% url 'notifications' %}" title="{% translate 'Notifications' %}" data-count="{{ unread }}"{% if section == 'notifications' %} aria-current="page"{% endif %}>
-                    <span class="visually-hidden">{% translate 'Notifications' %}</span>
-                    <span class="bell__count"{% if not unread %} hidden{% endif %}>
+                <a class="envelope" href="{% url 'conversations' %}" title="{% translate 'Messages' %}" data-count="{{ unread_counts.messages }}"{% if section == 'messages' %} aria-current="page"{% endif %}>
+                    <span class="visually-hidden">{% translate 'Messages' %}</span>
+                    <span class="envelope__count"{% if not unread_counts.messages %} hidden{% endif %}>
                         <span class="visually-hidden">{% translate 'Unread:' %}</span>
-                        <span class="bell__number">{% if unread > 9 %}9+{% else %}{{ unread }}{% endif %}</span>
+                        <span class="envelope__number">{% if unread_counts.messages > 9 %}9+{% else %}{{ unread_counts.messages }}{% endif %}</span>
+                    </span>
+                </a>
+                {% comment %}
+                News in the member's subscribed threads: a link to the list, with the number
+                of threads with unread replies, which js/notifications.js keeps current
+                {% endcomment %}
+                <a class="bell" href="{% url 'notifications' %}" title="{% translate 'Notifications' %}" data-count="{{ unread_counts.replies }}"{% if section == 'notifications' %} aria-current="page"{% endif %}>
+                    <span class="visually-hidden">{% translate 'Notifications' %}</span>
+                    <span class="bell__count"{% if not unread_counts.replies %} hidden{% endif %}>
+                        <span class="visually-hidden">{% translate 'Unread:' %}</span>
+                        <span class="bell__number">{% if unread_counts.replies > 9 %}9+{% else %}{{ unread_counts.replies }}{% endif %}</span>
                     </span>
                 </a>
             {% else %}

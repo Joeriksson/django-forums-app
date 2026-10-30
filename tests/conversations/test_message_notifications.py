@@ -158,12 +158,13 @@ def test_deleting_the_senders_account_deletes_the_row(anna, bo, write):
 # The notifications page and the bell
 
 
-def test_the_bell_counts_a_conversation_once(anna, bo, write, client):
+def test_the_envelope_counts_a_conversation_once(anna, bo, write, client):
     write(anna, bo)
     write(anna, bo)
     client.force_login(bo)
 
-    assert client.get(reverse('notifications_count')).json() == {'unread': 1}
+    # On the envelope, not on the bell
+    assert client.get(reverse('notifications_count')).json() == {'replies': 0, 'messages': 1}
 
 
 def test_the_page_lists_the_messages_with_a_link_to_the_conversation(anna, bo, write, client):
@@ -191,7 +192,7 @@ def test_following_the_link_marks_the_row_read(anna, bo, write, client):
     resp = client.get(reverse('notifications'))
     assertContains(resp, 'Read')
     assertNotContains(resp, 'new message')
-    assert client.get(reverse('notifications_count')).json() == {'unread': 0}
+    assert client.get(reverse('notifications_count')).json() == {'replies': 0, 'messages': 0}
 
 
 def test_mark_all_as_read_covers_messages(anna, bo, write, client):
