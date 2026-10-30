@@ -114,7 +114,7 @@ def test_a_visitor_has_no_bell_and_no_script(member):
 
     assert 'class="bell"' not in html
     assert 'notifications.js' not in html
-    assert '<title>Wildvasa</title>' in html
+    assert '<title>Django Forums App</title>' in html
 
 
 def test_the_script_gets_the_address_to_ask(client):

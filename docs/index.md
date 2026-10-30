@@ -1,4 +1,4 @@
-# Wildvasa
+# Django Forums App
 
 A private discussion forum. Members read and write in forums, threads and replies, and new members join by invitation, or by signing up while signup is open.
 

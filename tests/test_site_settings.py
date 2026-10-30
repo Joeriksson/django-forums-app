@@ -47,7 +47,7 @@ def staff_client(client, add_totp):
 def test_the_migration_creates_the_record_with_todays_texts():
     site_settings = SiteSettings.objects.get()
 
-    assert site_settings.title == 'Wildvasa'
+    assert site_settings.title == 'Django Forums App'
     assert site_settings.tagline == 'A private forum. Sign in to read and write.'
     assert site_settings.invitation_note.startswith('Membership is by invitation.')
 
@@ -56,7 +56,7 @@ def test_the_migration_creates_the_record_with_todays_texts():
 def test_load_falls_back_to_the_defaults_without_a_record():
     SiteSettings.objects.all().delete()
 
-    assert SiteSettings.load().title == 'Wildvasa'
+    assert SiteSettings.load().title == 'Django Forums App'
 
 
 @pytest.mark.django_db
@@ -77,7 +77,7 @@ def test_header_and_tab_show_the_title(client, renamed):
     resp = client.get(reverse('account_login'))
 
     assertContains(resp, f'<a class="site-name" href="{reverse("home")}">{TITLE}</a>')
-    assertNotContains(resp, 'Wildvasa')
+    assertNotContains(resp, 'Django Forums App')
 
 
 def test_visitors_home_shows_title_tagline_and_note(client, renamed, settings):
@@ -103,7 +103,7 @@ def test_texts_are_escaped(client, db, settings):
 @pytest.mark.django_db
 def test_server_error_page_names_the_site_without_the_database(rf):
     # Django renders 500.html without a request, so without the context processor
-    assert b'Wildvasa' in server_error(rf.get('/')).content
+    assert b'Django Forums App' in server_error(rf.get('/')).content
 
 
 # Emails and authenticator apps
@@ -140,7 +140,7 @@ def test_invitation_email_uses_the_title(renamed):
 
     assert TITLE in mail.outbox[0].subject
     assert TITLE in mail.outbox[0].body
-    assert 'Wildvasa' not in mail.outbox[0].body
+    assert 'Django Forums App' not in mail.outbox[0].body
 
 
 def test_welcome_email_uses_the_title(renamed):

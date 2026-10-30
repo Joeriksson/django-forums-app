@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
             name='SiteSettings',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(default='Wildvasa', help_text="The site's name: header, tab, emails and authenticator apps.", max_length=60)),
+                ('title', models.CharField(default='Django Forums App', help_text="The site's name: header, tab, emails and authenticator apps.", max_length=60)),
                 ('tagline', models.CharField(default='A private forum. Sign in to read and write.', help_text="Under the name on the visitors' home page.", max_length=200)),
                 ('invitation_note', models.CharField(default='Membership is by invitation. Got an invitation? Use the link in the email.', help_text="On the visitors' home page while signup is closed.", max_length=300)),
             ],
