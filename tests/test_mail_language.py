@@ -96,7 +96,7 @@ def test_invitation_mail_reads_as_before():
     send_invitation_email_task(invitation.pk)
 
     message = mail.outbox[0]
-    assert message.subject == "You're invited to Wildvasa"
-    assert message.body.startswith("Hello,\n\nYou're invited to join Wildvasa. Use this link to create your account:\n\n")
+    assert message.subject == "You're invited to Django Forums App"
+    assert message.body.startswith("Hello,\n\nYou're invited to join Django Forums App. Use this link to create your account:\n\n")
     assert f'\n\n{invitation.get_link()}\n\nThe link works once, for this email address only, until ' in message.body
     assert message.body.endswith(".\n\nIf you weren't expecting this invitation, you can ignore this email.\n")

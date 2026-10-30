@@ -38,7 +38,7 @@ The site's name, the visitors' texts and a few list sizes are set in the Django 
 
 | Setting | Default | Used for |
 |---|---|---|
-| Title | `Wildvasa` | The site's name: the header, the browser tab, the visitors' home page, emails and authenticator apps |
+| Title | `Django Forums App` | The site's name: the header, the browser tab, the visitors' home page, emails and authenticator apps |
 | Tagline | `A private forum. Sign in to read and write.` | Under the name on the visitors' home page |
 | Invitation note | `Membership is by invitation. …` | On the visitors' home page while signup is closed |
 | Recent threads | 3 (1–10) | Threads under *Recent activity*, above the forum list |
@@ -68,7 +68,7 @@ On GitHub: *Settings* → *Developer settings* → *OAuth Apps* → *New OAuth A
 
 | Field | Development | Production |
 |---|---|---|
-| Application name | e.g. `Wildvasa (dev)` | e.g. `Wildvasa` (members see it when they approve) |
+| Application name | e.g. `My forum (dev)` | e.g. `My forum` (members see it when they approve) |
 | Homepage URL | `http://127.0.0.1:8000` | `https://forum.example.com` |
 | Authorization callback URL | `http://127.0.0.1:8000/accounts/github/login/callback/` | `https://forum.example.com/accounts/github/login/callback/` |
 

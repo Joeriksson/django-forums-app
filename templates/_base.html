@@ -6,7 +6,7 @@
 <html lang="{{ language }}">
 <head>
     <meta charset="utf-8">
-    <title>{% if unread %}({{ unread }}) {% endif %}{% block title %}{{ site_settings.title|default:'Wildvasa' }}{% endblock title %}</title>
+    <title>{% if unread %}({{ unread }}) {% endif %}{% block title %}{{ site_settings.title|default:'Django Forums App' }}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
     {% comment %}Before the stylesheets and not deferred: the saved colours apply before the page draws{% endcomment %}
@@ -19,7 +19,7 @@
 <body>
 <header class="site-header">
     <div class="wrap site-header__row">
-        <a class="site-name" href="{% url 'home' %}">{{ site_settings.title|default:'Wildvasa' }}</a>
+        <a class="site-name" href="{% url 'home' %}">{{ site_settings.title|default:'Django Forums App' }}</a>
         <nav class="site-nav" aria-label="{% translate 'Main' %}">
             {% if user.is_authenticated %}
                 {% nav_section as section %}

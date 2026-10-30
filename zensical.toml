@@ -1,7 +1,7 @@
 # Documentation site, built with `uv run --group docs zensical build` into site/ and
 # published by deploy/docs.sh. Preview with `make docs`.
 [project]
-site_name = "Wildvasa"
+site_name = "Django Forums App"
 site_url = "https://docs.brommaplan.nu/forums/"
 site_description = "A private discussion forum built with Django and PostgreSQL."
 site_author = "J-O Eriksson"

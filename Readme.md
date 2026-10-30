@@ -1,6 +1,6 @@
 ![django test workflow](https://github.com/joeriksson/django-forums-app/actions/workflows/django.yml/badge.svg)
 
-# Wildvasa Forums App
+# Django Forums App
 
 A private discussion forum built with Django. Members read and write in forums, threads and replies; new members join by invitation, or by signing up while signup is open.
 
