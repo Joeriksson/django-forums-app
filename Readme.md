@@ -4,6 +4,8 @@
 
 A private discussion forum built with Django. Members read and write in forums, threads and replies; new members join by invitation, or by signing up while signup is open.
 
+![The forum list in dark mode, with search, recent activity and the latest threads in each forum](.github/images/home-member-dark.png)
+
 ## Features
 
 - **Forums and threads**: Markdown replies with an editor and preview, announcements, upvotes, recent activity, full-text search with filters, email notifications for subscribed threads
