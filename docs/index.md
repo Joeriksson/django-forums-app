@@ -2,7 +2,7 @@
 
 A private discussion forum. Members read and write in forums, threads and replies, and new members join by invitation, or by signing up while signup is open.
 
-**Stack:** Python 3.12, Django 5.2, PostgreSQL 16, Redis 8, Celery, managed with [uv](https://docs.astral.sh/uv/). It is self-hosted with Docker behind a reverse proxy.
+**Stack:** Python 3.14, Django 5.2, PostgreSQL 16, Redis 8, Celery, managed with [uv](https://docs.astral.sh/uv/). It is self-hosted with Docker behind a reverse proxy.
 
 ## Features
 
