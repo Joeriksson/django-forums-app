@@ -12,6 +12,8 @@ DEBUG = False
 TIME_ZONE = 'UTC'
 # Nor the developer's DJANGO_LANGUAGE: the tests expect English texts
 LANGUAGE_CODE = 'en'
+# Nor the developer's DJANGO_STAFF_REQUIRE_MFA: the tests check the requirement
+STAFF_REQUIRE_MFA = True
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',

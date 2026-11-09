@@ -15,7 +15,7 @@ A private discussion forum built with Django. Members read and write in forums, 
 
 ## Tech stack
 
-Python 3.12 · Django 5.2 · PostgreSQL 16 · Redis 8 · Celery · uv · Docker Compose
+Python 3.14 · Django 5.2 · PostgreSQL 16 · Redis 8 · Celery · uv · Docker Compose
 
 ## Documentation
 
