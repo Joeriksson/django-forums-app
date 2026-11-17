@@ -58,6 +58,18 @@ audit:
 	@uv export --frozen --group docs --no-emit-project --format requirements-txt \
 		| uvx pip-audit==2.10.1 --requirement /dev/stdin --require-hashes --disable-pip --strict $(AUDIT_IGNORE)
 
+.PHONY: outdated upgrade
+# List what an upgrade of uv.lock would change, without writing anything; runs on the host
+outdated:
+	@uv lock --upgrade --dry-run
+	@printf "\nRun 'make upgrade' to apply, then 'make dev_build dev_pytest'\n"
+
+# Upgrade uv.lock within pyproject.toml's ranges, sync .venv and audit the result; runs on the host
+upgrade:
+	@uv lock --upgrade
+	@uv sync
+	@$(MAKE) --no-print-directory audit
+
 .PHONY: docs
 # Preview the documentation site at http://localhost:8001; deploy/docs.sh publishes it
 docs:
