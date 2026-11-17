@@ -17,6 +17,15 @@ def password_login(client):
     return client.post(reverse('account_login'), {'login': EMAIL, 'password': PASSWORD})
 
 
+def reauthenticate(client):
+    """
+    Enter the password again: allauth asks for it before the two-factor pages, also right
+    after a login (since 65.20 a login no longer counts as a recent reauthentication).
+    """
+    resp = client.post(reverse('account_reauthenticate'), {'password': PASSWORD})
+    assert resp.status_code == 302
+
+
 def is_logged_in(client):
     return '_auth_user_id' in client.session
 
@@ -66,6 +75,7 @@ def test_passkeys_are_not_offered():
 
 def test_user_sets_up_authenticator_app(client, user, totp_code):
     password_login(client)
+    reauthenticate(client)
     page = client.get(reverse('mfa_activate_totp'))
     assertContains(page, 'site-header')
     secret = page.context['form'].secret
@@ -77,8 +87,18 @@ def test_user_sets_up_authenticator_app(client, user, totp_code):
     assert types == {Authenticator.Type.TOTP, Authenticator.Type.RECOVERY_CODES}
 
 
+def test_setup_asks_for_password_again_after_login(client, user):
+    password_login(client)
+
+    resp = client.get(reverse('mfa_activate_totp'))
+
+    assert resp.status_code == 302
+    assert resp['Location'].startswith(reverse('account_reauthenticate'))
+
+
 def test_setup_refuses_wrong_code(client, user):
     password_login(client)
+    reauthenticate(client)
     client.get(reverse('mfa_activate_totp'))
 
     resp = client.post(reverse('mfa_activate_totp'), {'code': '000000'})
