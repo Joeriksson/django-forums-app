@@ -152,7 +152,19 @@ def test_the_menu_has_messages_for_members_only(client, anna):
 
     client.force_login(anna)
 
-    assert re.search(rf'href="{reverse("conversations")}"[^>]*>Messages</a>', nav(client.get(reverse('home'))))
+    # An envelope, named for screen readers and on hover
+    assert re.search(
+        rf'<a class="envelope" href="{reverse("conversations")}" title="Messages"[^>]*>\s*'
+        r'<span class="visually-hidden">Messages</span>',
+        nav(client.get(reverse('home'))),
+    )
+
+
+def test_the_envelope_stands_with_the_icons(as_anna):
+    """Next to the bell, after the user menu: not among the text links."""
+    menu = nav(as_anna.get(reverse('home')))
+
+    assert menu.index('class="menu"') < menu.index('class="envelope"') < menu.index('class="bell"')
 
 
 def test_the_menu_marks_messages_on_its_pages(as_anna, bo):
@@ -164,7 +176,9 @@ def test_the_menu_marks_messages_on_its_pages(as_anna, bo):
     for url in pages:
         menu = nav(as_anna.get(url))
 
-        assert re.findall(r'<a [^>]*aria-current="page"[^>]*>([^<]+)</a>', menu) == ['Messages']
+        marked = re.findall(r'<a [^>]*aria-current="page"[^>]*>', menu)
+        assert len(marked) == 1
+        assert 'class="envelope"' in marked[0]
 
 
 def test_the_conversation_page_leads_back_to_the_list(as_anna, bo):
