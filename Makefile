@@ -45,7 +45,7 @@ AUDIT_IGNORE =
 # messages: collect the texts marked for translation into locale/sv/LC_MESSAGES/django.po
 messages:
 	@uv run python manage.py makemessages --locale sv --add-location file \
-		--ignore '.venv/*' --ignore 'staticfiles/*' --ignore 'docs/*' --ignore 'tests/*' \
+		--ignore '.venv/*' --ignore 'staticfiles/*' --ignore 'docs/*' --ignore 'site/*' --ignore 'tests/*' \
 		--settings=project.settings.test
 
 # compile_messages: make django.mo, which Django reads, from django.po; commit both
@@ -55,5 +55,10 @@ compile_messages:
 
 # Check the locked dependencies (incl. dev) for known vulnerabilities; runs on the host with uv
 audit:
-	@uv export --frozen --no-emit-project --format requirements-txt \
+	@uv export --frozen --group docs --no-emit-project --format requirements-txt \
 		| uvx pip-audit==2.10.1 --requirement /dev/stdin --require-hashes --disable-pip --strict $(AUDIT_IGNORE)
+
+.PHONY: docs
+# Preview the documentation site at http://localhost:8001; deploy/docs.sh publishes it
+docs:
+	@uv run --group docs zensical serve -a localhost:8001

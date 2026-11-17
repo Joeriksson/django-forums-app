@@ -33,6 +33,9 @@ dev = [
     "pytest-django>=4.8",
     "pytest-xdist>=3.5",
 ]
+docs = [
+    "zensical~=0.0.73",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

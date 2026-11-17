@@ -13,7 +13,7 @@ class SiteSettings(models.Model):
     PK = 1
 
     title = models.CharField(
-        max_length=60, default='Wildvasa', help_text='The site\'s name: header, tab, emails and authenticator apps.'
+        max_length=60, default='Django Forums App', help_text='The site\'s name: header, tab, emails and authenticator apps.'
     )
     tagline = models.CharField(
         max_length=200,

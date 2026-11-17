@@ -297,3 +297,6 @@ modules.xml
 
 # Built by collectstatic during the Docker image build
 staticfiles/
+
+# Private notes and old reviews, never committed
+/reviews/
